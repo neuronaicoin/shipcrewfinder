@@ -28,7 +28,6 @@ export async function signupCrew(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://shipcrewfinder.com"}/auth/confirm`,
       data: {
         full_name: fullName,
         user_type: crewType,
@@ -55,10 +54,13 @@ export async function signupCrew(formData: FormData) {
 
   if (profileError) {
     console.error("Profile insert error:", profileError);
-    // Don't fail the signup, profile can be created later
   }
 
-  redirect("/auth/check-email");
+  // Auto sign-in after signup (since email confirmation is off)
+  await supabase.auth.signInWithPassword({ email, password });
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
 // ============================================
@@ -84,7 +86,6 @@ export async function signupCompany(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://shipcrewfinder.com"}/auth/confirm`,
       data: {
         full_name: contactName,
         user_type: "company",
@@ -124,7 +125,11 @@ export async function signupCompany(formData: FormData) {
     console.error("Company details insert error:", companyError);
   }
 
-  redirect("/auth/check-email");
+  // Auto sign-in after signup
+  await supabase.auth.signInWithPassword({ email, password });
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }
 
 // ============================================
