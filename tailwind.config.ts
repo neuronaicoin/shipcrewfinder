@@ -15,14 +15,14 @@ const config: Config = {
           darker: "#020a1a",
         },
         accent: {
-          DEFAULT: "#06b6d4",
-          light: "#22d3ee",
-          dark: "#0891b2",
-          deep: "#0e7490",
+          DEFAULT: "#fbbf24",
+          light: "#fcd34d",
+          dark: "#f59e0b",
+          deep: "#d97706",
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
       },
       animation: {
         "fade-in-up": "fadeInUp 0.6s ease-out forwards",
