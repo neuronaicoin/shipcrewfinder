@@ -7,7 +7,11 @@ export const metadata = {
   title: "Dashboard — ShipCrewFinder",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onboarding?: string }>;
+}) {
   const supabase = await createClient();
 
   const {
@@ -18,12 +22,79 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Get profile data
+  // Get profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
+
+  // Get user type details to calculate profile completion
+  let detailsCompletion = 0;
+  let detailsData: Record<string, unknown> | null = null;
+
+  if (profile?.user_type === "seafarer") {
+    const { data } = await supabase
+      .from("seafarer_details")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    detailsData = data;
+  } else if (profile?.user_type === "yacht") {
+    const { data } = await supabase
+      .from("yacht_details")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    detailsData = data;
+  } else if (profile?.user_type === "company") {
+    const { data } = await supabase
+      .from("company_details")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    detailsData = data;
+  }
+
+  // Calculate profile completion
+  // Base: account created (20%)
+  // Each filled field adds more
+  let completion = 20; // account exists
+
+  if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
+    if (detailsData?.rank || detailsData?.position) completion += 15;
+    if (detailsData?.years_experience !== undefined && detailsData?.years_experience !== null) completion += 15;
+    if (detailsData?.nationality || profile?.country) completion += 15;
+    if (detailsData?.cv_url) completion += 15;
+    if (detailsData?.availability) completion += 10;
+    if (profile?.phone) completion += 10;
+  } else if (profile?.user_type === "company") {
+    if (detailsData?.headquarters_country) completion += 20;
+    if (detailsData?.company_type) completion += 20;
+    if (detailsData?.hiring_for_ranks && Array.isArray(detailsData.hiring_for_ranks) && detailsData.hiring_for_ranks.length > 0) completion += 20;
+    if (detailsData?.company_logo_url) completion += 10;
+    if (detailsData?.description) completion += 10;
+  }
+
+  completion = Math.min(completion, 100);
+  const isComplete = completion === 100;
+
+  // Onboarding URL based on user type
+  const onboardingUrl =
+    profile?.user_type === "company"
+      ? "/onboarding/company/step-1"
+      : "/onboarding/crew/step-1";
+
+  const params = await searchParams;
+  const justCompleted = params?.onboarding === "complete";
+
+  // Account type label
+  const accountTypeLabel =
+    profile?.user_type === "company"
+      ? "Company Account"
+      : profile?.user_type === "yacht"
+      ? "Yacht Crew"
+      : "Ship Crew";
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
@@ -64,18 +135,39 @@ export default async function DashboardPage() {
 
       {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+        {/* Onboarding success banner */}
+        {justCompleted && (
+          <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl p-5 mb-8 flex items-start gap-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-display text-emerald-400 font-bold text-lg mb-1">
+                🎉 Profile Complete!
+              </h3>
+              <p className="text-white/70 text-sm">
+                Your profile is now public and discoverable by maritime {profile?.user_type === "company" ? "talent" : "companies"} worldwide.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Welcome */}
         <div className="mb-10">
           <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
             <span className="text-accent text-xs font-extrabold tracking-wider uppercase">
-              {profile?.user_type === "company" ? "Company Account" : profile?.user_type === "yacht" ? "Yacht Crew" : "Ship Crew"}
+              {accountTypeLabel}
             </span>
           </div>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
             Welcome, {profile?.full_name || "there"}!
           </h1>
           <p className="text-white/60 text-lg">
-            Your account is active. Let's complete your profile to start receiving offers.
+            {isComplete
+              ? "Your profile is live and ready."
+              : "Let's complete your profile to start receiving offers."}
           </p>
         </div>
 
@@ -87,11 +179,25 @@ export default async function DashboardPage() {
                 Profile Status
               </h2>
               <p className="text-white/60 text-sm">
-                Complete your profile to unlock all features
+                {isComplete
+                  ? "Your profile is complete and live"
+                  : "Complete your profile to unlock all features"}
               </p>
             </div>
-            <div className="px-3 py-1 bg-amber-500/15 border border-amber-500/30 rounded-full">
-              <span className="text-amber-400 text-xs font-bold uppercase tracking-wide">Incomplete</span>
+            <div
+              className={`px-3 py-1 border rounded-full ${
+                isComplete
+                  ? "bg-emerald-500/15 border-emerald-500/30"
+                  : "bg-amber-500/15 border-amber-500/30"
+              }`}
+            >
+              <span
+                className={`text-xs font-bold uppercase tracking-wide ${
+                  isComplete ? "text-emerald-400" : "text-amber-400"
+                }`}
+              >
+                {isComplete ? "Complete" : "Incomplete"}
+              </span>
             </div>
           </div>
 
@@ -99,26 +205,35 @@ export default async function DashboardPage() {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white/70 text-sm font-bold">Profile completion</span>
-              <span className="text-white/70 text-sm">20%</span>
+              <span className="text-white/70 text-sm">{completion}%</span>
             </div>
             <div className="h-2 bg-primary border border-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-accent rounded-full" style={{ width: "20%" }} />
+              <div
+                className="h-full bg-accent rounded-full transition-all duration-500"
+                style={{ width: `${completion}%` }}
+              />
             </div>
           </div>
 
           {/* Action */}
-          <Link
-            href="#"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-          >
-            Complete Profile
-            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" />
-            </svg>
-          </Link>
-          <p className="text-white/40 text-xs mt-3">
-            Onboarding wizard coming soon — we're building this feature now
-          </p>
+          {!isComplete ? (
+            <Link
+              href={onboardingUrl}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+            >
+              Complete Profile
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" />
+              </svg>
+            </Link>
+          ) : (
+            <Link
+              href={onboardingUrl}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+            >
+              Edit Profile
+            </Link>
+          )}
         </div>
 
         {/* Account Info */}
@@ -133,8 +248,8 @@ export default async function DashboardPage() {
             </div>
             <div className="flex items-center justify-between py-3 border-b border-white/5">
               <span className="text-white/60 text-sm">Account Type</span>
-              <span className="text-white font-medium text-sm capitalize">
-                {profile?.user_type || "Unknown"}
+              <span className="text-white font-medium text-sm">
+                {accountTypeLabel}
               </span>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-white/5">
@@ -148,9 +263,15 @@ export default async function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center justify-between py-3">
-              <span className="text-white/60 text-sm">Email Verified</span>
-              <span className="px-2 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-bold uppercase">
-                Verified
+              <span className="text-white/60 text-sm">Profile Visibility</span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-bold uppercase border ${
+                  profile?.visibility === "public"
+                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                    : "bg-white/5 border-white/10 text-white/60"
+                }`}
+              >
+                {profile?.visibility === "public" ? "Public" : "Hidden"}
               </span>
             </div>
           </div>
@@ -158,7 +279,7 @@ export default async function DashboardPage() {
 
         {/* Coming Soon Note */}
         <p className="text-center text-white/40 text-sm mt-8">
-          Full dashboard, profile management, and search coming soon
+          Job search, candidate browsing, and messaging coming soon
         </p>
       </div>
     </main>
