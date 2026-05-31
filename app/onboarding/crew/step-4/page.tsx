@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { uploadCrewCV } from "@/lib/actions/profile";
 import Link from "next/link";
+import CVUpload from "./cv-upload";
 
 export const metadata = {
   title: "Upload CV — ShipCrewFinder",
@@ -37,42 +38,8 @@ export default async function CrewStep4Page() {
 
       {/* Form */}
       <form action={uploadCrewCV} className="space-y-6">
-        {/* Upload Area */}
-        <div className="bg-primary-dark border-2 border-dashed border-white/15 hover:border-accent/50 rounded-2xl p-8 md:p-10 transition group">
-          <label htmlFor="cv" className="block cursor-pointer text-center">
-            {/* Upload Icon */}
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 border border-accent/30 rounded-2xl mb-4 group-hover:bg-accent/20 transition">
-              <svg
-                className="w-8 h-8 text-accent"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-
-            <h3 className="font-display text-xl font-bold text-white mb-2">
-              Drop your CV here, or click to browse
-            </h3>
-            <p className="text-white/60 text-sm mb-4">
-              PDF format only · Maximum 5MB
-            </p>
-
-            <div className="inline-block px-5 py-2.5 bg-accent/15 border border-accent/30 rounded-lg text-accent font-bold text-sm hover:bg-accent/25 transition">
-              Choose File
-            </div>
-
-            <input
-              id="cv"
-              name="cv"
-              type="file"
-              accept="application/pdf"
-              className="sr-only"
-            />
-          </label>
-        </div>
+        {/* Upload Area (client component) */}
+        <CVUpload />
 
         {/* Why CV? */}
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-5">
