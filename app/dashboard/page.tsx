@@ -7,11 +7,7 @@ export const metadata = {
   title: "Dashboard — ShipCrewFinder",
 };
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ onboarding?: string }>;
-}) {
+export default async function DashboardPage() {
   const supabase = await createClient();
 
   const {
@@ -30,7 +26,6 @@ export default async function DashboardPage({
     .single();
 
   // Get user type details to calculate profile completion
-  let detailsCompletion = 0;
   let detailsData: Record<string, unknown> | null = null;
 
   if (profile?.user_type === "seafarer") {
@@ -57,8 +52,6 @@ export default async function DashboardPage({
   }
 
   // Calculate profile completion
-  // Base: account created (20%)
-  // Each filled field adds more
   let completion = 20; // account exists
 
   if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
@@ -85,9 +78,6 @@ export default async function DashboardPage({
       ? "/onboarding/company/step-1"
       : "/onboarding/crew/step-1";
 
-  const params = await searchParams;
-  const justCompleted = params?.onboarding === "complete";
-
   // Account type label
   const accountTypeLabel =
     profile?.user_type === "company"
@@ -95,6 +85,39 @@ export default async function DashboardPage({
       : profile?.user_type === "yacht"
       ? "Yacht Crew"
       : "Ship Crew";
+
+  const isCrew =
+    profile?.user_type === "seafarer" || profile?.user_type === "yacht";
+
+  // Helpers for display
+  const experienceLabel = (() => {
+    const y = detailsData?.years_experience as number | undefined | null;
+    if (y === undefined || y === null) return null;
+    if (y <= 1) return "0–1 years";
+    if (y <= 3) return "1–3 years";
+    return "3+ years";
+  })();
+
+  const availabilityLabel = (() => {
+    const a = detailsData?.availability as string | undefined | null;
+    if (!a) return null;
+    if (a === "immediate") return "Available within 1 month";
+    if (a === "1-3_months") return "Available in 1–3 months";
+    if (a === "3+_months") return "Available in 3+ months";
+    return a;
+  })();
+
+  const languages = Array.isArray(detailsData?.languages)
+    ? (detailsData?.languages as string[])
+    : [];
+
+  const hiringRanks = Array.isArray(detailsData?.hiring_for_ranks)
+    ? (detailsData?.hiring_for_ranks as string[])
+    : [];
+
+  const fleetTypes = Array.isArray(detailsData?.fleet_types)
+    ? (detailsData?.fleet_types as string[])
+    : [];
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
@@ -135,25 +158,6 @@ export default async function DashboardPage({
 
       {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        {/* Onboarding success banner */}
-        {justCompleted && (
-          <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl p-5 mb-8 flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 bg-emerald-500/20 border border-emerald-500/40 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-display text-emerald-400 font-bold text-lg mb-1">
-                🎉 Profile Complete!
-              </h3>
-              <p className="text-white/70 text-sm">
-                Your profile is now public and discoverable by maritime {profile?.user_type === "company" ? "talent" : "companies"} worldwide.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Welcome */}
         <div className="mb-10">
           <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
@@ -227,14 +231,127 @@ export default async function DashboardPage({
               </svg>
             </Link>
           ) : (
-            <Link
-              href={onboardingUrl}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-            >
-              Edit Profile
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href={onboardingUrl}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+              >
+                Edit Profile
+              </Link>
+              <Link
+                href="/profile/me"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+              >
+                View My Profile
+              </Link>
+            </div>
           )}
         </div>
+
+        {/* Your Profile Details (only when complete) */}
+        {isComplete && isCrew && (
+          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
+            <h2 className="font-display text-xl font-bold text-white mb-4">
+              Your Profile
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">
+                  {profile?.user_type === "yacht" ? "Position" : "Rank"}
+                </span>
+                <span className="text-white font-medium text-sm">
+                  {(detailsData?.rank as string) ||
+                    (detailsData?.position as string) ||
+                    "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">Experience</span>
+                <span className="text-white font-medium text-sm">
+                  {experienceLabel || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">Nationality</span>
+                <span className="text-white font-medium text-sm">
+                  {(detailsData?.nationality as string) ||
+                    profile?.country ||
+                    "—"}
+                </span>
+              </div>
+              {languages.length > 0 && (
+                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                  <span className="text-white/60 text-sm">Languages</span>
+                  <span className="text-white font-medium text-sm text-right">
+                    {languages.join(", ")}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">Availability</span>
+                <span className="text-white font-medium text-sm">
+                  {availabilityLabel || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span className="text-white/60 text-sm">CV</span>
+                <span className="text-white font-medium text-sm">
+                  {detailsData?.cv_url ? (
+                    
+                      href={detailsData.cv_url as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:text-accent-light underline underline-offset-2"
+                    >
+                      View CV
+                    </a>
+                  ) : (
+                    "Not uploaded"
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Your Company (only when complete) */}
+        {isComplete && profile?.user_type === "company" && (
+          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
+            <h2 className="font-display text-xl font-bold text-white mb-4">
+              Your Company
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">Company Type</span>
+                <span className="text-white font-medium text-sm">
+                  {(detailsData?.company_type as string) || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-white/5">
+                <span className="text-white/60 text-sm">Headquarters</span>
+                <span className="text-white font-medium text-sm">
+                  {(detailsData?.headquarters_country as string) || "—"}
+                </span>
+              </div>
+              {hiringRanks.length > 0 && (
+                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                  <span className="text-white/60 text-sm">Hiring For</span>
+                  <span className="text-white font-medium text-sm text-right">
+                    {hiringRanks.join(", ")}
+                  </span>
+                </div>
+              )}
+              {fleetTypes.length > 0 && (
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-white/60 text-sm">Fleet Types</span>
+                  <span className="text-white font-medium text-sm text-right">
+                    {fleetTypes.join(", ")}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Account Info */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
