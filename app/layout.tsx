@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
-const manrope = Manrope({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-jakarta",
   weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -43,7 +50,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={manrope.variable}>{children}</body>
+      <body className={`${jakarta.variable} ${bricolage.variable} font-sans`}>
+        {children}
+      </body>
     </html>
   );
 }
