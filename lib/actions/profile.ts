@@ -7,37 +7,39 @@ import { revalidatePath } from "next/cache";
 // ============================================
 // CREW: Step 1 - Rank
 // ============================================
-export async function updateCrewRank(formData: FormData) {
+export async function updateCrewRank(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) {
+    redirect("/login");
+  }
 
   const rank = formData.get("rank") as string;
-  if (!rank) return { error: "Rank is required" };
+  if (!rank) {
+    redirect("/onboarding/crew/step-1?error=rank_required");
+  }
 
-  // Get user type from profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("user_type")
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (!profile) {
+    redirect("/dashboard");
+  }
 
-  // Upsert into the right details table
   if (profile.user_type === "seafarer") {
-    const { error } = await supabase.from("seafarer_details").upsert({
+    await supabase.from("seafarer_details").upsert({
       id: user.id,
       rank: rank,
     });
-    if (error) return { error: error.message };
   } else if (profile.user_type === "yacht") {
-    const { error } = await supabase.from("yacht_details").upsert({
+    await supabase.from("yacht_details").upsert({
       id: user.id,
       position: rank,
     });
-    if (error) return { error: error.message };
   }
 
   revalidatePath("/onboarding/crew");
@@ -47,16 +49,17 @@ export async function updateCrewRank(formData: FormData) {
 // ============================================
 // CREW: Step 2 - Experience
 // ============================================
-export async function updateCrewExperience(formData: FormData) {
+export async function updateCrewExperience(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const experience = formData.get("experience") as string;
-  if (!experience) return { error: "Experience is required" };
+  if (!experience) {
+    redirect("/onboarding/crew/step-2?error=required");
+  }
 
-  // Map text to years
   const expMap: Record<string, number> = {
     "0-1": 1,
     "1-3": 3,
@@ -70,20 +73,18 @@ export async function updateCrewExperience(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (!profile) redirect("/dashboard");
 
   if (profile.user_type === "seafarer") {
-    const { error } = await supabase
+    await supabase
       .from("seafarer_details")
       .update({ years_experience: years })
       .eq("id", user.id);
-    if (error) return { error: error.message };
   } else if (profile.user_type === "yacht") {
-    const { error } = await supabase
+    await supabase
       .from("yacht_details")
       .update({ years_experience: years })
       .eq("id", user.id);
-    if (error) return { error: error.message };
   }
 
   revalidatePath("/onboarding/crew");
@@ -93,19 +94,20 @@ export async function updateCrewExperience(formData: FormData) {
 // ============================================
 // CREW: Step 3 - Nationality + Languages
 // ============================================
-export async function updateCrewNationality(formData: FormData) {
+export async function updateCrewNationality(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const nationality = formData.get("nationality") as string;
   const englishLevel = formData.get("englishLevel") as string;
   const languages = formData.getAll("languages") as string[];
 
-  if (!nationality) return { error: "Nationality is required" };
+  if (!nationality) {
+    redirect("/onboarding/crew/step-3?error=required");
+  }
 
-  // Update profile country
   await supabase
     .from("profiles")
     .update({ country: nationality })
@@ -117,10 +119,10 @@ export async function updateCrewNationality(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (!profile) redirect("/dashboard");
 
   if (profile.user_type === "seafarer") {
-    const { error } = await supabase
+    await supabase
       .from("seafarer_details")
       .update({
         nationality: nationality,
@@ -128,16 +130,14 @@ export async function updateCrewNationality(formData: FormData) {
         english_level: englishLevel || null,
       })
       .eq("id", user.id);
-    if (error) return { error: error.message };
   } else if (profile.user_type === "yacht") {
-    const { error } = await supabase
+    await supabase
       .from("yacht_details")
       .update({
         languages: languages,
         english_level: englishLevel || null,
       })
       .eq("id", user.id);
-    if (error) return { error: error.message };
   }
 
   revalidatePath("/onboarding/crew");
@@ -147,24 +147,25 @@ export async function updateCrewNationality(formData: FormData) {
 // ============================================
 // CREW: Step 4 - CV Upload
 // ============================================
-export async function uploadCrewCV(formData: FormData) {
+export async function uploadCrewCV(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const file = formData.get("cv") as File;
+
+  // CV upload is optional - skip if no file
   if (!file || file.size === 0) {
-    // CV upload is optional - skip
     redirect("/onboarding/crew/step-5");
   }
 
   // Validate
   if (file.size > 5 * 1024 * 1024) {
-    return { error: "CV file is too large (max 5MB)" };
+    redirect("/onboarding/crew/step-4?error=file_too_large");
   }
   if (file.type !== "application/pdf") {
-    return { error: "Only PDF files are accepted" };
+    redirect("/onboarding/crew/step-4?error=invalid_type");
   }
 
   // Upload to Storage
@@ -176,7 +177,9 @@ export async function uploadCrewCV(formData: FormData) {
       contentType: "application/pdf",
     });
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) {
+    redirect("/onboarding/crew/step-4?error=upload_failed");
+  }
 
   // Get URL
   const { data: { publicUrl } } = supabase.storage
@@ -190,7 +193,7 @@ export async function uploadCrewCV(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (!profile) redirect("/dashboard");
 
   if (profile.user_type === "seafarer") {
     await supabase
@@ -211,19 +214,19 @@ export async function uploadCrewCV(formData: FormData) {
 // ============================================
 // CREW: Step 5 - Availability + Contact (FINAL)
 // ============================================
-export async function completeCrewOnboarding(formData: FormData) {
+export async function completeCrewOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const availability = formData.get("availability") as string;
   const phone = formData.get("phone") as string;
-  const whatsapp = formData.get("whatsapp") as string;
 
-  if (!availability) return { error: "Availability is required" };
+  if (!availability) {
+    redirect("/onboarding/crew/step-5?error=required");
+  }
 
-  // Map availability
   const availMap: Record<string, string> = {
     "0-1": "immediate",
     "1-3": "1-3_months",
@@ -231,12 +234,11 @@ export async function completeCrewOnboarding(formData: FormData) {
   };
   const availabilityValue = availMap[availability] || "immediate";
 
-  // Update profile (phone + make profile public)
   await supabase
     .from("profiles")
     .update({
       phone: phone || null,
-      visibility: "public", // Now ready to be seen
+      visibility: "public",
     })
     .eq("id", user.id);
 
@@ -246,7 +248,7 @@ export async function completeCrewOnboarding(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile) return { error: "Profile not found" };
+  if (!profile) redirect("/dashboard");
 
   if (profile.user_type === "seafarer") {
     await supabase
@@ -265,15 +267,13 @@ export async function completeCrewOnboarding(formData: FormData) {
 }
 
 // ============================================
-// COMPANY ONBOARDING
+// COMPANY: Step 1 - Company Info
 // ============================================
-
-// Step 1: Company info
-export async function updateCompanyInfo(formData: FormData) {
+export async function updateCompanyInfo(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const country = formData.get("country") as string;
   const companyType = formData.get("companyType") as string;
@@ -281,16 +281,15 @@ export async function updateCompanyInfo(formData: FormData) {
   const website = formData.get("website") as string;
 
   if (!country || !companyType) {
-    return { error: "Country and company type are required" };
+    redirect("/onboarding/company/step-1?error=required");
   }
 
-  // Update profile country
   await supabase
     .from("profiles")
     .update({ country: country })
     .eq("id", user.id);
 
-  const { error } = await supabase
+  await supabase
     .from("company_details")
     .update({
       headquarters_country: country,
@@ -300,23 +299,23 @@ export async function updateCompanyInfo(formData: FormData) {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
-
   revalidatePath("/onboarding/company");
   redirect("/onboarding/company/step-2");
 }
 
-// Step 2: Hiring info
-export async function updateCompanyHiring(formData: FormData) {
+// ============================================
+// COMPANY: Step 2 - Hiring Info
+// ============================================
+export async function updateCompanyHiring(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const hiringRanks = formData.getAll("hiringRanks") as string[];
   const fleetTypes = formData.getAll("fleetTypes") as string[];
 
-  const { error } = await supabase
+  await supabase
     .from("company_details")
     .update({
       hiring_for_ranks: hiringRanks,
@@ -324,18 +323,18 @@ export async function updateCompanyHiring(formData: FormData) {
     })
     .eq("id", user.id);
 
-  if (error) return { error: error.message };
-
   revalidatePath("/onboarding/company");
   redirect("/onboarding/company/step-3");
 }
 
-// Step 3: Logo + complete
-export async function completeCompanyOnboarding(formData: FormData) {
+// ============================================
+// COMPANY: Step 3 - Logo + Complete
+// ============================================
+export async function completeCompanyOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) redirect("/login");
 
   const description = formData.get("description") as string;
   const contactPhone = formData.get("contactPhone") as string;
@@ -346,7 +345,7 @@ export async function completeCompanyOnboarding(formData: FormData) {
   // Upload logo if provided
   if (logo && logo.size > 0) {
     if (logo.size > 2 * 1024 * 1024) {
-      return { error: "Logo file is too large (max 2MB)" };
+      redirect("/onboarding/company/step-3?error=file_too_large");
     }
 
     const ext = logo.name.split(".").pop();
@@ -363,7 +362,6 @@ export async function completeCompanyOnboarding(formData: FormData) {
     }
   }
 
-  // Make profile public + add phone
   await supabase
     .from("profiles")
     .update({
@@ -380,12 +378,10 @@ export async function completeCompanyOnboarding(formData: FormData) {
     updateData.company_logo_url = logoUrl;
   }
 
-  const { error } = await supabase
+  await supabase
     .from("company_details")
     .update(updateData)
     .eq("id", user.id);
-
-  if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
   redirect("/dashboard?onboarding=complete");
