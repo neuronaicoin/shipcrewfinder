@@ -108,7 +108,7 @@ export default async function CrewStep5Page() {
                       </div>
                       <p className="text-white/60 text-sm">{option.description}</p>
                     </div>
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-white/30 peer-checked:border-accent peer-checked:bg-accent flex items-center justify-center">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-white/30 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center">
                       <svg
                         className="w-3 h-3 text-primary opacity-0 peer-checked:opacity-100"
                         viewBox="0 0 12 12"
