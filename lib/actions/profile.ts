@@ -263,7 +263,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard?onboarding=complete");
+  redirect("/onboarding/complete");
 }
 
 // ============================================
@@ -384,5 +384,5 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
     .eq("id", user.id);
 
   revalidatePath("/", "layout");
-  redirect("/dashboard?onboarding=complete");
+  redirect("/onboarding/complete");
 }
