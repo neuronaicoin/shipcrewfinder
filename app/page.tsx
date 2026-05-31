@@ -12,7 +12,7 @@ export default function HomePage() {
               <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
               <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
-            <span className="text-white font-bold text-lg tracking-tight">
+            <span className="text-white font-display font-bold text-lg tracking-tight">
               Ship<span className="text-accent">Crew</span>Finder
             </span>
           </Link>
@@ -34,7 +34,7 @@ export default function HomePage() {
       </header>
 
       <main>
-        {/* HERO (No image, fast) */}
+        {/* HERO */}
         <section className="relative overflow-hidden bg-primary">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
           <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
@@ -46,7 +46,7 @@ export default function HomePage() {
               <span className="text-accent text-xs font-bold tracking-wider uppercase">Verified Maritime Platform</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight max-w-5xl leading-[1.05]">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight max-w-5xl leading-[1.05]">
               The Global<br />
               <span className="text-accent">Maritime Career</span><br />
               Platform
@@ -64,7 +64,7 @@ export default function HomePage() {
                   <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-5">
                     <span className="text-accent text-xs uppercase tracking-wider font-extrabold">For Crew</span>
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight leading-tight">
+                  <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
                     I'm Looking<br />for Work
                   </h2>
                   <p className="text-white/60 text-base mb-6 leading-relaxed">
@@ -83,7 +83,7 @@ export default function HomePage() {
                   <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-5">
                     <span className="text-accent text-xs uppercase tracking-wider font-extrabold">For Companies</span>
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight leading-tight">
+                  <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
                     We Are<br />Hiring
                   </h2>
                   <p className="text-white/60 text-base mb-6 leading-relaxed">
@@ -97,7 +97,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Only Cancel anytime */}
             <div className="mt-10 flex items-center gap-2 text-white/50 text-sm">
               <svg className="w-4 h-4 text-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
               <span>Cancel anytime</span>
@@ -116,7 +115,7 @@ export default function HomePage() {
                 { value: "24/7", label: "Verified support" },
               ].map((stat) => (
                 <div key={stat.label}>
-                  <div className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-accent mb-1 tracking-tight">{stat.value}</div>
+                  <div className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-accent mb-1 tracking-tight">{stat.value}</div>
                   <div className="text-white/60 text-xs md:text-sm">{stat.label}</div>
                 </div>
               ))}
@@ -131,7 +130,7 @@ export default function HomePage() {
               <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
                 <span className="text-accent text-xs font-extrabold tracking-wider uppercase">How it works</span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+              <h2 className="font-display text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight leading-tight">
                 Three steps to your<br />next opportunity
               </h2>
               <p className="text-white/60 text-lg leading-relaxed">From signup to your next contract, the process is simple and transparent.</p>
@@ -144,8 +143,8 @@ export default function HomePage() {
                 { num: "03", title: "Get hired directly", text: "Companies contact you directly. No agencies. No commission. Negotiate your contract face-to-face." },
               ].map((step) => (
                 <div key={step.num}>
-                  <div className="text-6xl md:text-7xl font-extrabold text-accent/15 mb-4 tracking-tighter">{step.num}</div>
-                  <h3 className="text-xl md:text-2xl font-bold text-white mb-3">{step.title}</h3>
+                  <div className="font-display text-6xl md:text-7xl font-bold text-accent/15 mb-4 tracking-tighter">{step.num}</div>
+                  <h3 className="font-display text-xl md:text-2xl font-bold text-white mb-3">{step.title}</h3>
                   <p className="text-white/60 leading-relaxed">{step.text}</p>
                 </div>
               ))}
@@ -153,17 +152,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FOR CREW — BIG BOXED TITLE */}
+        {/* FOR CREW */}
         <section className="py-20 md:py-28 bg-primary-dark relative overflow-hidden">
           <div className="absolute top-1/2 -left-32 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
               <div>
-                {/* BIG BOXED LABEL */}
                 <div className="inline-block px-6 py-2.5 bg-accent/15 border-2 border-accent/40 rounded-2xl mb-6">
                   <span className="text-accent text-base md:text-lg font-extrabold tracking-wider uppercase">For Crew</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+                <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
                   Take control of your<br />maritime career
                 </h2>
                 <p className="text-white/70 text-lg mb-10 leading-relaxed">
@@ -182,7 +180,7 @@ export default function HomePage() {
                         <svg className="w-5 h-5 text-accent" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </div>
                       <div>
-                        <h3 className="text-white font-bold mb-1">{feature.title}</h3>
+                        <h3 className="font-display text-white font-bold mb-1">{feature.title}</h3>
                         <p className="text-white/60 text-sm leading-relaxed">{feature.text}</p>
                       </div>
                     </div>
@@ -195,7 +193,6 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Pricing card */}
               <div className="relative lg:sticky lg:top-24">
                 <div className="absolute -inset-1 bg-gradient-to-r from-accent/30 via-accent/0 to-accent/0 rounded-2xl blur-xl" />
                 <div className="relative bg-primary border border-white/10 rounded-2xl p-8 lg:p-10">
@@ -203,7 +200,7 @@ export default function HomePage() {
                     CREW PLAN
                   </div>
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-5xl md:text-6xl font-extrabold text-white tracking-tight">$9.90</span>
+                    <span className="font-display text-5xl md:text-6xl font-bold text-white tracking-tight">$9.90</span>
                     <span className="text-white/60">/ month</span>
                   </div>
                   <p className="text-white/60 text-sm mb-8">Free 7-day trial · Cancel anytime</p>
@@ -227,16 +224,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FOR COMPANIES — BIG BOXED TITLE */}
+        {/* FOR COMPANIES */}
         <section className="py-20 md:py-28 bg-primary relative overflow-hidden">
           <div className="absolute top-1/2 -right-32 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              {/* BIG BOXED LABEL */}
               <div className="inline-block px-6 py-2.5 bg-accent/15 border-2 border-accent/40 rounded-2xl mb-6">
                 <span className="text-accent text-base md:text-lg font-extrabold tracking-wider uppercase">For Companies</span>
               </div>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
                 Find verified maritime talent
               </h2>
               <p className="text-white/70 text-lg leading-relaxed">
@@ -244,12 +240,11 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* 3 Pricing Tiers */}
             <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
               <div className="relative bg-primary-dark border border-white/10 rounded-2xl p-8 hover:border-white/20 transition">
                 <div className="text-white/50 text-xs uppercase tracking-wider font-extrabold mb-3">Starter</div>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-extrabold text-white tracking-tight">$49</span>
+                  <span className="font-display text-4xl font-bold text-white tracking-tight">$49</span>
                   <span className="text-white/60 text-sm">/ month</span>
                 </div>
                 <p className="text-white/60 text-sm mb-8">For small operators getting started</p>
@@ -272,7 +267,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-accent text-xs uppercase tracking-wider font-extrabold mb-3">Pro</div>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-extrabold text-white tracking-tight">$99</span>
+                  <span className="font-display text-4xl font-bold text-white tracking-tight">$99</span>
                   <span className="text-white/60 text-sm">/ month</span>
                 </div>
                 <p className="text-white/60 text-sm mb-8">For active hiring teams</p>
@@ -292,7 +287,7 @@ export default function HomePage() {
               <div className="relative bg-primary-dark border border-white/10 rounded-2xl p-8 hover:border-white/20 transition">
                 <div className="text-white/50 text-xs uppercase tracking-wider font-extrabold mb-3">Enterprise</div>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-extrabold text-white tracking-tight">$299</span>
+                  <span className="font-display text-4xl font-bold text-white tracking-tight">$299</span>
                   <span className="text-white/60 text-sm">/ month</span>
                 </div>
                 <p className="text-white/60 text-sm mb-8">For large fleets and agencies</p>
@@ -323,7 +318,7 @@ export default function HomePage() {
               <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
                 <span className="text-accent text-xs font-extrabold tracking-wider uppercase">Why ShipCrewFinder</span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+              <h2 className="font-display text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">
                 Built by maritime professionals,<br />for maritime professionals
               </h2>
               <p className="text-white/70 text-lg leading-relaxed">
@@ -344,7 +339,7 @@ export default function HomePage() {
                   <div className="w-12 h-12 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent mb-4 group-hover:bg-accent/20 transition">
                     {feature.icon}
                   </div>
-                  <h3 className="text-white font-bold text-lg mb-2">{feature.title}</h3>
+                  <h3 className="font-display text-white font-bold text-lg mb-2">{feature.title}</h3>
                   <p className="text-white/60 text-sm leading-relaxed">{feature.text}</p>
                 </div>
               ))}
@@ -358,7 +353,7 @@ export default function HomePage() {
             <div className="w-[600px] h-[600px] bg-accent/20 rounded-full blur-3xl" />
           </div>
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
               Ready to set sail<br />
               <span className="text-accent">on your next career?</span>
             </h2>
@@ -389,7 +384,7 @@ export default function HomePage() {
                   <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
                   <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
-                <span className="text-white font-bold text-lg tracking-tight">
+                <span className="text-white font-display font-bold text-lg tracking-tight">
                   Ship<span className="text-accent">Crew</span>Finder
                 </span>
               </Link>
@@ -399,7 +394,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Product</h4>
+              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Product</h4>
               <ul className="space-y-3">
                 {[{ label: "For Crew", href: "/for-crew" }, { label: "For Companies", href: "/for-companies" }, { label: "Pricing", href: "/pricing" }, { label: "How it works", href: "/how-it-works" }].map((link) => (
                   <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
@@ -408,7 +403,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Company</h4>
+              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Company</h4>
               <ul className="space-y-3">
                 {[{ label: "About", href: "/about" }, { label: "Blog", href: "/blog" }, { label: "Contact", href: "/contact" }, { label: "Careers", href: "/careers" }].map((link) => (
                   <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
@@ -417,7 +412,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">Legal</h4>
+              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Legal</h4>
               <ul className="space-y-3">
                 {[{ label: "Privacy Policy", href: "/privacy" }, { label: "Terms of Service", href: "/terms" }, { label: "Cookie Policy", href: "/cookies" }, { label: "GDPR", href: "/gdpr" }].map((link) => (
                   <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
