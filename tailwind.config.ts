@@ -22,7 +22,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
+        sans: ["var(--font-jakarta)", "system-ui", "sans-serif"],
+        display: ["var(--font-bricolage)", "Georgia", "serif"],
       },
       animation: {
         "fade-in-up": "fadeInUp 0.6s ease-out forwards",
