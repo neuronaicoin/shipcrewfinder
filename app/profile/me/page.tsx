@@ -28,7 +28,6 @@ export default async function MyProfilePage() {
     redirect("/dashboard");
   }
 
-  // Load type-specific details
   let detailsData: Record<string, unknown> | null = null;
 
   if (profile.user_type === "seafarer") {
@@ -69,7 +68,6 @@ export default async function MyProfilePage() {
       ? "/onboarding/company/step-1"
       : "/onboarding/crew/step-1";
 
-  // Display helpers
   const experienceLabel = (() => {
     const y = detailsData?.years_experience as number | undefined | null;
     if (y === undefined || y === null) return null;
@@ -108,7 +106,6 @@ export default async function MyProfilePage() {
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
       <div
         className="absolute inset-0 opacity-[0.04]"
@@ -118,7 +115,6 @@ export default async function MyProfilePage() {
         }}
       />
 
-      {/* Header */}
       <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -151,9 +147,7 @@ export default async function MyProfilePage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        {/* Back link */}
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6"
@@ -161,7 +155,6 @@ export default async function MyProfilePage() {
           ← Back to Dashboard
         </Link>
 
-        {/* Profile Header Card */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
           <div className="flex items-start gap-5">
             <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center">
@@ -207,7 +200,6 @@ export default async function MyProfilePage() {
           </div>
         </div>
 
-        {/* Crew details */}
         {isCrew && (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
             <h2 className="font-display text-xl font-bold text-white mb-4">
@@ -262,14 +254,7 @@ export default async function MyProfilePage() {
                 <span className="text-white/60 text-sm">CV</span>
                 <span className="text-white font-medium text-sm">
                   {detailsData?.cv_url ? (
-                    
-                      href={detailsData.cv_url as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent hover:text-accent-light underline underline-offset-2"
-                    >
-                      View CV
-                    </a>
+                    <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2">View CV</a>
                   ) : (
                     "Not uploaded"
                   )}
@@ -279,7 +264,6 @@ export default async function MyProfilePage() {
           </div>
         )}
 
-        {/* Company details */}
         {profile.user_type === "company" && (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
             <h2 className="font-display text-xl font-bold text-white mb-4">
@@ -301,14 +285,7 @@ export default async function MyProfilePage() {
               {detailsData?.website ? (
                 <div className="flex items-center justify-between py-3 border-b border-white/5">
                   <span className="text-white/60 text-sm">Website</span>
-                  
-                    href={detailsData.website as string}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-accent hover:text-accent-light underline underline-offset-2 text-sm font-medium break-all text-right"
-                  >
-                    {detailsData.website as string}
-                  </a>
+                  <a href={detailsData.website as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2 text-sm font-medium break-all text-right">{detailsData.website as string}</a>
                 </div>
               ) : null}
               <div className="flex items-center justify-between py-3 border-b border-white/5">
@@ -335,7 +312,6 @@ export default async function MyProfilePage() {
           </div>
         )}
 
-        {/* Contact */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
           <h2 className="font-display text-xl font-bold text-white mb-4">
             Contact
