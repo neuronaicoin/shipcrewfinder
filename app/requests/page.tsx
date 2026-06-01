@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 import { acceptRequest, rejectRequest, blockCompany } from "@/lib/actions/contact";
+import NotificationBell from "@/app/components/notification-bell";
 import Link from "next/link";
 
 export const metadata = {
@@ -22,8 +23,14 @@ export default async function RequestsPage() {
     .eq("id", user.id)
     .single();
 
-  // Only crew (seafarer/yacht) have incoming requests
   if (!me || me.user_type === "company") redirect("/dashboard");
+
+  // Unread notification count
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("read", false);
 
   // Companies this user blocked (to hide their requests)
   const { data: blockedRows } = await supabase
@@ -32,7 +39,6 @@ export default async function RequestsPage() {
     .eq("user_id", user.id);
   const blockedIds = (blockedRows || []).map((r) => r.company_id as string);
 
-  // All requests addressed to this user
   const { data: requests } = await supabase
     .from("contact_requests")
     .select("id, from_company_id, message, status, created_at")
@@ -43,7 +49,6 @@ export default async function RequestsPage() {
     (r) => !blockedIds.includes(r.from_company_id as string)
   );
 
-  // Company names
   const companyIds = [...new Set(allRequests.map((r) => r.from_company_id as string))];
   const companyMap: Record<string, string> = {};
   if (companyIds.length > 0) {
@@ -98,6 +103,7 @@ export default async function RequestsPage() {
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <NotificationBell count={unreadCount || 0} />
             <Link
               href="/dashboard"
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
@@ -126,7 +132,6 @@ export default async function RequestsPage() {
           </p>
         </div>
 
-        {/* Pending */}
         <h2 className="font-display text-xl font-bold text-white mb-4">
           Pending {pending.length > 0 && `(${pending.length})`}
         </h2>
@@ -198,7 +203,6 @@ export default async function RequestsPage() {
           </div>
         )}
 
-        {/* History */}
         {history.length > 0 && (
           <>
             <h2 className="font-display text-xl font-bold text-white mb-4">
