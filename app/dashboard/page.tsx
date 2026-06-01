@@ -283,14 +283,7 @@ export default async function DashboardPage() {
                 <span className="text-white/60 text-sm">CV</span>
                 <span className="text-white font-medium text-sm">
                   {detailsData?.cv_url ? (
-                    
-                      href={detailsData.cv_url as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent hover:text-accent-light underline underline-offset-2"
-                    >
-                      View CV
-                    </a>
+                    <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2">View CV</a>
                   ) : (
                     "Not uploaded"
                   )}
