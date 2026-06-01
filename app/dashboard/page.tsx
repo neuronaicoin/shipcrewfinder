@@ -18,14 +18,12 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Get profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  // Get user type details to calculate profile completion
   let detailsData: Record<string, unknown> | null = null;
 
   if (profile?.user_type === "seafarer") {
@@ -51,8 +49,7 @@ export default async function DashboardPage() {
     detailsData = data;
   }
 
-  // Calculate profile completion
-  let completion = 20; // account exists
+  let completion = 20;
 
   if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
     if (detailsData?.rank || detailsData?.position) completion += 15;
@@ -72,13 +69,11 @@ export default async function DashboardPage() {
   completion = Math.min(completion, 100);
   const isComplete = completion === 100;
 
-  // Onboarding URL based on user type
   const onboardingUrl =
     profile?.user_type === "company"
       ? "/onboarding/company/step-1"
       : "/onboarding/crew/step-1";
 
-  // Account type label
   const accountTypeLabel =
     profile?.user_type === "company"
       ? "Company Account"
@@ -89,7 +84,6 @@ export default async function DashboardPage() {
   const isCrew =
     profile?.user_type === "seafarer" || profile?.user_type === "yacht";
 
-  // Helpers for display
   const experienceLabel = (() => {
     const y = detailsData?.years_experience as number | undefined | null;
     if (y === undefined || y === null) return null;
@@ -121,7 +115,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
       <div
         className="absolute inset-0 opacity-[0.04]"
@@ -131,7 +124,6 @@ export default async function DashboardPage() {
         }}
       />
 
-      {/* Header */}
       <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -156,9 +148,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        {/* Welcome */}
         <div className="mb-10">
           <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
             <span className="text-accent text-xs font-extrabold tracking-wider uppercase">
@@ -175,7 +165,6 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* Profile Status Card */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
@@ -205,7 +194,6 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Progress */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-white/70 text-sm font-bold">Profile completion</span>
@@ -219,7 +207,6 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Action */}
           {!isComplete ? (
             <Link
               href={onboardingUrl}
@@ -248,7 +235,6 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Your Profile Details (only when complete) */}
         {isComplete && isCrew && (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
             <h2 className="font-display text-xl font-bold text-white mb-4">
@@ -314,7 +300,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Your Company (only when complete) */}
         {isComplete && profile?.user_type === "company" && (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
             <h2 className="font-display text-xl font-bold text-white mb-4">
@@ -353,7 +338,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* Account Info */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
           <h2 className="font-display text-xl font-bold text-white mb-4">
             Account Information
@@ -394,7 +378,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Coming Soon Note */}
         <p className="text-center text-white/40 text-sm mt-8">
           Job search, candidate browsing, and messaging coming soon
         </p>
