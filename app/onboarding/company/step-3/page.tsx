@@ -4,7 +4,7 @@ import { completeCompanyOnboarding } from "@/lib/actions/profile";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Company Logo — ShipCrewFinder",
+  title: "Finish Profile — ShipCrewFinder",
 };
 
 export default async function CompanyStep3Page() {
@@ -37,34 +37,6 @@ export default async function CompanyStep3Page() {
 
       {/* Form */}
       <form action={completeCompanyOnboarding} className="space-y-5">
-        {/* Logo Upload */}
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-          <label className="block text-white font-bold mb-3">
-            Company Logo <span className="text-white/40 text-sm font-normal">(optional)</span>
-          </label>
-          <label
-            htmlFor="logo"
-            className="block cursor-pointer border-2 border-dashed border-white/15 hover:border-accent/50 rounded-xl p-6 text-center transition group"
-          >
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-accent/10 border border-accent/30 rounded-xl mb-3 group-hover:bg-accent/20 transition">
-              <svg className="w-6 h-6 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            </div>
-            <p className="text-white font-bold mb-1">Click to upload logo</p>
-            <p className="text-white/50 text-xs">PNG or JPG · Max 2MB · Square format recommended</p>
-            <input
-              id="logo"
-              name="logo"
-              type="file"
-              accept="image/png,image/jpeg,image/jpg"
-              className="sr-only"
-            />
-          </label>
-        </div>
-
         {/* Description */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
           <label htmlFor="description" className="block text-white font-bold mb-3">
