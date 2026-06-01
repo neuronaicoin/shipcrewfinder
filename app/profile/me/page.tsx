@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
+import NotificationBell from "@/app/components/notification-bell";
 import Link from "next/link";
 
 export const metadata = {
@@ -52,6 +53,13 @@ export default async function MyProfilePage() {
       .single();
     detailsData = data;
   }
+
+  // Unread notification count
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("read", false);
 
   const isCrew =
     profile.user_type === "seafarer" || profile.user_type === "yacht";
@@ -129,6 +137,7 @@ export default async function MyProfilePage() {
           </Link>
 
           <div className="flex items-center gap-3">
+            <NotificationBell count={unreadCount || 0} />
             <Link
               href="/dashboard"
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
