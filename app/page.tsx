@@ -24,9 +24,9 @@ export default function HomePage() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/for-crew" className="text-white/70 hover:text-white text-sm font-medium transition">For Crew</Link>
-            <Link href="/for-companies" className="text-white/70 hover:text-white text-sm font-medium transition">For Companies</Link>
-            <Link href="/pricing" className="text-white/70 hover:text-white text-sm font-medium transition">Pricing</Link>
+            <Link href="/signup/crew" className="text-white/70 hover:text-white text-sm font-medium transition">For Crew</Link>
+            <Link href="/signup/company" className="text-white/70 hover:text-white text-sm font-medium transition">For Companies</Link>
+            <Link href="/#pricing" className="text-white/70 hover:text-white text-sm font-medium transition">Pricing</Link>
             <Link href="/blog" className="text-white/70 hover:text-white text-sm font-medium transition">Blog</Link>
           </div>
 
@@ -64,21 +64,21 @@ export default function HomePage() {
           <div className="md:hidden bg-primary-dark border-t border-white/10">
             <div className="px-4 py-6 space-y-1">
               <Link
-                href="/for-crew"
+                href="/signup/crew"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
               >
                 For Crew
               </Link>
               <Link
-                href="/for-companies"
+                href="/signup/company"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
               >
                 For Companies
               </Link>
               <Link
-                href="/pricing"
+                href="/#pricing"
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
               >
@@ -188,10 +188,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
               {[
-                { value: "2.25M+", label: "Maritime workers worldwide" },
-                { value: "100+", label: "Countries covered" },
-                { value: "50K+", label: "Active vessels globally" },
-                { value: "24/7", label: "Verified support" },
+                { value: "Verified", label: "Profiles checked before activation" },
+                { value: "100+", label: "Countries supported" },
+                { value: "0%", label: "Commission — no agency cut" },
+                { value: "Direct", label: "Crew-to-company contact" },
               ].map((stat) => (
                 <div key={stat.label}>
                   <div className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-accent mb-1 tracking-tight">{stat.value}</div>
@@ -203,7 +203,7 @@ export default function HomePage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="py-16 sm:py-20 md:py-28 bg-primary">
+        <section id="how-it-works" className="py-16 sm:py-20 md:py-28 bg-primary">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mb-12 sm:mb-16">
               <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
@@ -304,7 +304,7 @@ export default function HomePage() {
         </section>
 
         {/* FOR COMPANIES */}
-        <section className="py-16 sm:py-20 md:py-28 bg-primary relative overflow-hidden">
+        <section id="pricing" className="py-16 sm:py-20 md:py-28 bg-primary relative overflow-hidden">
           <div className="absolute top-1/2 -right-32 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
@@ -437,7 +437,7 @@ export default function HomePage() {
               <span className="text-accent">on your next career?</span>
             </h2>
             <p className="text-white/70 text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-              Join thousands of seafarers, yacht crew, and maritime companies building the future of crew recruitment.
+              Join seafarers, yacht crew, and maritime companies building the future of crew recruitment.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Link href="/signup/crew" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent hover:bg-accent-dark text-primary font-extrabold rounded-lg transition shadow-lg shadow-accent/30">
@@ -447,7 +447,7 @@ export default function HomePage() {
                 Hire Talent — 3 Free Views
               </Link>
             </div>
-            <p className="text-white/40 text-sm mt-6 sm:mt-8">Cancel anytime · Trusted by maritime professionals worldwide</p>
+            <p className="text-white/40 text-sm mt-6 sm:mt-8">Cancel anytime · No commission, ever</p>
           </div>
         </section>
       </main>
@@ -475,7 +475,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Product</h4>
               <ul className="space-y-3">
-                {[{ label: "For Crew", href: "/for-crew" }, { label: "For Companies", href: "/for-companies" }, { label: "Pricing", href: "/pricing" }, { label: "How it works", href: "/how-it-works" }].map((link) => (
+                {[{ label: "For Crew", href: "/signup/crew" }, { label: "For Companies", href: "/signup/company" }, { label: "Pricing", href: "/#pricing" }, { label: "How it works", href: "/#how-it-works" }].map((link) => (
                   <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
                 ))}
               </ul>
@@ -516,3 +516,4 @@ export default function HomePage() {
     </>
   );
 }
+</parameter>
