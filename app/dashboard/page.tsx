@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
+import NotificationBell from "@/app/components/notification-bell";
 import Link from "next/link";
 
 export const metadata = {
@@ -49,6 +50,13 @@ export default async function DashboardPage() {
     detailsData = data;
   }
 
+  // Unread notification count
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("read", false);
+
   let completion = 20;
 
   if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
@@ -83,6 +91,8 @@ export default async function DashboardPage() {
 
   const isCrew =
     profile?.user_type === "seafarer" || profile?.user_type === "yacht";
+
+  const isCompany = profile?.user_type === "company";
 
   const experienceLabel = (() => {
     const y = detailsData?.years_experience as number | undefined | null;
@@ -137,14 +147,17 @@ export default async function DashboardPage() {
             </span>
           </Link>
 
-          <form action={logout}>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-            >
-              Log Out
-            </button>
-          </form>
+          <div className="flex items-center gap-3">
+            <NotificationBell count={unreadCount || 0} />
+            <form action={logout}>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
+              >
+                Log Out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
@@ -163,6 +176,26 @@ export default async function DashboardPage() {
               ? "Your profile is live and ready."
               : "Let's complete your profile to start receiving offers."}
           </p>
+        </div>
+
+        {/* Quick actions */}
+        <div className="flex flex-wrap gap-3 mb-8">
+          {isCompany && (
+            <Link
+              href="/browse"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+            >
+              Browse Candidates
+            </Link>
+          )}
+          {isCrew && (
+            <Link
+              href="/requests"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+            >
+              Connection Requests
+            </Link>
+          )}
         </div>
 
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
