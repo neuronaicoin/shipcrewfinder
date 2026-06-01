@@ -328,7 +328,7 @@ export async function updateCompanyHiring(formData: FormData): Promise<void> {
 }
 
 // ============================================
-// COMPANY: Step 3 - Logo + Complete
+// COMPANY: Step 3 - Complete (logo removed)
 // ============================================
 export async function completeCompanyOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
@@ -338,29 +338,6 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
 
   const description = formData.get("description") as string;
   const contactPhone = formData.get("contactPhone") as string;
-  const logo = formData.get("logo") as File;
-
-  let logoUrl: string | null = null;
-
-  // Upload logo if provided
-  if (logo && logo.size > 0) {
-    if (logo.size > 2 * 1024 * 1024) {
-      redirect("/onboarding/company/step-3?error=file_too_large");
-    }
-
-    const ext = logo.name.split(".").pop();
-    const fileName = `${user.id}-${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("company-logos")
-      .upload(fileName, logo, { upsert: true });
-
-    if (!uploadError) {
-      const { data: { publicUrl } } = supabase.storage
-        .from("company-logos")
-        .getPublicUrl(fileName);
-      logoUrl = publicUrl;
-    }
-  }
 
   await supabase
     .from("profiles")
@@ -370,17 +347,12 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
     })
     .eq("id", user.id);
 
-  const updateData: Record<string, unknown> = {
-    description: description || null,
-    contact_phone: contactPhone || null,
-  };
-  if (logoUrl) {
-    updateData.company_logo_url = logoUrl;
-  }
-
   await supabase
     .from("company_details")
-    .update(updateData)
+    .update({
+      description: description || null,
+      contact_phone: contactPhone || null,
+    })
     .eq("id", user.id);
 
   revalidatePath("/", "layout");
