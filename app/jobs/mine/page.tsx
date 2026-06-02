@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { closeJob } from "@/lib/actions/jobs";
+import { closeJob, reopenJob } from "@/lib/actions/jobs";
+import DeleteJobButton from "@/app/components/delete-job-button";
 import { getSortedCountries } from "@/lib/constants/countries";
 
 export const metadata = {
@@ -15,6 +16,8 @@ export default async function MyJobsPage({
 }) {
   const sp = await searchParams;
   const created = sp.created;
+  const updated = sp.updated;
+  const deleted = sp.deleted;
 
   const supabase = await createClient();
   const {
@@ -94,6 +97,16 @@ export default async function MyJobsPage({
             Your job has been published.
           </div>
         )}
+        {updated === "1" && (
+          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm">
+            Your job has been updated.
+          </div>
+        )}
+        {deleted === "1" && (
+          <div className="mb-6 bg-white/5 border border-white/15 rounded-xl p-4 text-white/70 text-sm">
+            The job has been deleted.
+          </div>
+        )}
 
         {jobList.length === 0 ? (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
@@ -106,7 +119,7 @@ export default async function MyJobsPage({
           <div className="space-y-4">
             {jobList.map((job) => (
               <div key={job.id} className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
@@ -131,14 +144,34 @@ export default async function MyJobsPage({
                       <span>{fmtDate(job.created_at)}</span>
                     </div>
                   </div>
-                  {job.status === "active" && (
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/5">
+                  <Link
+                    href={`/jobs/${job.id}/edit`}
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs font-bold rounded-lg transition border border-white/10"
+                  >
+                    Edit
+                  </Link>
+
+                  {job.status === "active" ? (
                     <form action={closeJob}>
                       <input type="hidden" name="jobId" value={job.id} />
-                      <button type="submit" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-bold rounded-lg transition border border-white/10 whitespace-nowrap">
+                      <button type="submit" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-bold rounded-lg transition border border-white/10">
                         Close
                       </button>
                     </form>
+                  ) : (
+                    <form action={reopenJob}>
+                      <input type="hidden" name="jobId" value={job.id} />
+                      <button type="submit" className="px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold rounded-lg transition border border-emerald-500/30">
+                        Reopen
+                      </button>
+                    </form>
                   )}
+
+                  <DeleteJobButton jobId={job.id} />
                 </div>
               </div>
             ))}
