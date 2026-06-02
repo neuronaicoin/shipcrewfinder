@@ -6,6 +6,7 @@ import seafarerSalaries2026 from "./seafarer-salaries-2026";
 import maritimeCvGuide from "./maritime-cv-guide";
 import stcwCertificatesExplained from "./stcw-certificates-explained";
 import stealthJobSearchSeafarers from "./stealth-job-search-seafarers";
+import shipCrewVsYachtCrew from "./ship-crew-vs-yacht-crew";
 
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
@@ -14,6 +15,7 @@ export const allPosts: BlogPost[] = [
   maritimeCvGuide,
   stcwCertificatesExplained,
   stealthJobSearchSeafarers,
+  shipCrewVsYachtCrew,
 ];
 
 // Tarihe göre yeniden eskiye sıralı
