@@ -74,7 +74,7 @@ export default function SearchWizard() {
                     : "bg-primary border-white/15 text-white/80 hover:border-white/30"
                 }`}
               >
-                Search for Crew
+                Search Crew
               </button>
               <button
                 type="button"
