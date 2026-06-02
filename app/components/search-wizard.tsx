@@ -28,7 +28,6 @@ export default function SearchWizard() {
     setShowResult(false);
   };
 
-  // Build the target URL (used after signup)
   const targetUrl = (() => {
     const params = new URLSearchParams();
     if (crewType) params.set("type", crewType);
@@ -46,13 +45,12 @@ export default function SearchWizard() {
     paddingRight: "2.5rem",
   };
 
-  // Step indicators
   const canPickCrewType = intent !== null;
   const canPickCountry = crewType !== null;
   const canSearch = intent !== null && crewType !== null;
 
   return (
-    <div className="bg-gradient-to-br from-white/[0.07] to-white/[0.02] border-2 border-white/15 rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 backdrop-blur-sm">
+    <div className="relative bg-gradient-to-br from-white/[0.07] to-white/[0.02] border-2 border-accent/40 rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 backdrop-blur-sm shadow-[0_0_40px_-8px_rgba(251,191,36,0.35)]">
       {!showResult ? (
         <>
           <div className="mb-5">
@@ -66,9 +64,6 @@ export default function SearchWizard() {
 
           {/* Step 1 — Intent */}
           <div className="mb-4">
-            <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">
-              1 · I want to
-            </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -79,7 +74,7 @@ export default function SearchWizard() {
                     : "bg-primary border-white/15 text-white/80 hover:border-white/30"
                 }`}
               >
-                Hire Crew
+                Search for Crew
               </button>
               <button
                 type="button"
@@ -90,7 +85,7 @@ export default function SearchWizard() {
                     : "bg-primary border-white/15 text-white/80 hover:border-white/30"
                 }`}
               >
-                Find Work
+                Search for Work
               </button>
             </div>
           </div>
@@ -99,7 +94,7 @@ export default function SearchWizard() {
           {canPickCrewType && (
             <div className="mb-4">
               <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">
-                2 · Category
+                Category
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -132,7 +127,7 @@ export default function SearchWizard() {
           {canPickCountry && (
             <div className="mb-4">
               <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">
-                3 · Country
+                Country
               </label>
               <select
                 value={country}
@@ -152,7 +147,7 @@ export default function SearchWizard() {
           {canPickCountry && intent === "hire" && (
             <div className="mb-5">
               <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">
-                4 · Rank (optional)
+                Rank (optional)
               </label>
               <select
                 value={rank}
@@ -186,7 +181,6 @@ export default function SearchWizard() {
           </button>
         </>
       ) : (
-        /* Result — membership required */
         <div className="text-center py-2">
           <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center">
             <svg className="w-6 h-6 text-accent" viewBox="0 0 20 20" fill="currentColor">
@@ -202,8 +196,7 @@ export default function SearchWizard() {
               : "Viewing job openings requires a free account."}
           </p>
           <p className="text-white/40 text-xs mb-6">
-            Your search: {intent === "hire" ? "Hiring" : "Looking for"}{" "}
-            {crewType === "yacht" ? "yacht crew" : "ship crew"}
+            Your search: {crewType === "yacht" ? "Yacht crew" : "Ship crew"}
             {country ? ` · ${countries.find((c) => c.code === country)?.name || country}` : ""}
             {rank ? ` · ${rank}` : ""}
           </p>
