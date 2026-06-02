@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getPostBySlug, getAllSlugs } from "@/app/data/blog";
+import { getPostBySlug, getAllSlugs, blogIndex } from "@/app/data/blog";
 
 export function generateStaticParams() {
   return getAllSlugs().map((slug) => ({ slug }));
@@ -50,6 +50,9 @@ export default async function BlogPostPage({
 
   const url = `https://shipcrewfinder.com/blog/${post.slug}`;
 
+  // Related posts: tüm yazılar, bu yazı hariç, ilk 3
+  const related = blogIndex.filter((p) => p.slug !== post.slug).slice(0, 3);
+
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
       year: "numeric",
@@ -57,7 +60,6 @@ export default async function BlogPostPage({
       day: "numeric",
     });
 
-  // BlogPosting schema
   const blogSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -76,7 +78,6 @@ export default async function BlogPostPage({
     keywords: post.keywords.join(", "),
   };
 
-  // FAQPage schema
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -89,7 +90,6 @@ export default async function BlogPostPage({
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
-      {/* JSON-LD Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
@@ -108,7 +108,6 @@ export default async function BlogPostPage({
         }}
       />
 
-      {/* Header */}
       <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
@@ -138,7 +137,6 @@ export default async function BlogPostPage({
           ← Back to Blog
         </Link>
 
-        {/* Meta */}
         <div className="flex items-center gap-2 mb-4">
           <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
             {post.category}
@@ -148,12 +146,10 @@ export default async function BlogPostPage({
           <span className="text-white/40 text-xs">{fmtDate(post.date)}</span>
         </div>
 
-        {/* Title */}
         <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight leading-tight">
           {post.title}
         </h1>
 
-        {/* Hero */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.heroImage}
@@ -161,7 +157,6 @@ export default async function BlogPostPage({
           className="w-full h-56 md:h-80 object-cover rounded-2xl mb-10"
         />
 
-        {/* Intro */}
         <div className="space-y-5 mb-10">
           {post.intro.map((para, i) => (
             <p key={i} className="text-white/80 text-base md:text-lg leading-relaxed">
@@ -170,7 +165,6 @@ export default async function BlogPostPage({
           ))}
         </div>
 
-        {/* Sections */}
         <div className="space-y-10">
           {post.sections.map((section, i) => (
             <section key={i}>
@@ -190,7 +184,6 @@ export default async function BlogPostPage({
           ))}
         </div>
 
-        {/* FAQ */}
         {post.faqs.length > 0 && (
           <section className="mt-14">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight">
@@ -204,6 +197,34 @@ export default async function BlogPostPage({
                   </h3>
                   <p className="text-white/70 text-sm leading-relaxed">{faq.answer}</p>
                 </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Related reading (internal links) */}
+        {related.length > 0 && (
+          <section className="mt-14">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight">
+              Related reading
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {related.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/blog/${r.slug}`}
+                  className="group bg-primary-dark border border-white/10 hover:border-accent/40 rounded-2xl p-5 transition"
+                >
+                  <span className="px-2 py-0.5 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
+                    {r.category}
+                  </span>
+                  <h3 className="font-display text-base font-bold text-white mt-3 mb-1 leading-snug group-hover:text-accent transition">
+                    {r.title}
+                  </h3>
+                  <p className="text-white/55 text-sm leading-relaxed line-clamp-2">
+                    {r.excerpt}
+                  </p>
+                </Link>
               ))}
             </div>
           </section>
