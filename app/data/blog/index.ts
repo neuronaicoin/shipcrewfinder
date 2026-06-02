@@ -4,12 +4,14 @@ import type { BlogIndexEntry, BlogPost } from "./types";
 import maritimeHiringTrends2026 from "./maritime-hiring-trends-2026";
 import seafarerSalaries2026 from "./seafarer-salaries-2026";
 import maritimeCvGuide from "./maritime-cv-guide";
+import stcwCertificatesExplained from "./stcw-certificates-explained";
 
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
   maritimeHiringTrends2026,
   seafarerSalaries2026,
   maritimeCvGuide,
+  stcwCertificatesExplained,
 ];
 
 // Tarihe göre yeniden eskiye sıralı
