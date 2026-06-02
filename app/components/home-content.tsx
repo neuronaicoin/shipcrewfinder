@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import SearchWizard from "@/app/components/search-wizard";
 
 export default function HomeContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -135,44 +136,19 @@ export default function HomeContent() {
               Verified profiles. Direct contact. No middlemen. Connect seafarers and yacht crew with leading maritime companies worldwide.
             </p>
 
-            {/* CTAs */}
-            <div className="mt-10 sm:mt-12 grid sm:grid-cols-2 gap-4 sm:gap-5 max-w-4xl">
-              <Link href="/signup/crew" className="group relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.04] border-2 border-white/15 hover:border-accent/60 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/15 group-hover:to-transparent transition-all duration-500" />
-                <div className="relative">
-                  <div className="inline-block px-3 sm:px-4 py-1 sm:py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4 sm:mb-5">
-                    <span className="text-accent text-[10px] sm:text-xs uppercase tracking-wider font-extrabold">For Crew</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
-                    I'm Looking<br />for Work
-                  </h2>
-                  <p className="text-white/60 text-sm sm:text-base mb-5 sm:mb-6 leading-relaxed">
-                    Seafarer or yacht crew? Build a verified profile and get contacted directly by employers.
-                  </p>
-                  <div className="flex items-center gap-2 text-accent font-bold text-sm sm:text-base">
-                    Get started
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" /></svg>
-                  </div>
-                </div>
-              </Link>
+            {/* Search Wizard */}
+            <div className="mt-10 sm:mt-12 max-w-2xl">
+              <SearchWizard />
+            </div>
 
-              <Link href="/signup/company" className="group relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.04] border-2 border-white/15 hover:border-accent/60 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/15 group-hover:to-transparent transition-all duration-500" />
-                <div className="relative">
-                  <div className="inline-block px-3 sm:px-4 py-1 sm:py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4 sm:mb-5">
-                    <span className="text-accent text-[10px] sm:text-xs uppercase tracking-wider font-extrabold">For Companies</span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
-                    We Are<br />Hiring
-                  </h2>
-                  <p className="text-white/60 text-sm sm:text-base mb-5 sm:mb-6 leading-relaxed">
-                    Find verified maritime talent worldwide. Browse profiles or post job openings directly.
-                  </p>
-                  <div className="flex items-center gap-2 text-accent font-bold text-sm sm:text-base">
-                    Get started
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" /></svg>
-                  </div>
-                </div>
+            {/* Quick signup links */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <span className="text-white/50">New here?</span>
+              <Link href="/signup/crew" className="text-accent hover:text-accent-light font-bold transition">
+                Sign up as Crew →
+              </Link>
+              <Link href="/signup/company" className="text-accent hover:text-accent-light font-bold transition">
+                Sign up as Company →
               </Link>
             </div>
 
