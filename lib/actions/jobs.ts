@@ -45,7 +45,6 @@ export async function createJob(formData: FormData) {
     salary_min: Number.isFinite(salaryMin as number) ? salaryMin : null,
     salary_max: Number.isFinite(salaryMax as number) ? salaryMax : null,
     salary_currency: salaryCurrency,
-    salary_period: "month",
     status: "active",
   });
   if (error) {
