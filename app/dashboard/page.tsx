@@ -181,20 +181,42 @@ export default async function DashboardPage() {
         {/* Quick actions */}
         <div className="flex flex-wrap gap-3 mb-8">
           {isCompany && (
-            <Link
-              href="/browse"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-            >
-              Search for Crew
-            </Link>
+            <>
+              <Link
+                href="/browse"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+              >
+                Search for Crew
+              </Link>
+              <Link
+                href="/jobs/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+              >
+                Post a Job
+              </Link>
+              <Link
+                href="/jobs/mine"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+              >
+                My Jobs
+              </Link>
+            </>
           )}
           {isCrew && (
-            <Link
-              href="/requests"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-            >
-              Connection Requests
-            </Link>
+            <>
+              <Link
+                href="/jobs"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+              >
+                Browse Jobs
+              </Link>
+              <Link
+                href="/requests"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+              >
+                Connection Requests
+              </Link>
+            </>
           )}
         </div>
 
@@ -405,7 +427,7 @@ export default async function DashboardPage() {
         </div>
 
         <p className="text-center text-white/40 text-sm mt-8">
-          Job search, candidate browsing, and messaging coming soon
+          Direct messaging coming soon
         </p>
       </div>
     </main>
