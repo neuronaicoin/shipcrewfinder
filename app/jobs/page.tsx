@@ -8,19 +8,35 @@ export const metadata = {
     "Browse maritime job openings from verified companies. Find seafarer and yacht crew positions by rank and country.",
 };
 
-export default async function JobsPage() {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+  const fType = sp.type || "";
+  const fCountry = sp.country || "";
+
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: jobs } = await supabase
+  let query = supabase
     .from("jobs")
     .select("id, title, position, job_type, location_country, location_city, created_at, company_id")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
+  if (fType === "seafarer" || fType === "yacht") {
+    query = query.eq("job_type", fType);
+  }
+  if (fCountry) {
+    query = query.eq("location_country", fCountry);
+  }
+
+  const { data: jobs } = await query;
   const jobList = jobs || [];
 
   const countries = getSortedCountries();
@@ -34,6 +50,15 @@ export default async function JobsPage() {
     d
       ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
       : "";
+
+  const hasFilter = fType || fCountry;
+
+  const inputStyle = {
+    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat" as const,
+    backgroundPosition: "right 0.75rem center",
+    paddingRight: "2rem",
+  };
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
@@ -81,9 +106,44 @@ export default async function JobsPage() {
           </p>
         </div>
 
+        {/* Filters */}
+        <form method="get" className="bg-primary-dark border border-white/10 rounded-2xl p-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Crew Type</label>
+              <select name="type" defaultValue={fType} style={inputStyle}
+                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
+                <option value="">All</option>
+                <option value="seafarer">Ship Crew</option>
+                <option value="yacht">Yacht Crew</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Country</label>
+              <select name="country" defaultValue={fCountry} style={inputStyle}
+                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
+                <option value="">All</option>
+                {countries.map((c) => (
+                  <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mt-4">
+            <button type="submit" className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition">
+              Apply Filters
+            </button>
+            {hasFilter && (
+              <Link href="/jobs" className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 font-bold text-sm rounded-lg transition border border-white/10">
+                Clear
+              </Link>
+            )}
+          </div>
+        </form>
+
         {jobList.length === 0 ? (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-white/60">No open jobs right now. Check back soon.</p>
+            <p className="text-white/60">No open jobs match your filters. Try adjusting them.</p>
           </div>
         ) : (
           <div className="space-y-4">
