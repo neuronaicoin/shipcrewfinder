@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
+import ApplyForm from "@/app/components/apply-form";
 
 export const metadata = {
   title: "Job Details — ShipCrewFinder",
@@ -9,10 +10,16 @@ export const metadata = {
 
 export default async function JobDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const applied = sp.applied;
+  const error = sp.error;
+
   const supabase = await createClient();
 
   const {
@@ -28,6 +35,29 @@ export default async function JobDetailPage({
   if (!job || (job.status !== "active" && job.company_id !== user?.id)) {
     notFound();
   }
+
+  // Kullanıcının tipi + bu ilana başvurup başvurmadığı
+  let userType: string | null = null;
+  let alreadyApplied = false;
+  if (user) {
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
+      .single();
+    userType = (me?.user_type as string) || null;
+
+    const { data: existing } = await supabase
+      .from("job_applications")
+      .select("id")
+      .eq("job_id", job.id)
+      .eq("applicant_id", user.id)
+      .maybeSingle();
+    alreadyApplied = !!existing;
+  }
+
+  const isOwner = !!user && job.company_id === user.id;
+  const isCrew = userType === "seafarer" || userType === "yacht";
 
   const countries = getSortedCountries();
   const countryName = (code: string | null) => {
@@ -71,7 +101,7 @@ export default async function JobDetailPage({
           </Link>
           <div className="flex items-center gap-3">
             {isMember ? (
-              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Dashboard</Link>
+              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Your Account</Link>
             ) : (
               <>
                 <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition">Login</Link>
@@ -86,6 +116,33 @@ export default async function JobDetailPage({
         <Link href="/jobs" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6">
           ← All Jobs
         </Link>
+
+        {/* Status banners */}
+        {applied === "1" && (
+          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm">
+            Your application has been sent. The company has been notified.
+          </div>
+        )}
+        {applied === "already" && (
+          <div className="mb-6 bg-white/5 border border-white/15 rounded-xl p-4 text-white/70 text-sm">
+            You have already applied to this job.
+          </div>
+        )}
+        {error === "closed" && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
+            This job is no longer accepting applications.
+          </div>
+        )}
+        {error === "notcrew" && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
+            Only crew accounts can apply to jobs.
+          </div>
+        )}
+        {error === "failed" && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
+            Something went wrong. Please try again.
+          </div>
+        )}
 
         {/* Title block — always visible */}
         <div className="flex items-center gap-2 mb-3">
@@ -133,15 +190,29 @@ export default async function JobDetailPage({
               </p>
             </div>
 
-            {/* Apply / contact note */}
-            <div className="mt-8 bg-primary-dark border border-accent/20 rounded-2xl p-6 text-center">
-              <p className="text-white/70 text-sm">
-                Interested? Make sure your profile is complete so this company can find and contact you.
-              </p>
-              <Link href="/dashboard" className="inline-block mt-4 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition">
-                Go to My Dashboard
-              </Link>
-            </div>
+            {/* Apply section */}
+            {isOwner ? (
+              <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 text-center">
+                <p className="text-white/70 text-sm mb-4">This is your job posting.</p>
+                <Link href={`/jobs/${job.id}/applications`} className="inline-block px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition">
+                  View Applications
+                </Link>
+              </div>
+            ) : alreadyApplied ? (
+              <div className="mt-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 text-center">
+                <p className="text-emerald-300 font-bold text-sm">✓ You have applied to this job</p>
+                <p className="text-white/50 text-xs mt-1">The company can see your application and profile.</p>
+              </div>
+            ) : isCrew ? (
+              <div className="mt-8 bg-primary-dark border border-accent/20 rounded-2xl p-6">
+                <h2 className="font-display text-xl font-bold text-white mb-4">Apply for this position</h2>
+                <ApplyForm jobId={job.id} />
+              </div>
+            ) : (
+              <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 text-center">
+                <p className="text-white/60 text-sm">Only crew accounts can apply to jobs.</p>
+              </div>
+            )}
           </>
         ) : (
           /* Locked — not a member */
