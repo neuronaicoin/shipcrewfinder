@@ -25,7 +25,14 @@ export default async function RequestsPage() {
 
   if (!me || me.user_type === "company") redirect("/dashboard");
 
-  // Unread notification count
+  // Bu sayfa açılınca bildirimleri okundu işaretle (zil sayısı sıfırlansın)
+  await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("user_id", user.id)
+    .eq("read", false);
+
+  // Unread notification count (okundu işaretledikten sonra 0 olmalı)
   const { count: unreadCount } = await supabase
     .from("notifications")
     .select("id", { count: "exact", head: true })
