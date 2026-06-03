@@ -166,3 +166,68 @@ export async function reopenJob(formData: FormData) {
 
   redirect("/jobs/mine");
 }
+
+export async function applyToJob(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const jobId = (formData.get("jobId") as string) || "";
+  if (!jobId) redirect("/jobs");
+
+  // Başvuran crew olmalı (company kendi ilanına başvuramaz)
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("user_type, full_name")
+    .eq("id", user.id)
+    .single();
+  if (!me || me.user_type === "company") {
+    redirect(`/jobs/${jobId}?error=notcrew`);
+  }
+
+  // İlanı çek (company_id + title lazım)
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("id, title, company_id, status")
+    .eq("id", jobId)
+    .single();
+  if (!job || job.status !== "active") {
+    redirect(`/jobs/${jobId}?error=closed`);
+  }
+
+  // Mesajı topla (hazır seçenek + opsiyonel serbest metin)
+  const preset = (formData.get("preset") as string)?.trim() || "";
+  const custom = (formData.get("custom") as string)?.trim() || "";
+  const message = [preset, custom].filter(Boolean).join(" — ").slice(0, 500) || null;
+
+  // Başvuruyu kaydet (aynı ilana ikinci kez = unique hatası → zaten başvurmuş)
+  const { error } = await supabase.from("job_applications").insert({
+    job_id: job.id,
+    applicant_id: user.id,
+    company_id: job.company_id,
+    message,
+    status: "pending",
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      redirect(`/jobs/${jobId}?applied=already`);
+    }
+    redirect(`/jobs/${jobId}?error=failed`);
+  }
+
+  // Şirkete bildirim gönder
+  const applicantName = (me.full_name as string) || "A candidate";
+  await supabase.from("notifications").insert({
+    user_id: job.company_id,
+    type: "job_application",
+    title: "New job application",
+    message: `${applicantName} applied to "${job.title}".`,
+    link: `/jobs/${job.id}/applications`,
+    read: false,
+  });
+
+  redirect(`/jobs/${jobId}?applied=1`);
+}
