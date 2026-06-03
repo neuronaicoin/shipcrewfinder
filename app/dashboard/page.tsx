@@ -5,7 +5,7 @@ import NotificationBell from "@/app/components/notification-bell";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Dashboard — ShipCrewFinder",
+  title: "Your Account — ShipCrewFinder",
 };
 
 export default async function DashboardPage() {
