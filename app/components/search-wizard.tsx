@@ -68,10 +68,10 @@ export default function SearchWizard() {
               <button
                 type="button"
                 onClick={() => { setIntent("hire"); setCrewType(null); setRank(""); }}
-                className={`px-4 py-3 rounded-lg text-sm font-bold transition border ${
+                className={`px-4 py-3 rounded-lg text-base font-bold transition border ${
                   intent === "hire"
                     ? "bg-accent text-primary border-accent"
-                    : "bg-primary border-white/15 text-white/80 hover:border-white/30"
+                    : "bg-primary border-white/15 text-accent hover:border-accent/50"
                 }`}
               >
                 Search Crew
@@ -79,13 +79,13 @@ export default function SearchWizard() {
               <button
                 type="button"
                 onClick={() => { setIntent("work"); setCrewType(null); setRank(""); }}
-                className={`px-4 py-3 rounded-lg text-sm font-bold transition border ${
+                className={`px-4 py-3 rounded-lg text-base font-bold transition border ${
                   intent === "work"
                     ? "bg-accent text-primary border-accent"
-                    : "bg-primary border-white/15 text-white/80 hover:border-white/30"
+                    : "bg-primary border-white/15 text-accent hover:border-accent/50"
                 }`}
               >
-                Search for Work
+                Search Work
               </button>
             </div>
           </div>
