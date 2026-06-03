@@ -7,8 +7,10 @@ import stcwCertificatesExplained from "./stcw-certificates-explained";
 import stealthJobSearchSeafarers from "./stealth-job-search-seafarers";
 import shipCrewVsYachtCrew from "./ship-crew-vs-yacht-crew";
 import howToGetAJobOnAShip from "./how-to-get-a-job-on-a-ship";
+import seafarerSalaryByRank from "./seafarer-salary-by-rank";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  seafarerSalaryByRank,
   howToGetAJobOnAShip,
   maritimeHiringTrends2026,
   seafarerSalaries2026,
