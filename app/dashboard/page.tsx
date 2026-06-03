@@ -208,7 +208,7 @@ export default async function DashboardPage() {
                 href="/jobs"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
               >
-                Browse Jobs
+                Search Jobs
               </Link>
               <Link
                 href="/requests"
