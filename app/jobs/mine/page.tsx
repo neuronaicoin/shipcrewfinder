@@ -40,6 +40,20 @@ export default async function MyJobsPage({
 
   const jobList = jobs || [];
 
+  // Her ilana gelen başvuru sayısı
+  const jobIds = jobList.map((j) => j.id as string);
+  const appCountMap: Record<string, number> = {};
+  if (jobIds.length > 0) {
+    const { data: apps } = await supabase
+      .from("job_applications")
+      .select("job_id")
+      .in("job_id", jobIds);
+    (apps || []).forEach((a) => {
+      const jid = a.job_id as string;
+      appCountMap[jid] = (appCountMap[jid] || 0) + 1;
+    });
+  }
+
   const countries = getSortedCountries();
   const countryName = (code: string | null) => {
     if (!code) return null;
@@ -74,7 +88,7 @@ export default async function MyJobsPage({
             </span>
           </Link>
           <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">
-            Dashboard
+            Your Account
           </Link>
         </div>
       </header>
@@ -117,7 +131,9 @@ export default async function MyJobsPage({
           </div>
         ) : (
           <div className="space-y-4">
-            {jobList.map((job) => (
+            {jobList.map((job) => {
+              const appCount = appCountMap[job.id as string] || 0;
+              return (
               <div key={job.id} className="bg-primary-dark border border-white/10 rounded-2xl p-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="min-w-0">
@@ -149,6 +165,13 @@ export default async function MyJobsPage({
                 {/* Action buttons */}
                 <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/5">
                   <Link
+                    href={`/jobs/${job.id}/applications`}
+                    className="px-3 py-1.5 bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold rounded-lg transition border border-accent/30"
+                  >
+                    Applications {appCount > 0 && `(${appCount})`}
+                  </Link>
+
+                  <Link
                     href={`/jobs/${job.id}/edit`}
                     className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs font-bold rounded-lg transition border border-white/10"
                   >
@@ -174,7 +197,8 @@ export default async function MyJobsPage({
                   <DeleteJobButton jobId={job.id} />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
