@@ -85,7 +85,7 @@ export default async function JobsPage({
           </Link>
           <div className="flex items-center gap-3">
             {user ? (
-              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Dashboard</Link>
+              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Your Account</Link>
             ) : (
               <>
                 <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition">Login</Link>
