@@ -142,7 +142,7 @@ export default async function MyProfilePage() {
               href="/dashboard"
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
             >
-              Dashboard
+              Your Account
             </Link>
             <form action={logout}>
               <button
@@ -161,7 +161,7 @@ export default async function MyProfilePage() {
           href="/dashboard"
           className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6"
         >
-          ← Back to Dashboard
+          ← Back to Your Account
         </Link>
 
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
