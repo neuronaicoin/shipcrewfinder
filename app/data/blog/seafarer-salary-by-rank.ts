@@ -5,11 +5,12 @@ const post: BlogPost = {
   title: "How Much Do Seafarers Make? Average Salaries by Rank in 2026",
   description:
     "A rank-by-rank breakdown of average seafarer salaries in 2026, from Ordinary Seaman to Master and Chief Engineer. Realistic monthly USD ranges for deck, engine, and catering crew.",
-  excerpt:
-    "From Ordinary Seaman to Master, here are realistic average monthly salaries for every rank at sea in 2026 — and the factors that move the numbers up or down.",
   category: "Salaries",
+  author: "Maritime industry professional",
   date: "2026-06-03",
   readingMinutes: 10,
+  excerpt:
+    "From Ordinary Seaman to Master, here are realistic average monthly salaries for every rank at sea in 2026 — and the factors that move the numbers up or down.",
   keywords: [
     "seafarer salary by rank",
     "how much do seafarers make",
