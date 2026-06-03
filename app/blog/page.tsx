@@ -85,13 +85,22 @@ export default function BlogIndexPage() {
                 href={`/blog/${post.slug}`}
                 className="group bg-primary-dark border border-white/10 hover:border-accent/40 rounded-2xl overflow-hidden transition flex flex-col"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.heroImage}
-                  alt={post.heroAlt}
-                  className="w-full h-44 object-cover"
-                  loading="lazy"
-                />
+                {/* Patterned header block (no image) */}
+                <div className="relative h-36 bg-gradient-to-br from-primary-light via-primary to-primary-darker overflow-hidden flex items-center justify-center">
+                  <div
+                    className="absolute inset-0 opacity-[0.12]"
+                    style={{
+                      backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
+                      backgroundSize: "28px 28px",
+                    }}
+                  />
+                  <div className="absolute -right-6 -top-6 w-28 h-28 bg-accent/10 rounded-full blur-2xl" />
+                  <svg className="relative w-12 h-12 text-accent/70" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 14 Q10 6, 20 14 T38 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+                    <path d="M2 20 Q10 12, 20 20 T38 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+                    <path d="M2 26 Q10 18, 20 26 T38 26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
