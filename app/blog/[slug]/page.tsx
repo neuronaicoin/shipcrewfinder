@@ -50,7 +50,6 @@ export default async function BlogPostPage({
 
   const url = `https://shipcrewfinder.com/blog/${post.slug}`;
 
-  // Related posts: tüm yazılar, bu yazı hariç, ilk 3
   const related = blogIndex.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   const fmtDate = (d: string) =>
@@ -150,12 +149,23 @@ export default async function BlogPostPage({
           {post.title}
         </h1>
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={post.heroImage}
-          alt={post.heroAlt}
-          className="w-full h-56 md:h-80 object-cover rounded-2xl mb-10"
-        />
+        {/* Hero — patterned block (no image) */}
+        <div className="relative w-full h-44 md:h-60 rounded-2xl mb-10 overflow-hidden bg-gradient-to-br from-primary-light via-primary to-primary-darker flex items-center justify-center">
+          <div
+            className="absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
+              backgroundSize: "32px 32px",
+            }}
+          />
+          <div className="absolute -right-10 -top-10 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
+          <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-accent/10 rounded-full blur-3xl" />
+          <svg className="relative w-20 h-20 text-accent/70" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 14 Q10 6, 20 14 T38 14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+            <path d="M2 20 Q10 12, 20 20 T38 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+            <path d="M2 26 Q10 18, 20 26 T38 26" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </div>
 
         <div className="space-y-5 mb-10">
           {post.intro.map((para, i) => (
@@ -202,7 +212,6 @@ export default async function BlogPostPage({
           </section>
         )}
 
-        {/* Related reading (internal links) */}
         {related.length > 0 && (
           <section className="mt-14">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight">
@@ -230,7 +239,6 @@ export default async function BlogPostPage({
           </section>
         )}
 
-        {/* CTA */}
         <div className="mt-14 bg-primary-dark border border-accent/20 rounded-2xl p-8 text-center">
           <h2 className="font-display text-2xl font-bold text-white mb-3">
             Ready to find your next contract?
