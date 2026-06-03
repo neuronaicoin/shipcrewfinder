@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     "global seafarer platform",
   ],
   authors: [{ name: "ShipCrewFinder" }],
+  verification: {
+    other: {
+      "msvalidate.01": "9CB03E8E93C7289160D5677D71AB3ACB",
+    },
+  },
   openGraph: {
     title: "ShipCrewFinder — Global Maritime Career Platform",
     description:
