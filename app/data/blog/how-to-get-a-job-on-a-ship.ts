@@ -6,8 +6,11 @@ const post: BlogPost = {
   description:
     "A step-by-step 2026 guide on how to get a job on a ship — the certificates you need, how to write a seafarer CV, where to apply, and how to land your first contract at sea.",
   category: "Career Guide",
+  author: "Maritime industry professional",
   date: "2026-06-03",
   readingMinutes: 11,
+  excerpt:
+    "The certificates you need, how to write a seafarer CV, where to apply, and how to land your first contract at sea — a complete step-by-step guide for 2026.",
   keywords: [
     "how to get a job on a ship",
     "seafarer jobs",
