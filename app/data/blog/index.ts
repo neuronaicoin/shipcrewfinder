@@ -1,5 +1,4 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
-
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import maritimeHiringTrends2026 from "./maritime-hiring-trends-2026";
 import seafarerSalaries2026 from "./seafarer-salaries-2026";
@@ -7,9 +6,10 @@ import maritimeCvGuide from "./maritime-cv-guide";
 import stcwCertificatesExplained from "./stcw-certificates-explained";
 import stealthJobSearchSeafarers from "./stealth-job-search-seafarers";
 import shipCrewVsYachtCrew from "./ship-crew-vs-yacht-crew";
-
+import howToGetAJobOnAShip from "./how-to-get-a-job-on-a-ship";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  howToGetAJobOnAShip,
   maritimeHiringTrends2026,
   seafarerSalaries2026,
   maritimeCvGuide,
@@ -17,12 +17,10 @@ export const allPosts: BlogPost[] = [
   stealthJobSearchSeafarers,
   shipCrewVsYachtCrew,
 ];
-
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(
   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
 );
-
 // Liste sayfası için hafif özetler
 export const blogIndex: BlogIndexEntry[] = sortedPosts.map((p) => ({
   slug: p.slug,
@@ -35,12 +33,10 @@ export const blogIndex: BlogIndexEntry[] = sortedPosts.map((p) => ({
   heroAlt: p.heroAlt,
   excerpt: p.excerpt,
 }));
-
 // Slug ile tek yazı bulma
 export function getPostBySlug(slug: string): BlogPost | undefined {
   return allPosts.find((p) => p.slug === slug);
 }
-
 // Statik üretim için tüm slug'lar
 export function getAllSlugs(): string[] {
   return allPosts.map((p) => p.slug);
