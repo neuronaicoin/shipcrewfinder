@@ -10,8 +10,10 @@ import howToGetAJobOnAShip from "./how-to-get-a-job-on-a-ship";
 import seafarerSalaryByRank from "./seafarer-salary-by-rank";
 import seafarerContractLengthRotation from "./seafarer-contract-length-rotation";
 import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
+import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  tankerVsCargoShipJobs,
   howToBecomeYachtCrew,
   seafarerContractLengthRotation,
   seafarerSalaryByRank,
