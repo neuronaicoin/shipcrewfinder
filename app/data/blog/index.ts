@@ -8,8 +8,10 @@ import stealthJobSearchSeafarers from "./stealth-job-search-seafarers";
 import shipCrewVsYachtCrew from "./ship-crew-vs-yacht-crew";
 import howToGetAJobOnAShip from "./how-to-get-a-job-on-a-ship";
 import seafarerSalaryByRank from "./seafarer-salary-by-rank";
+import seafarerContractLengthRotation from "./seafarer-contract-length-rotation";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  seafarerContractLengthRotation,
   seafarerSalaryByRank,
   howToGetAJobOnAShip,
   maritimeHiringTrends2026,
