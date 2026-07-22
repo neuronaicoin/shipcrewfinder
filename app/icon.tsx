@@ -14,14 +14,17 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0a2540",
-          borderRadius: 12,
+          background: "linear-gradient(150deg, #ffd34d, #fbbf24 55%, #e0a010)",
+          borderRadius: 14,
         }}
       >
-        <svg width="48" height="48" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
-          <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-          <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="5" r="2.4" />
+          <line x1="12" y1="7.4" x2="12" y2="20.5" />
+          <line x1="7.5" y1="10.4" x2="16.5" y2="10.4" />
+          <path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7" />
+          <path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4" />
+          <path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4" />
         </svg>
       </div>
     ),
