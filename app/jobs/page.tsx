@@ -68,7 +68,7 @@ export default async function JobsPage({
       ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
       : "";
 
-  const hasFilter = fType || fCountry;
+  const hasFilter = fRank || fCountry;
 
   const inputStyle = {
     backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
