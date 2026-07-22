@@ -146,6 +146,14 @@ if(hRot){
   body.light .hint{color:#6a7a9c}
   body.light .avatar{background:linear-gradient(145deg,#dfe7f6,#c9d6ee);color:#8a6a1e}
   body.light .pcard{background:linear-gradient(165deg,#ffffff,#f2f5fc)}
+  /* gündüz: SearchWizard (Tailwind adası) kontrast düzeltmeleri */
+  body.light #try [class*="bg-primary"]{background:#ffffff !important}
+  body.light #try [class*="text-white"]{color:#1c2a4d !important}
+  body.light #try [class*="border-white"]{border-color:rgba(15,25,60,.16) !important}
+  body.light #try [class*="bg-white"]{background:#eef2fa !important}
+  body.light #try [class*="bg-accent"]{background:#fbbf24 !important}
+  body.light #try [class*="bg-accent"] *, body.light #try .text-primary{color:#0b0e13 !important}
+  body.light #try select, body.light #try input{background:#f4f6fc !important;color:#14203f !important;border-color:rgba(15,25,60,.18) !important}
 
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
