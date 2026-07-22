@@ -131,9 +131,9 @@ export default async function JobsPage({
               <select name="rank" defaultValue={fRank} style={inputStyle}
                 className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
                 <option value="">All ranks</option>
-                {SHIP_RANKS.map((g) => (
-                  <optgroup key={g.group} label={g.group}>
-                    {g.ranks.map((r) => (
+                {Object.entries(SHIP_RANKS).map(([group, ranks]) => (
+                  <optgroup key={group} label={group}>
+                    {(ranks as string[]).map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </optgroup>
