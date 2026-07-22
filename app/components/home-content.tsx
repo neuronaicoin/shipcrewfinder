@@ -1,494 +1,543 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import SearchWizard from "@/app/components/search-wizard";
+import { useEffect } from "react";
+import SearchWizard from "./search-wizard";
 
 export default function HomeContent() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (es) => {
+        es.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in");
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll(".rv").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
     <>
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-primary/85 border-b border-white/10">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-base sm:text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0a2540;--navy2:#0e2d4d;--navy3:#123a5f;--ink:#071a30;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+    --grn:#34d399;
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/signup/crew" className="text-white/70 hover:text-white text-sm font-medium transition">For Crew</Link>
-            <Link href="/signup/company" className="text-white/70 hover:text-white text-sm font-medium transition">For Companies</Link>
-            <Link href="/#pricing" className="text-white/70 hover:text-white text-sm font-medium transition">Pricing</Link>
-            <Link href="/blog" className="text-white/70 hover:text-white text-sm font-medium transition">Blog</Link>
-          </div>
+  /* ── topbar ── */
+  .top{position:sticky;top:0;z-index:50;background:rgba(10,37,64,.85);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line2)}
+  .top-in{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--tx)}
+  .logo-ic{width:38px;height:38px;border-radius:10px;background:linear-gradient(145deg,var(--gold),var(--gold2));
+    display:grid;place-items:center;color:var(--ink);font-family:var(--disp);font-weight:800;font-size:19px}
+  .logo b{font-family:var(--disp);font-size:18px;font-weight:700}
+  .logo b span{color:var(--gold)}
+  nav{display:flex;gap:26px}
+  nav a{color:var(--tx2);text-decoration:none;font-size:14px;font-weight:500;transition:.15s}
+  nav a:hover{color:var(--gold)}
+  .top-cta{display:flex;gap:10px;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;
+    font-family:var(--body);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;
+    transition:.18s;border:none;padding:11px 20px}
+  .btn-ghost{color:var(--tx);background:transparent;border:1px solid var(--line2)}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);
+    box-shadow:0 4px 20px rgba(251,191,36,.25)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(251,191,36,.4)}
+  .btn-lg{padding:15px 28px;font-size:15.5px;border-radius:13px}
+  @media(max-width:860px){ nav{display:none} .top-cta .btn-ghost{display:none} }
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition">Login</Link>
-            <Link href="/signup" className="px-4 py-2 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition shadow-lg shadow-accent/20">
-              Sign Up Free
-            </Link>
-          </div>
+  /* ── hero ── */
+  .hero{position:relative;padding:72px 0 60px;overflow:hidden}
+  .hero::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);
+    width:1200px;height:800px;background:radial-gradient(ellipse,rgba(251,191,36,.1),transparent 60%);pointer-events:none}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(251,191,36,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(251,191,36,.04) 1px,transparent 1px);background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,#000,transparent);pointer-events:none}
+  .hero-in{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+  @media(max-width:960px){ .hero-in{grid-template-columns:1fr} .hero-vis{display:none} }
+  .badge{display:inline-flex;align-items:center;gap:9px;background:rgba(251,191,36,.09);
+    border:1px solid var(--line);border-radius:22px;padding:7px 16px;font-size:12.5px;font-weight:600;
+    color:var(--gold);margin-bottom:22px}
+  .badge .d{width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-family:var(--disp);font-size:clamp(2.3rem,5.4vw,3.9rem);font-weight:800;line-height:1.06;
+    letter-spacing:-.03em;margin-bottom:18px}
+  h1 .g{color:var(--gold)}
+  .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
+  .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
+  @media(max-width:560px){ .paths{grid-template-columns:1fr} }
+  .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));border:1.5px solid var(--line2);
+    border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);transition:.2s;position:relative;overflow:hidden}
+  .path::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .path:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 14px 34px rgba(0,0,0,.35)}
+  .path .pi{font-size:24px;margin-bottom:8px}
+  .path b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:5px}
+  .path span{font-size:12.5px;color:var(--tx3);line-height:1.5;display:block}
+  .path .go{color:var(--gold);font-weight:700;font-size:13px;margin-top:10px;display:inline-block}
+  .psteps{list-style:none;counter-reset:ps;margin:4px 0 2px;display:flex;flex-direction:column;gap:6px}
+  .psteps li{counter-increment:ps;font-size:12.5px;color:var(--tx2);display:flex;gap:9px;align-items:center}
+  .psteps li::before{content:counter(ps);width:19px;height:19px;border-radius:6px;flex-shrink:0;
+    background:rgba(251,191,36,.14);color:var(--gold);font-weight:700;font-size:10.5px;display:grid;place-items:center}
+  .psteps em{font-style:normal;color:var(--tx3);font-size:11px}
+  .hero-note{margin-top:18px;font-size:12.5px;color:var(--tx3)}
+  .hero-note b{color:var(--grn)}
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden flex items-center justify-center w-10 h-10 text-white/80 hover:text-white"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            )}
-          </button>
-        </nav>
+  /* hero visual: profile mock */
+  .hero-vis{position:relative}
+  .pcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);
+    border-radius:20px;padding:24px;box-shadow:0 30px 60px rgba(0,0,0,.45);position:relative;max-width:360px;margin-left:auto}
+  .pcard::before{content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
+    background:radial-gradient(ellipse at 80% 0%,rgba(251,191,36,.12),transparent 55%)}
+  .pc-top{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+  .avatar{width:58px;height:58px;border-radius:16px;background:linear-gradient(145deg,#2a4a70,#16324f);
+    display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:22px;color:var(--gold)}
+  .pc-name{font-family:var(--disp);font-weight:700;font-size:17px}
+  .pc-rank{font-size:12.5px;color:var(--tx3);margin-top:2px}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:rgba(52,211,153,.12);color:var(--grn);
+    border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:3px 9px;font-size:10.5px;font-weight:700;margin-top:6px}
+  .pc-rows{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+  .pc-row{display:flex;justify-content:space-between;font-size:12.5px;padding:9px 12px;
+    background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:10px}
+  .pc-row span{color:var(--tx3)}
+  .pc-row b{font-weight:600}
+  .pc-row b.av{color:var(--grn)}
+  .pc-cta{width:100%;text-align:center;font-size:13px}
+  .fcard{position:absolute;bottom:-22px;left:-14px;background:var(--navy2);border:1px solid var(--line);
+    border-radius:14px;padding:13px 16px;box-shadow:0 18px 40px rgba(0,0,0,.4);font-size:12px;
+    display:flex;gap:10px;align-items:center;animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .fcard .ic{width:32px;height:32px;border-radius:9px;background:rgba(251,191,36,.14);display:grid;place-items:center;font-size:15px}
+  .fcard b{display:block;font-size:12.5px}
+  .fcard span{color:var(--tx3);font-size:11px}
 
-        {/* Mobile Menu Drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-primary-dark border-t border-white/10">
-            <div className="px-4 py-6 space-y-1">
-              <Link
-                href="/signup/crew"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
-              >
-                For Crew
-              </Link>
-              <Link
-                href="/signup/company"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
-              >
-                For Companies
-              </Link>
-              <Link
-                href="/#pricing"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/blog"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium transition"
-              >
-                Blog
-              </Link>
-              <div className="pt-4 mt-4 border-t border-white/10 space-y-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-medium text-center transition"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg text-center transition"
-                >
-                  Sign Up Free
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
+  /* ── rank marquee ── */
+  .marq{border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:16px 0;overflow:hidden;
+    background:rgba(7,26,48,.5)}
+  .marq-in{display:flex;gap:38px;white-space:nowrap;animation:scroll 30s linear infinite;width:max-content}
+  .marq-in span{font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--tx3);display:flex;align-items:center;gap:38px}
+  .marq-in span::after{content:'·';color:var(--gold)}
+  @keyframes scroll{to{transform:translateX(-50%)}}
 
-      <main>
-        {/* HERO */}
-        <section className="relative overflow-hidden bg-primary">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`, backgroundSize: "60px 60px" }} />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-accent/10 rounded-full blur-3xl" />
+  /* ── sections ── */
+  section{padding:76px 0}
+  .sec-tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:12px}
+  h2{font-family:var(--disp);font-size:clamp(1.7rem,3.8vw,2.5rem);font-weight:800;letter-spacing:-.02em;
+    line-height:1.12;margin-bottom:14px}
+  .sec-sub{font-size:15px;color:var(--tx2);line-height:1.65;max-width:58ch;margin-bottom:40px}
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-28 lg:py-36">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-accent/10 border border-accent/30 rounded-full mb-6">
-              <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-              <span className="text-accent text-[10px] sm:text-xs font-bold tracking-wider uppercase">Verified Maritime Platform</span>
-            </div>
+  /* how it works */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:860px){ .steps{grid-template-columns:1fr} }
+  .step{background:linear-gradient(160deg,var(--navy2),var(--navy));border:1px solid var(--line2);
+    border-radius:18px;padding:26px;position:relative}
+  .step .num{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--ink);
+    width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+    display:grid;place-items:center;margin-bottom:16px}
+  .step h3{font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:9px}
+  .step p{font-size:13.5px;color:var(--tx2);line-height:1.6}
 
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight max-w-5xl leading-[1.05]">
-              The Global<br />
-              <span className="text-accent">Maritime Career</span><br />
-              Platform
-            </h1>
+  /* crew section */
+  .split{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
+  @media(max-width:960px){ .split{grid-template-columns:1fr} }
+  .feats{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:26px}
+  @media(max-width:560px){ .feats{grid-template-columns:1fr} }
+  .feat{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:14px;padding:17px}
+  .feat .fi{font-size:20px;margin-bottom:8px}
+  .feat b{display:block;font-size:14px;font-family:var(--disp);font-weight:700;margin-bottom:5px}
+  .feat p{font-size:12.5px;color:var(--tx2);line-height:1.55}
 
-            <p className="mt-6 text-base sm:text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-              Verified profiles. Direct contact. No middlemen. Connect seafarers and yacht crew with leading maritime companies worldwide.
-            </p>
+  .price{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);
+    border-radius:22px;padding:30px;position:relative;overflow:hidden}
+  .price::before{content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 0%,rgba(251,191,36,.12),transparent 55%)}
+  .price .plabel{font-size:11.5px;font-weight:700;letter-spacing:.12em;color:var(--gold);margin-bottom:14px}
+  .free-strip{display:inline-flex;align-items:center;gap:8px;background:rgba(52,211,153,.12);color:var(--grn);
+    border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;margin-bottom:14px}
+  .pnum{font-family:var(--disp);font-weight:800;font-size:44px;letter-spacing:-.02em}
+  .pnum small{font-size:16px;color:var(--tx3);font-weight:600}
+  .pper{font-size:13px;color:var(--tx3);margin-bottom:6px}
+  .pwhy{font-size:12.5px;color:var(--tx2);line-height:1.6;border-left:3px solid var(--gold);
+    padding-left:12px;margin:16px 0 20px}
+  .plist{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+  .plist li{font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+  .plist li::before{content:'✓';color:var(--grn);font-weight:800;flex-shrink:0}
+  .pfoot{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:12px}
 
-            {/* Search Wizard */}
-            <div className="mt-10 sm:mt-12 max-w-2xl">
-              <SearchWizard />
-            </div>
+  /* companies */
+  .searchbox{background:linear-gradient(160deg,var(--navy2),var(--ink));border:1.5px solid var(--line);
+    border-radius:18px;padding:20px 22px;margin-bottom:26px;max-width:860px}
+  .sb-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:15px}
+  .sb-head b{font-family:var(--disp)}
+  .sb-head span{font-size:11.5px;color:var(--tx3)}
+  .sb-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px}
+  @media(max-width:820px){ .sb-row{grid-template-columns:1fr 1fr} }
+  @media(max-width:540px){ .sb-row{grid-template-columns:1fr} }
+  .sb-sel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;
+    padding:12px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none;cursor:pointer}
+  .sb-sel:focus{border-color:var(--gold)}
+  .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px}
+  @media(max-width:820px){ .cplans{grid-template-columns:1fr} }
+  .cplan{background:linear-gradient(165deg,var(--navy2),var(--navy));border:1px solid var(--line2);
+    border-radius:20px;padding:28px;position:relative}
+  .cplan.hot{border:1.5px solid var(--gold);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .hot-tag{position:absolute;top:-12px;left:24px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+    color:var(--ink);font-size:10.5px;font-weight:800;letter-spacing:.08em;border-radius:7px;padding:4px 11px}
+  .cplan h3{font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:4px}
+  .cplan .cfor{font-size:12.5px;color:var(--tx3);margin-bottom:16px}
 
-            {/* Quick signup links */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-              <span className="text-white/50">New here?</span>
-              <Link href="/signup/crew" className="text-accent hover:text-accent-light font-bold transition">
-                Sign up as Crew →
-              </Link>
-              <Link href="/signup/company" className="text-accent hover:text-accent-light font-bold transition">
-                Sign up as Company →
-              </Link>
-            </div>
+  /* why */
+  .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:860px){ .why-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:560px){ .why-grid{grid-template-columns:1fr} }
+  .founder{margin-top:34px;background:rgba(251,191,36,.06);border:1px solid var(--line);border-radius:16px;
+    padding:22px 26px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .founder .fi{font-size:28px}
+  .founder b{font-family:var(--disp);font-size:15.5px;display:block;margin-bottom:4px}
+  .founder p{font-size:13px;color:var(--tx2);line-height:1.6;max-width:64ch}
 
-            <div className="mt-8 sm:mt-10 flex items-center gap-2 text-white/50 text-sm">
-              <svg className="w-4 h-4 text-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-              <span>Cancel anytime</span>
-            </div>
-          </div>
-        </section>
+  /* FAQ */
+  .faq{max-width:760px}
+  details{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:14px;
+    margin-bottom:11px;overflow:hidden}
+  summary{cursor:pointer;padding:17px 20px;font-weight:700;font-size:14.5px;list-style:none;
+    display:flex;justify-content:space-between;align-items:center;gap:14px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:'+';font-family:var(--disp);color:var(--gold);font-size:20px;font-weight:700;transition:.2s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{padding:0 20px 17px;font-size:13.5px;color:var(--tx2);line-height:1.65}
 
-        {/* TRUST BAR */}
-        <section className="bg-primary-darker border-y border-white/10 py-10 sm:py-12 md:py-14">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
-              {[
-                { value: "Verified", label: "Profiles checked before activation" },
-                { value: "100+", label: "Countries supported" },
-                { value: "0%", label: "Commission — no agency cut" },
-                { value: "Direct", label: "Crew-to-company contact" },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-accent mb-1 tracking-tight">{stat.value}</div>
-                  <div className="text-white/60 text-[10px] sm:text-xs md:text-sm">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+  /* final CTA */
+  .final{background:linear-gradient(160deg,var(--navy3),var(--navy));border-top:1px solid var(--line2);
+    text-align:center;padding:84px 0}
+  .final h2{margin-bottom:12px}
+  .final .sec-sub{margin:0 auto 32px}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .final .note{margin-top:18px;font-size:12.5px;color:var(--tx3)}
 
-        {/* HOW IT WORKS */}
-        <section id="how-it-works" className="py-16 sm:py-20 md:py-28 bg-primary">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mb-12 sm:mb-16">
-              <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
-                <span className="text-accent text-xs font-extrabold tracking-wider uppercase">How it works</span>
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight leading-tight">
-                Three steps to your<br />next opportunity
-              </h2>
-              <p className="text-white/60 text-base sm:text-lg leading-relaxed">From signup to your next contract, the process is simple and transparent.</p>
-            </div>
+  /* footer */
+  footer{border-top:1px solid var(--line2);padding:52px 0 90px;background:var(--ink)}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
+  @media(max-width:820px){ .foot-grid{grid-template-columns:1fr 1fr} }
+  .foot-brand p{font-size:13px;color:var(--tx3);line-height:1.6;margin-top:12px;max-width:32ch}
+  footer h4{font-family:var(--disp);font-size:13.5px;font-weight:700;margin-bottom:14px}
+  footer ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  footer ul a{color:var(--tx3);text-decoration:none;font-size:13px}
+  footer ul a:hover{color:var(--gold)}
+  .foot-btm{margin-top:38px;padding-top:20px;border-top:1px solid var(--line2);font-size:12px;color:var(--tx3);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
-            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-              {[
-                { num: "01", title: "Sign up free", text: "Create your account in 60 seconds. No credit card required. Premium features free for 7 days." },
-                { num: "02", title: "Build verified profile", text: "Upload your CV and certificates. AI verification gives you a trusted badge that employers value." },
-                { num: "03", title: "Get hired directly", text: "Companies contact you directly. No agencies. No commission. Negotiate your contract face-to-face." },
-              ].map((step) => (
-                <div key={step.num}>
-                  <div className="font-display text-5xl sm:text-6xl md:text-7xl font-bold text-accent/15 mb-3 sm:mb-4 tracking-tighter">{step.num}</div>
-                  <h3 className="font-display text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">{step.title}</h3>
-                  <p className="text-white/60 text-sm sm:text-base leading-relaxed">{step.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+  /* mobile sticky CTA */
+  .mbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;gap:10px;padding:12px 14px;
+    background:rgba(7,26,48,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line2)}
+  .mbar .btn{flex:1;padding:13px 8px;font-size:13.5px}
+  @media(max-width:640px){ .mbar{display:flex} footer{padding-bottom:120px} }
 
-        {/* FOR CREW */}
-        <section className="py-16 sm:py-20 md:py-28 bg-primary-dark relative overflow-hidden">
-          <div className="absolute top-1/2 -left-32 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-start">
-              <div>
-                <div className="inline-block px-5 sm:px-6 py-2 sm:py-2.5 bg-accent/15 border-2 border-accent/40 rounded-2xl mb-5 sm:mb-6">
-                  <span className="text-accent text-sm sm:text-base md:text-lg font-extrabold tracking-wider uppercase">For Crew</span>
-                </div>
-                <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 sm:mb-6 tracking-tight leading-tight">
-                  Take control of your<br />maritime career
-                </h2>
-                <p className="text-white/70 text-base sm:text-lg mb-8 sm:mb-10 leading-relaxed">
-                  Whether you're a Master, AB, ETO, Stewardess on a luxury yacht, or starting your maritime journey — ShipCrewFinder gives you the tools to be found by the right companies.
-                </p>
+  /* reveal */
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+  .rv.in{opacity:1;transform:none}
+`}</style>
+<header className="top">
+  <div className="wrap top-in">
+    <a className="logo" href="/"><span className="logo-ic">⚓</span><b>Ship<span>Crew</span>Finder</b></a>
+    <nav>
+      <a href="#crew">For Crew</a>
+      <a href="#companies">For Companies</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a href="/blog">Blog</a>
+    </nav>
+    <div className="top-cta">
+      <a className="btn btn-ghost" href="/login">Login</a>
+      <a className="btn btn-gold" href="/signup">Sign Up Free</a>
+    </div>
+  </div>
+</header>
 
-                <div className="space-y-4 sm:space-y-5">
-                  {[
-                    { title: "Verified Member Badge", text: "CV and certificates checked. Stand out from unverified profiles instantly." },
-                    { title: "Stealth Mode", text: "Hide your profile from your current employer. Search for jobs without risk." },
-                    { title: "Direct Contact", text: "Companies reach out to you. No middlemen, no commission cuts." },
-                    { title: "Profile Analytics", text: "See which companies viewed your profile, when, and from where." },
-                  ].map((feature) => (
-                    <div key={feature.title} className="flex gap-3 sm:gap-4">
-                      <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-accent/15 border border-accent/30 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-accent" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      </div>
-                      <div>
-                        <h3 className="font-display text-white font-bold mb-1">{feature.title}</h3>
-                        <p className="text-white/60 text-sm leading-relaxed">{feature.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Link href="/signup/crew" className="inline-flex items-center gap-2 mt-8 sm:mt-10 px-5 sm:px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20">
-                  Join as Crew — Free Trial
-                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" /></svg>
-                </Link>
-              </div>
-
-              <div className="relative lg:sticky lg:top-24">
-                <div className="absolute -inset-1 bg-gradient-to-r from-accent/30 via-accent/0 to-accent/0 rounded-2xl blur-xl" />
-                <div className="relative bg-primary border border-white/10 rounded-2xl p-6 sm:p-8 lg:p-10">
-                  <div className="inline-block px-3 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-xs font-extrabold tracking-wide mb-5 sm:mb-6">
-                    CREW PLAN
-                  </div>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight">$9.90</span>
-                    <span className="text-white/60 text-sm sm:text-base">/ month</span>
-                  </div>
-                  <p className="text-white/60 text-sm mb-6 sm:mb-8">Free 7-day trial · Cancel anytime</p>
-
-                  <ul className="space-y-3 mb-6 sm:mb-8">
-                    {["Verified profile badge", "Stealth mode (hide from employer)", "Profile analytics & insights", "Block specific companies", "Direct messaging with employers", "Priority placement in search"].map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-white/80">
-                        <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link href="/signup/crew" className="block text-center px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition">
-                    Start Free Trial
-                  </Link>
-                  <p className="text-center text-white/40 text-xs mt-4">Cancel anytime. No questions asked.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FOR COMPANIES */}
-        <section id="pricing" className="py-16 sm:py-20 md:py-28 bg-primary relative overflow-hidden">
-          <div className="absolute top-1/2 -right-32 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-              <div className="inline-block px-5 sm:px-6 py-2 sm:py-2.5 bg-accent/15 border-2 border-accent/40 rounded-2xl mb-5 sm:mb-6">
-                <span className="text-accent text-sm sm:text-base md:text-lg font-extrabold tracking-wider uppercase">For Companies</span>
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 sm:mb-6 tracking-tight leading-tight">
-                Find verified maritime talent
-              </h2>
-              <p className="text-white/70 text-base sm:text-lg leading-relaxed">
-                Browse verified profiles, post job openings, and contact candidates directly. Start with 3 free profile views.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-              <div className="relative bg-primary-dark border border-white/10 rounded-2xl p-6 sm:p-8 hover:border-white/20 transition">
-                <div className="text-white/50 text-xs uppercase tracking-wider font-extrabold mb-3">Starter</div>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">$49</span>
-                  <span className="text-white/60 text-sm">/ month</span>
-                </div>
-                <p className="text-white/60 text-sm mb-6 sm:mb-8">For small operators getting started</p>
-                <ul className="space-y-3 mb-6 sm:mb-8">
-                  {["10 profile views / month", "Post 2 job listings", "Basic search filters", "Email support"].map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-white/80">
-                      <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup/company?plan=starter" className="block text-center px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10">
-                  Choose Starter
-                </Link>
-              </div>
-
-              <div className="relative bg-primary-dark border-2 border-accent rounded-2xl p-6 sm:p-8 md:scale-105 shadow-2xl shadow-accent/10">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-accent text-primary text-xs font-extrabold tracking-wide rounded-full">
-                  MOST POPULAR
-                </div>
-                <div className="text-accent text-xs uppercase tracking-wider font-extrabold mb-3">Pro</div>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">$99</span>
-                  <span className="text-white/60 text-sm">/ month</span>
-                </div>
-                <p className="text-white/60 text-sm mb-6 sm:mb-8">For active hiring teams</p>
-                <ul className="space-y-3 mb-6 sm:mb-8">
-                  {["Unlimited profile views", "Post 10 job listings", "Advanced search & filters", "Save & shortlist candidates", "Priority support", "Verified company badge"].map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-white/80">
-                      <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup/company?plan=pro" className="block text-center px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20">
-                  Choose Pro
-                </Link>
-              </div>
-
-              <div className="relative bg-primary-dark border border-white/10 rounded-2xl p-6 sm:p-8 hover:border-white/20 transition">
-                <div className="text-white/50 text-xs uppercase tracking-wider font-extrabold mb-3">Enterprise</div>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">$299</span>
-                  <span className="text-white/60 text-sm">/ month</span>
-                </div>
-                <p className="text-white/60 text-sm mb-6 sm:mb-8">For large fleets and agencies</p>
-                <ul className="space-y-3 mb-6 sm:mb-8">
-                  {["Everything in Pro", "Unlimited job listings", "Dedicated account manager", "Custom integrations (ATS)", "Bulk profile export", "API access"].map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-white/80">
-                      <svg className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup/company?plan=enterprise" className="block text-center px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10">
-                  Choose Enterprise
-                </Link>
-              </div>
-            </div>
-
-            <p className="text-center text-white/50 text-sm mt-6 sm:mt-8">
-              Not ready to commit? <Link href="/signup/company" className="text-accent hover:text-accent-light font-bold">Start with 3 free profile views</Link>
-            </p>
-          </div>
-        </section>
-
-        {/* WHY VERIFIED */}
-        <section className="py-16 sm:py-20 md:py-28 bg-primary-dark">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-              <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
-                <span className="text-accent text-xs font-extrabold tracking-wider uppercase">Why ShipCrewFinder</span>
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-5 sm:mb-6 tracking-tight leading-tight">
-                Built by maritime professionals,<br />for maritime professionals
-              </h2>
-              <p className="text-white/70 text-base sm:text-lg leading-relaxed">
-                We've worked on ships. We know the industry. That's why every feature is designed with real maritime experience in mind.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {[
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" /></svg>, title: "Verified Profiles Only", text: "Every profile is checked. CVs, certificates, ENG1, STCW — all verified before activation." },
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s-8-4-8-12c0-4 3-7 8-7s8 3 8 7c0 8-8 12-8 12z" /><circle cx="12" cy="10" r="3" /></svg>, title: "Global Reach", text: "Connecting talent across 100+ countries. From Singapore to Rotterdam, Houston to Dubai." },
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>, title: "Privacy First", text: "Stealth mode keeps your job search private. Block companies. Control who sees what." },
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>, title: "No Commission Fees", text: "Direct connection between you and employers. No agencies taking a cut from your salary." },
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>, title: "Direct Messaging", text: "Talk directly to employers or crew. No third parties filtering or delaying communication." },
-                { icon: <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>, title: "Real-Time Availability", text: "Always-current availability dates. No outdated profiles or wasted outreach." },
-              ].map((feature) => (
-                <div key={feature.title} className="bg-primary border border-white/5 rounded-xl p-5 sm:p-6 hover:border-accent/30 transition group">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent mb-4 group-hover:bg-accent/20 transition">
-                    {feature.icon}
-                  </div>
-                  <h3 className="font-display text-white font-bold text-base sm:text-lg mb-2">{feature.title}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">{feature.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="py-16 sm:py-20 md:py-28 bg-primary relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center opacity-20">
-            <div className="w-[600px] h-[600px] bg-accent/20 rounded-full blur-3xl" />
-          </div>
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 sm:mb-6 tracking-tight leading-tight">
-              Ready to set sail<br />
-              <span className="text-accent">on your next career?</span>
-            </h2>
-            <p className="text-white/70 text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-              Join seafarers, yacht crew, and maritime companies building the future of crew recruitment.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              <Link href="/signup/crew" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-accent hover:bg-accent-dark text-primary font-extrabold rounded-lg transition shadow-lg shadow-accent/30">
-                Join as Crew — Free Trial
-              </Link>
-              <Link href="/signup/company" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/15 text-white font-extrabold rounded-lg transition border border-white/20">
-                Hire Talent — 3 Free Views
-              </Link>
-            </div>
-            <p className="text-white/40 text-sm mt-6 sm:mt-8">Cancel anytime · No commission, ever</p>
-          </div>
-        </section>
-      </main>
-
-      {/* FOOTER */}
-      <footer className="bg-primary-darker border-t border-white/10 py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10 sm:mb-12">
-            <div className="col-span-2">
-              <Link href="/" className="flex items-center gap-2.5 mb-4">
-                <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-                  <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-                  <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-                <span className="text-white font-display font-bold text-lg tracking-tight">
-                  Ship<span className="text-accent">Crew</span>Finder
-                </span>
-              </Link>
-              <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-                The global maritime career platform. Verified profiles. Direct contact. No middlemen.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Product</h4>
-              <ul className="space-y-3">
-                {[{ label: "For Crew", href: "/signup/crew" }, { label: "For Companies", href: "/signup/company" }, { label: "Pricing", href: "/#pricing" }, { label: "How it works", href: "/#how-it-works" }].map((link) => (
-                  <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Company</h4>
-              <ul className="space-y-3">
-                {[{ label: "About", href: "/about" }, { label: "Blog", href: "/blog" }, { label: "Contact", href: "/contact" }, { label: "Careers", href: "/careers" }].map((link) => (
-                  <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-display text-white font-bold text-sm mb-4 uppercase tracking-wider">Legal</h4>
-              <ul className="space-y-3">
-                {[{ label: "Privacy Policy", href: "/privacy" }, { label: "Terms of Service", href: "/terms" }, { label: "Cookie Policy", href: "/cookies" }, { label: "GDPR", href: "/gdpr" }].map((link) => (
-                  <li key={link.href}><Link href={link.href} className="text-white/60 hover:text-accent text-sm transition">{link.label}</Link></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-6 sm:pt-8 border-t border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <p className="text-white/40 text-sm">© {new Date().getFullYear()} ShipCrewFinder. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-accent transition" aria-label="LinkedIn">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-accent transition" aria-label="Twitter / X">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-              </a>
-            </div>
+<section className="hero">
+  <div className="hero-grid"></div>
+  <div className="wrap hero-in">
+    <div>
+      <div className="badge"><span className="d"></span>VERIFIED MARITIME PLATFORM · FOUNDING MEMBERS OPEN</div>
+      <h1>Your next contract.<br/><span className="g">No agency. No cut.</span></h1>
+      <p className="sub">ShipCrewFinder connects verified seafarers with shipping companies — directly. No middlemen taking a slice of your salary. No agencies filtering your messages.</p>
+      <div className="paths">
+        <a className="path" href="/signup/crew">
+          <div className="pi">⚓</div>
+          <b>I'm Crew — get found</b>
+          <ol className="psteps">
+            <li>Create profile <em>(2 min)</em></li>
+            <li>Upload CV {"&"} certificates</li>
+            <li>Companies contact you</li>
+          </ol>
+          <span className="go">Start free month →</span>
+        </a>
+        <a className="path" href="/signup/company">
+          <div className="pi">🏢</div>
+          <b>I'm Hiring — find crew</b>
+          <ol className="psteps">
+            <li>Create company account</li>
+            <li>Search by rank {"&"} availability</li>
+            <li>Message crew directly</li>
+          </ol>
+          <span className="go">Start free month →</span>
+        </a>
+      </div>
+      <div className="hero-note"><b>✓</b> Cancel anytime  ·  <b>✓</b> 0% commission — ever  ·  <b>✓</b> Verified profiles only</div>
+    </div>
+    <div className="hero-vis">
+      <div className="pcard">
+        <div className="pc-top">
+          <div className="avatar">ME</div>
+          <div>
+            <div className="pc-name">Chief Engineer</div>
+            <div className="pc-rank">Unlimited · Motor · 12 yrs at sea</div>
+            <div className="vbadge">✓ VERIFIED PROFILE</div>
           </div>
         </div>
-      </footer>
+        <div className="pc-rows">
+          <div className="pc-row"><span>Availability</span><b className="av">● Available from Sep 2026</b></div>
+          <div className="pc-row"><span>Certificates</span><b>STCW III/2 · COC ✓</b></div>
+          <div className="pc-row"><span>Vessel experience</span><b>Bulk · Tanker · Container</b></div>
+          <div className="pc-row"><span>Last contract</span><b>C/E — 82,000 DWT Bulk</b></div>
+        </div>
+        <a className="btn btn-gold pc-cta" href="/signup/company">Contact directly →</a>
+      </div>
+      <div className="fcard">
+        <div className="ic">👁</div>
+        <div><b>3 companies viewed your profile</b><span>this week · via Profile Analytics</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div className="marq">
+  <div className="marq-in">
+    <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
+    <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
+  </div>
+</div>
+
+<section id="search" style={{paddingBottom:"20px"}}>
+  <div className="wrap">
+    <div style={{maxWidth:"640px",margin:"0 auto"}}>
+      <SearchWizard />
+    </div>
+  </div>
+</section>
+
+<section id="how" style={{paddingTop:"40px"}}>
+  <div className="wrap">
+    <div className="sec-tag rv">How it works</div>
+    <h2 className="rv">Three steps to your next opportunity</h2>
+    <p className="sec-sub rv">From signup to contract — simple, transparent, and fully in your control.</p>
+    <div className="steps">
+      <div className="step rv">
+        <div className="num">01</div>
+        <h3>Sign up free</h3>
+        <p>Create your account in 60 seconds. Crew and companies both start with a full free month — no credit card needed to look around.</p>
+      </div>
+      <div className="step rv">
+        <div className="num">02</div>
+        <h3>Get verified</h3>
+        <p>Upload your CV and certificates (STCW, COC, medical). Our team reviews every profile before activation — no fake profiles, no noise.</p>
+      </div>
+      <div className="step rv">
+        <div className="num">03</div>
+        <h3>Connect directly</h3>
+        <p>Companies message crew directly. Crew reply directly. No agency in the middle, no commission taken from your salary — ever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="crew" style={{background:"rgba(7,26,48,.45)"}}>
+  <div className="wrap split">
+    <div>
+      <div className="sec-tag rv">For Crew</div>
+      <h2 className="rv">Take control of your maritime career</h2>
+      <p className="sec-sub rv">Master, Chief Engineer, ETO, AB or Cook — build a profile that gets found by the right companies, on your terms.</p>
+      <div className="feats">
+        <div className="feat rv"><div className="fi">🛡️</div><b>Verified badge</b><p>Certificates reviewed by our team. Stand out instantly from unverified noise.</p></div>
+        <div className="feat rv"><div className="fi">🥷</div><b>Stealth Mode</b><p>Hide your profile from your current employer. Search without risk.</p></div>
+        <div className="feat rv"><div className="fi">📊</div><b>Profile Analytics</b><p>See which companies viewed your profile — and when.</p></div>
+        <div className="feat rv"><div className="fi">💬</div><b>Direct messaging</b><p>Talk to employers directly. Negotiate your own contract.</p></div>
+      </div>
+    </div>
+    <div className="price rv">
+      <div className="plabel">CREW MEMBERSHIP</div>
+      <div className="free-strip">🎁 FIRST MONTH COMPLETELY FREE</div>
+      <div className="pnum">$2.99 <small>/ 3 months</small></div>
+      <div className="pper">after your free month · that's less than a coffee — for a quarter</div>
+      <div className="pwhy">Why not fully free? The symbolic fee keeps bots, fake profiles and time-wasters out — so companies take every profile here seriously. Your visibility is worth more on a clean platform.</div>
+      <ul className="plist">
+        <li>Verified profile badge</li>
+        <li>Stealth mode — invisible to your employer</li>
+        <li>Profile analytics {"&"} view insights</li>
+        <li>Direct messaging with companies</li>
+        <li>Priority placement in search results</li>
+        <li>Block specific companies</li>
+      </ul>
+      <a className="btn btn-gold btn-lg" href="/signup/crew" style={{width:"100%"}}>Start free month →</a>
+      <div className="pfoot">Cancel anytime during the free month — pay nothing.</div>
+    </div>
+  </div>
+</section>
+
+<section id="companies">
+  <div className="wrap">
+    <div className="sec-tag rv">For Companies</div>
+    <h2 className="rv">Hire verified crew — without agency fees</h2>
+    <p className="sec-sub rv">Every profile is document-checked before it goes live. Try the full platform free for a month, see the crew pool for yourself — then decide.</p>
+    <div className="cplans">
+      <div className="cplan hot rv">
+        <div className="hot-tag">MOST POPULAR</div>
+        <h3>Pro</h3>
+        <div className="cfor">For active fleets {"&"} crewing departments</div>
+        <div className="free-strip">🎁 FIRST MONTH FREE</div>
+        <div className="pnum">$299.90 <small>/ month</small></div>
+        <div className="pper">after your free month · cancel anytime</div>
+        <ul className="plist">
+          <li><b style={{color:"var(--gold)"}}>100 full CV views / month</b></li>
+          <li>Post up to 10 job listings</li>
+          <li>Advanced search — rank, vessel type, availability</li>
+          <li>Direct messaging with crew</li>
+          <li>Save {"&"} shortlist candidates</li>
+          <li>Verified company badge</li>
+        </ul>
+        <a className="btn btn-gold" href="/signup/company?plan=pro" style={{width:"100%"}}>Start free month →</a>
+      </div>
+      <div className="cplan rv">
+        <h3>Fleet</h3>
+        <div className="cfor">For large fleets, managers {"&"} crewing agencies</div>
+        <div className="free-strip">🎁 FIRST MONTH FREE</div>
+        <div className="pnum">$499.90 <small>/ month</small></div>
+        <div className="pper">after your free month · cancel anytime</div>
+        <ul className="plist">
+          <li>Everything in Pro</li>
+          <li><b style={{color:"var(--gold)"}}>Unlimited full CV views</b></li>
+          <li>Unlimited job listings</li>
+          <li>Multiple user seats for your team</li>
+          <li>Bulk shortlist {"&"} export</li>
+          <li>Priority support {"&"} onboarding</li>
+          <li>API / ATS integration</li>
+        </ul>
+        <a className="btn btn-ghost" href="/signup/company?plan=fleet" style={{width:"100%",borderColor:"var(--gold)",color:"var(--gold)"}}>Start free month →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style={{background:"rgba(7,26,48,.45)"}}>
+  <div className="wrap">
+    <div className="sec-tag rv">Why ShipCrewFinder</div>
+    <h2 className="rv">Built by maritime professionals,<br/>for maritime professionals</h2>
+    <p className="sec-sub rv">We've stood watches, signed articles and lived the contract cycle. Every feature exists because we needed it ourselves.</p>
+    <div className="why-grid">
+      <div className="feat rv"><div className="fi">✅</div><b>Verified profiles only</b><p>CV, STCW, COC, medical — reviewed before any profile goes live.</p></div>
+      <div className="feat rv"><div className="fi">🚫</div><b>0% commission, ever</b><p>No agency cut from your salary. No hidden placement fees for companies.</p></div>
+      <div className="feat rv"><div className="fi">🥷</div><b>Privacy first</b><p>Stealth mode, company blocking, full control over who sees you.</p></div>
+      <div className="feat rv"><div className="fi">🌍</div><b>Global by design</b><p>From Singapore to Rotterdam, Houston to Piraeus — one platform.</p></div>
+      <div className="feat rv"><div className="fi">💬</div><b>Direct contact</b><p>No third party filtering messages or delaying your next contract.</p></div>
+      <div className="feat rv"><div className="fi">📅</div><b>Real availability</b><p>Current availability dates on every profile. No dead profiles, no wasted outreach.</p></div>
+    </div>
+    <div className="founder rv">
+      <div className="fi">⚓</div>
+      <div>
+        <b>A note from the founder</b>
+        <p>I've spent over a decade in engine rooms across bulk carriers and tankers. I watched agencies take their cut from every contract while adding delay, noise and zero transparency. ShipCrewFinder is the platform I wished existed — direct, verified, and honest.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div className="wrap">
+    <div className="sec-tag rv">FAQ</div>
+    <h2 className="rv">Questions, answered straight</h2>
+    <p className="sec-sub rv">No fine print surprises. Here's how it actually works.</p>
+    <div className="faq">
+      <details className="rv"><summary>Is the first month really free?</summary><p>Yes — both crew and companies get a full month with all features unlocked, no charge. Cancel any time during the free month and you pay nothing at all.</p></details>
+      <details className="rv"><summary>Why does crew membership cost $2.99 when other job boards are free?</summary><p>Free platforms fill up with bots, duplicate accounts and abandoned profiles — and companies stop trusting them. A symbolic $2.99 per 3 months keeps the pool clean and serious, which means the companies contacting you are serious too. It's less than one coffee, once a quarter.</p></details>
+      <details className="rv"><summary>How does profile verification work?</summary><p>After you upload your CV and certificates (STCW, COC, medical), our team manually reviews the documents before your profile goes live. Verified profiles carry a visible badge that companies can trust.</p></details>
+      <details className="rv"><summary>Can my current employer see that I'm looking?</summary><p>Not if you don't want them to. Stealth Mode hides your profile from specific companies you choose — including your current employer. You stay invisible to them while staying visible to everyone else.</p></details>
+      <details className="rv"><summary>Do you take any commission from my salary or the placement?</summary><p>Never. Zero commission, from either side, ever. Companies pay a flat subscription; crew pay a symbolic membership. Your salary is between you and your employer — as it should be.</p></details>
+      <details className="rv"><summary>How do companies contact crew?</summary><p>Directly, through the platform's messaging. No agency relaying messages, no delays, no filtering. You negotiate your own contract, face to face.</p></details>
+      <details className="rv"><summary>Can I cancel anytime?</summary><p>Yes — one click, no questions, no retention calls. If you cancel during a free month you pay nothing; if you cancel later, your access simply runs to the end of the paid period.</p></details>
+    </div>
+  </div>
+</section>
+
+<section className="final">
+  <div className="wrap">
+    <h2 className="rv">Ready for a contract<br/><span style={{color:"var(--gold)"}}>without the middleman?</span></h2>
+    <p className="sec-sub rv">Join the founding members building the cleanest crew platform at sea.</p>
+    <div className="cta-row rv">
+      <a className="btn btn-gold btn-lg" href="/signup/crew">⚓ Join as Crew — free month</a>
+      <a className="btn btn-ghost btn-lg" href="/signup/company">🏢 Hire Crew — free month</a>
+    </div>
+    <div className="note">Cancel anytime · 0% commission, ever · Verified profiles only</div>
+  </div>
+</section>
+
+<footer>
+  <div className="wrap">
+    <div className="foot-grid">
+      <div className="foot-brand">
+        <a className="logo" href="/"><span className="logo-ic">⚓</span><b>Ship<span>Crew</span>Finder</b></a>
+        <p>The verified maritime career platform. Direct contact. Zero commission. Built at sea.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/signup/crew">For Crew</a></li>
+          <li><a href="/signup/company">For Companies</a></li>
+          <li><a href="#companies">Pricing</a></li>
+          <li><a href="#how">How it works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy">Privacy Policy</a></li>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="/cookies">Cookie Policy</a></li>
+          <li><a href="/gdpr">GDPR</a></li>
+        </ul>
+      </div>
+    </div>
+    <div className="foot-btm">
+      <span>© 2026 ShipCrewFinder. All rights reserved.</span>
+      <span>Made by maritime professionals ⚓</span>
+    </div>
+  </div>
+</footer>
+
+<div className="mbar">
+  <a className="btn btn-gold" href="/signup/crew">⚓ Join as Crew</a>
+  <a className="btn btn-ghost" href="/signup/company">🏢 Hire Crew</a>
+</div>
     </>
   );
 }
