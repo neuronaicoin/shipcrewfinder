@@ -210,12 +210,7 @@ export default async function DashboardPage() {
               >
                 Search Jobs
               </Link>
-              <Link
-                href="/requests"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-              >
-                Connection Requests
-              </Link>
+
             </>
           )}
         </div>
