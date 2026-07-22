@@ -5,19 +5,97 @@ import SearchWizard from "./search-wizard";
 
 export default function HomeContent() {
   useEffect(() => {
-    const io = new IntersectionObserver(
-      (es) => {
-        es.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("in");
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.12 }
-    );
-    document.querySelectorAll(".rv").forEach((el) => io.observe(el));
-    return () => io.disconnect();
+const __T=[];
+const _si=window.setInterval.bind(window), _st=window.setTimeout.bind(window);
+const setInterval=(f,t)=>{const h=_si(f,t);__T.push({t:'i',h});return h;};
+const setTimeout=(f,t)=>{const h=_st(f,t);__T.push({t:'t',h});return h;};
+
+// hamburger menü
+const ham=document.getElementById('ham'), mnav=document.getElementById('mnav');
+if(ham){ ham.onclick=()=>mnav.classList.toggle('open');
+  mnav.querySelectorAll('a').forEach(a=>a.onclick=()=>mnav.classList.remove('open')); }
+
+// dönen örnek profiller (7 sn'de bir rank değişir)
+const PROFILES=[
+  {i:'CE',r:'Chief Engineer',l:'Unlimited · Motor · 12 yrs at sea',a:'● Available from Sep 2026',c:'STCW III/2 · COC ✓',v:'Bulk · Tanker · Container',x:'C/E — 82,000 DWT Bulk'},
+  {i:'MK',r:'Master',l:'Unlimited · 15 yrs at sea',a:'● Available from Aug 2026',c:'STCW II/2 · COC ✓',v:'Bulk · General Cargo',x:'Master — 58,000 DWT Bulk'},
+  {i:'CO',r:'Chief Officer',l:'Unlimited · 9 yrs at sea',a:'● Available now',c:'STCW II/2 · GMDSS ✓',v:'Container · Ro-Ro',x:'C/O — 6,800 TEU Container'},
+  {i:'2E',r:'2nd Engineer',l:'Motor · 7 yrs at sea',a:'● Available from Oct 2026',c:'STCW III/2 ✓',v:'Tanker · LPG',x:'2/E — 49,900 DWT Tanker'},
+  {i:'ET',r:'ETO',l:'High voltage · 6 yrs at sea',a:'● Available now',c:'STCW III/6 · HV ✓',v:'Container · LNG',x:'ETO — 14,000 TEU Container'}
+];
+let pIdx=0;
+const pdots=document.getElementById('pdots');
+if(pdots){
+  PROFILES.forEach((_,k)=>{const d=document.createElement('span');if(k===0)d.className='on';pdots.appendChild(d);});
+  const rotateCard=()=>{
+    const f=document.getElementById('pc-fade');
+    f.classList.add('out');
+    setTimeout(()=>{
+      pIdx=(pIdx+1)%PROFILES.length;
+      const p=PROFILES[pIdx];
+      document.getElementById('pc-init').textContent=p.i;
+      document.getElementById('pc-rankname').textContent=p.r;
+      document.getElementById('pc-line').textContent=p.l;
+      document.getElementById('pc-avail').textContent=p.a;
+      document.getElementById('pc-cert').textContent=p.c;
+      document.getElementById('pc-ves').textContent=p.v;
+      document.getElementById('pc-last').textContent=p.x;
+      [...pdots.children].forEach((d,k)=>d.classList.toggle('on',k===pIdx));
+      f.classList.remove('out');
+    },320);
+  };
+  setTimeout(()=>{ rotateCard(); setInterval(rotateCard,6000); },3000);
+}
+
+// reveal on scroll
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+},{threshold:.12});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
+// tema (gece varsayılan)
+const tbtn=document.getElementById('theme-btn');
+const applyTheme=t=>{
+  document.body.classList.toggle('light', t==='light');
+  if(tbtn) tbtn.textContent = t==='light' ? '☀️' : '🌙';
+};
+let scfTheme='dark';
+try{ scfTheme=localStorage.getItem('scf_theme')||'dark'; }catch(e){}
+applyTheme(scfTheme);
+if(tbtn) tbtn.onclick=()=>{
+  scfTheme = scfTheme==='light' ? 'dark' : 'light';
+  try{ localStorage.setItem('scf_theme',scfTheme); }catch(e){}
+  applyTheme(scfTheme);
+};
+
+// dönen hero sloganları
+const HERO_LINES=[
+  'No agency. No cut.',
+  'Create your profile. Get found.',
+  'Find your employer. Directly.',
+  'Hire verified crew, faster.',
+  'Crew & companies, worldwide.',
+  'Zero commission. Ever.',
+  'One platform. Every rank.',
+  'Your career. Your terms.'
+];
+let hIdx=0;
+const hRot=document.getElementById('hero-rot');
+if(hRot){
+  setInterval(()=>{
+    hRot.classList.add('out');
+    setTimeout(()=>{
+      hIdx=(hIdx+1)%HERO_LINES.length;
+      hRot.textContent=HERO_LINES[hIdx];
+      hRot.classList.remove('out');
+    },350);
+  },3400);
+}
+
+    return () => {
+      __T.forEach(x => x.t === 'i' ? clearInterval(x.h) : clearTimeout(x.h));
+      if (typeof io !== 'undefined' && io.disconnect) io.disconnect();
+    };
   }, []);
 
   return (
@@ -25,13 +103,49 @@ export default function HomeContent() {
       <style>{`
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
-    --navy:#0a2540;--navy2:#0e2d4d;--navy3:#123a5f;--ink:#071a30;
+    --navy:#0d1030;--navy2:#141845;--navy3:#1b2158;--ink:#050716;
     --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
     --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;
     --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
     --grn:#34d399;
   }
   html{scroll-behavior:smooth}
+  /* ── GÜNDÜZ MODU ── */
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--navy3:#e9edf8;--deep:#e6eaf5;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body.light .top{background:rgba(255,255,255,.88)}
+  body.light .mnav{background:rgba(255,255,255,.97)}
+  body.light .pcard,body.light .price{box-shadow:0 24px 55px rgba(20,30,70,.16)}
+  body.light .aur1{opacity:.4}
+  body.light .aur2{opacity:.3}
+  body.light .fcard{box-shadow:0 14px 30px rgba(20,30,70,.18)}
+  body.light .marq{background:rgba(255,255,255,.55)}
+  body.light nav a{background:rgba(255,255,255,.6)}
+  body.light .path:hover{box-shadow:0 14px 30px rgba(20,30,70,.14)}
+  body.light .rep-pre{background:#ffffff}
+  body.light .mbar{background:rgba(255,255,255,.94)}
+  body.light .feat{background:#f7f9fe;border-color:rgba(15,25,60,.13)}
+  body.light .pc-row{background:#f3f6fc;border-color:rgba(15,25,60,.13)}
+  body.light .pc-row span{color:#57678a}
+  body.light .pc-row b{color:#0e1730}
+  body.light details{background:#f7f9fe;border-color:rgba(15,25,60,.13)}
+  body.light .marq-in span{background:#ffffff;border-color:rgba(15,25,60,.15);color:#2e3c5e}
+  body.light .step{background:#ffffff;border-color:rgba(15,25,60,.13)}
+  body.light .path{background:#ffffff;border-color:rgba(15,25,60,.14)}
+  body.light .psteps li{color:#2e3c5e}
+  body.light .cplan{background:#ffffff;border-color:rgba(15,25,60,.13)}
+  body.light .cplan.hot{border-color:var(--gold)}
+  body.light .price{background:#ffffff}
+  body.light .plist li{color:#1c2846}
+  body.light .founder{background:rgba(224,160,16,.07)}
+  body.light .fcard{background:#ffffff;border-color:rgba(15,25,60,.14)}
+  body.light .hint{color:#6a7a9c}
+  body.light .avatar{background:linear-gradient(145deg,#dfe7f6,#c9d6ee);color:#8a6a1e}
+  body.light .pcard{background:linear-gradient(165deg,#ffffff,#f2f5fc)}
+
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
@@ -44,9 +158,10 @@ export default function HomeContent() {
     display:grid;place-items:center;color:var(--ink);font-family:var(--disp);font-weight:800;font-size:19px}
   .logo b{font-family:var(--disp);font-size:18px;font-weight:700}
   .logo b span{color:var(--gold)}
-  nav{display:flex;gap:26px}
-  nav a{color:var(--tx2);text-decoration:none;font-size:14px;font-weight:500;transition:.15s}
-  nav a:hover{color:var(--gold)}
+  nav{display:flex;gap:8px}
+  nav a{color:var(--tx2);text-decoration:none;font-size:13.5px;font-weight:600;transition:.18s;
+    border:1px solid var(--line2);border-radius:10px;padding:8px 15px;background:rgba(255,255,255,.02)}
+  nav a:hover{color:var(--gold);border-color:var(--gold);background:rgba(251,191,36,.07)}
   .top-cta{display:flex;gap:10px;align-items:center}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;
     font-family:var(--body);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;
@@ -57,15 +172,25 @@ export default function HomeContent() {
     box-shadow:0 4px 20px rgba(251,191,36,.25)}
   .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(251,191,36,.4)}
   .btn-lg{padding:15px 28px;font-size:15.5px;border-radius:13px}
-  @media(max-width:860px){ nav{display:none} .top-cta .btn-ghost{display:none} }
+  .ham{display:none;place-items:center;width:42px;height:42px;border:1px solid var(--line2);border-radius:10px;
+    background:rgba(255,255,255,.03);cursor:pointer;color:var(--tx);font-size:19px}
+  @media(max-width:860px){ nav{display:none} .top-cta .btn-ghost:not(#theme-btn){display:none} .ham{display:grid} }
+  .mnav{display:none;flex-direction:column;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line2);
+    background:rgba(7,26,48,.97)}
+  .mnav.open{display:flex}
+  .mnav a{color:var(--tx2);text-decoration:none;font-size:14.5px;font-weight:600;
+    border:1px solid var(--line2);border-radius:10px;padding:12px 16px;background:rgba(255,255,255,.02)}
+  .mnav a:active{color:var(--gold);border-color:var(--gold)}
 
   /* ── hero ── */
   .hero{position:relative;padding:72px 0 60px;overflow:hidden}
+  .aur{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.55}
+  .aur1{width:560px;height:560px;top:-180px;right:-80px;background:radial-gradient(circle,rgba(251,191,36,.30),transparent 65%);animation:drift1 14s ease-in-out infinite alternate}
+  .aur2{width:480px;height:480px;bottom:-200px;left:-120px;background:radial-gradient(circle,rgba(37,99,235,.33),transparent 65%);animation:drift2 18s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate(-60px,50px) scale(1.15)}}
+  @keyframes drift2{to{transform:translate(70px,-40px) scale(1.1)}}
   .hero::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);
     width:1200px;height:800px;background:radial-gradient(ellipse,rgba(251,191,36,.1),transparent 60%);pointer-events:none}
-  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(251,191,36,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(251,191,36,.04) 1px,transparent 1px);background-size:56px 56px;
-    mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,#000,transparent);pointer-events:none}
   .hero-in{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
   @media(max-width:960px){ .hero-in{grid-template-columns:1fr} .hero-vis{display:none} }
   .badge{display:inline-flex;align-items:center;gap:9px;background:rgba(251,191,36,.09);
@@ -76,6 +201,8 @@ export default function HomeContent() {
   h1{font-family:var(--disp);font-size:clamp(2.3rem,5.4vw,3.9rem);font-weight:800;line-height:1.06;
     letter-spacing:-.03em;margin-bottom:18px}
   h1 .g{color:var(--gold)}
+  .hero-rot{display:inline-block;transition:opacity .35s ease, transform .35s ease}
+  .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
   @media(max-width:560px){ .paths{grid-template-columns:1fr} }
@@ -97,8 +224,22 @@ export default function HomeContent() {
 
   /* hero visual: profile mock */
   .hero-vis{position:relative}
-  .pcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);
-    border-radius:20px;padding:24px;box-shadow:0 30px 60px rgba(0,0,0,.45);position:relative;max-width:360px;margin-left:auto}
+  .hero-vis{perspective:1100px}
+  .pcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid rgba(251,191,36,.22);
+    border-radius:22px;padding:26px;box-shadow:0 34px 70px rgba(0,0,0,.5);position:relative;max-width:380px;
+    margin-left:auto;overflow:hidden;animation:cardTilt 9s ease-in-out infinite alternate;transform-style:preserve-3d}
+  @keyframes cardTilt{0%{transform:rotateY(-5deg) rotateX(2deg)}100%{transform:rotateY(4deg) rotateX(-2deg)}}
+  .pcard::after{content:'';position:absolute;top:0;bottom:0;width:60%;left:-80%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.08),transparent);
+    animation:shine 5.5s ease-in-out infinite}
+  @keyframes shine{0%,55%{left:-80%}85%,100%{left:130%}}
+  .pc-fade{transition:opacity .3s ease, transform .3s ease}
+  .pc-fade.out{opacity:0;transform:translateY(-8px)}
+  .pdots{display:flex;gap:6px;justify-content:center;margin-top:14px}
+  .pdots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);transition:.3s}
+  .pdots span.on{background:var(--gold);transform:scale(1.25)}
+  .sample-tag{position:absolute;top:-11px;right:18px;background:var(--navy);border:1px solid var(--line);
+    color:var(--tx3);font-size:9.5px;font-weight:700;letter-spacing:.1em;border-radius:7px;padding:4px 10px;z-index:2}
   .pcard::before{content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
     background:radial-gradient(ellipse at 80% 0%,rgba(251,191,36,.12),transparent 55%)}
   .pc-top{display:flex;gap:14px;align-items:center;margin-bottom:16px}
@@ -126,9 +267,12 @@ export default function HomeContent() {
   /* ── rank marquee ── */
   .marq{border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:16px 0;overflow:hidden;
     background:rgba(7,26,48,.5)}
-  .marq-in{display:flex;gap:38px;white-space:nowrap;animation:scroll 30s linear infinite;width:max-content}
-  .marq-in span{font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--tx3);display:flex;align-items:center;gap:38px}
-  .marq-in span::after{content:'·';color:var(--gold)}
+  .marq-in{display:flex;white-space:nowrap;animation:scroll 55s linear infinite;width:max-content}
+  .marq-in{gap:14px}
+  .marq-in span{font-family:var(--disp);font-weight:700;font-size:13.5px;color:var(--tx2);
+    border:1px solid var(--line2);border-radius:11px;padding:9px 18px;background:rgba(255,255,255,.025);
+    display:inline-flex;align-items:center;gap:8px}
+  .marq-in span::before{content:'⚓';font-size:11px;opacity:.55}
   @keyframes scroll{to{transform:translateX(-50%)}}
 
   /* ── sections ── */
@@ -252,7 +396,7 @@ export default function HomeContent() {
 `}</style>
 <header className="top">
   <div className="wrap top-in">
-    <a className="logo" href="/"><span className="logo-ic">⚓</span><b>Ship<span>Crew</span>Finder</b></a>
+    <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
     <nav>
       <a href="#crew">For Crew</a>
       <a href="#companies">For Companies</a>
@@ -263,16 +407,27 @@ export default function HomeContent() {
     <div className="top-cta">
       <a className="btn btn-ghost" href="/login">Login</a>
       <a className="btn btn-gold" href="/signup">Sign Up Free</a>
+      <button className="btn btn-ghost" id="theme-btn" aria-label="Theme" style={{padding:"10px 13px",fontSize:"16px",lineHeight:"1"}}>🌙</button>
+      <button className="ham" id="ham" aria-label="Menu">☰</button>
     </div>
+  </div>
+  <div className="mnav" id="mnav">
+    <a href="#crew">For Crew</a>
+    <a href="#companies">For Companies</a>
+    <a href="#how">How it works</a>
+    <a href="#faq">FAQ</a>
+    <a href="/blog">Blog</a>
+    <a href="/login">Login</a>
   </div>
 </header>
 
 <section className="hero">
-  <div className="hero-grid"></div>
+  <div className="aur aur1"></div>
+  <div className="aur aur2"></div>
   <div className="wrap hero-in">
     <div>
       <div className="badge"><span className="d"></span>VERIFIED MARITIME PLATFORM · FOUNDING MEMBERS OPEN</div>
-      <h1>Your next contract.<br/><span className="g">No agency. No cut.</span></h1>
+      <h1>Your next contract.<br/><span className="g hero-rot" id="hero-rot">No agency. No cut.</span></h1>
       <p className="sub">ShipCrewFinder connects verified seafarers with shipping companies — directly. No middlemen taking a slice of your salary. No agencies filtering your messages.</p>
       <div className="paths">
         <a className="path" href="/signup/crew">
@@ -299,22 +454,25 @@ export default function HomeContent() {
       <div className="hero-note"><b>✓</b> Cancel anytime  ·  <b>✓</b> 0% commission — ever  ·  <b>✓</b> Verified profiles only</div>
     </div>
     <div className="hero-vis">
-      <div className="pcard">
+      <div className="pcard"><div className="sample-tag">EXAMPLE PROFILE</div>
+        <div className="pc-fade" id="pc-fade">
         <div className="pc-top">
-          <div className="avatar">ME</div>
+          <div className="avatar" id="pc-init">CE</div>
           <div>
-            <div className="pc-name">Chief Engineer</div>
-            <div className="pc-rank">Unlimited · Motor · 12 yrs at sea</div>
+            <div className="pc-name" id="pc-rankname">Chief Engineer</div>
+            <div className="pc-rank" id="pc-line">Unlimited · Motor · 12 yrs at sea</div>
             <div className="vbadge">✓ VERIFIED PROFILE</div>
           </div>
         </div>
         <div className="pc-rows">
-          <div className="pc-row"><span>Availability</span><b className="av">● Available from Sep 2026</b></div>
-          <div className="pc-row"><span>Certificates</span><b>STCW III/2 · COC ✓</b></div>
-          <div className="pc-row"><span>Vessel experience</span><b>Bulk · Tanker · Container</b></div>
-          <div className="pc-row"><span>Last contract</span><b>C/E — 82,000 DWT Bulk</b></div>
+          <div className="pc-row"><span>Availability</span><b className="av" id="pc-avail">● Available from Sep 2026</b></div>
+          <div className="pc-row"><span>Certificates</span><b id="pc-cert">STCW III/2 · COC ✓</b></div>
+          <div className="pc-row"><span>Vessel experience</span><b id="pc-ves">Bulk · Tanker · Container</b></div>
+          <div className="pc-row"><span>Last contract</span><b id="pc-last">C/E — 82,000 DWT Bulk</b></div>
+        </div>
         </div>
         <a className="btn btn-gold pc-cta" href="/signup/company">Contact directly →</a>
+        <div className="pdots" id="pdots"></div>
       </div>
       <div className="fcard">
         <div className="ic">👁</div>
@@ -331,15 +489,15 @@ export default function HomeContent() {
   </div>
 </div>
 
-<section id="search" style={{paddingBottom:"20px"}}>
+<section id="try" style={{padding:"56px 0 8px"}}>
   <div className="wrap">
-    <div style={{maxWidth:"640px",margin:"0 auto"}}>
-      <SearchWizard />
-    </div>
+    <div className="sec-tag rv">Try it now</div>
+    <h2 className="rv" style={{marginBottom:"26px"}}>Find crew by rank — in seconds</h2>
+<SearchWizard />
   </div>
 </section>
 
-<section id="how" style={{paddingTop:"40px"}}>
+<section id="how" style={{paddingTop:"56px"}}>
   <div className="wrap">
     <div className="sec-tag rv">How it works</div>
     <h2 className="rv">Three steps to your next opportunity</h2>
@@ -402,7 +560,7 @@ export default function HomeContent() {
     <div className="sec-tag rv">For Companies</div>
     <h2 className="rv">Hire verified crew — without agency fees</h2>
     <p className="sec-sub rv">Every profile is document-checked before it goes live. Try the full platform free for a month, see the crew pool for yourself — then decide.</p>
-    <div className="cplans">
+        <div className="cplans">
       <div className="cplan hot rv">
         <div className="hot-tag">MOST POPULAR</div>
         <h3>Pro</h3>
@@ -497,7 +655,7 @@ export default function HomeContent() {
   <div className="wrap">
     <div className="foot-grid">
       <div className="foot-brand">
-        <a className="logo" href="/"><span className="logo-ic">⚓</span><b>Ship<span>Crew</span>Finder</b></a>
+        <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
         <p>The verified maritime career platform. Direct contact. Zero commission. Built at sea.</p>
       </div>
       <div>
