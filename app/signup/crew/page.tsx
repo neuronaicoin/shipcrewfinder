@@ -5,7 +5,7 @@ import { useState } from "react";
 import { signupCrew } from "@/lib/actions/auth";
 
 export default function SignupCrewPage() {
-  const [crewType, setCrewType] = useState<"seafarer" | "yacht">("seafarer");
+  const crewType = "seafarer";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +72,7 @@ export default function SignupCrewPage() {
             <div className="grid grid-cols-2 gap-2 p-1 bg-primary border border-white/10 rounded-lg">
               <button
                 type="button"
-                onClick={() => setCrewType("seafarer")}
+                type="button"
                 className={`px-4 py-2.5 rounded-md text-sm font-bold transition ${
                   crewType === "seafarer"
                     ? "bg-accent text-primary shadow-lg"
@@ -80,17 +80,6 @@ export default function SignupCrewPage() {
                 }`}
               >
                 Ship Crew
-              </button>
-              <button
-                type="button"
-                onClick={() => setCrewType("yacht")}
-                className={`px-4 py-2.5 rounded-md text-sm font-bold transition ${
-                  crewType === "yacht"
-                    ? "bg-accent text-primary shadow-lg"
-                    : "text-white/60 hover:text-white"
-                }`}
-              >
-                Yacht Crew
               </button>
             </div>
           </div>
