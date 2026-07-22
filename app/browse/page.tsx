@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 import NotificationBell from "@/app/components/notification-bell";
-import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
+import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
 import { getSortedLanguages } from "@/lib/constants/languages";
 import Link from "next/link";
@@ -65,13 +65,9 @@ export default async function BrowsePage({
   let query = supabase
     .from("profiles")
     .select("id, user_type, full_name, country, avatar_url, visibility")
-    .in("visibility", ["public", "stealth"]);
+    .eq("visibility", "public");
 
-  if (fType === "seafarer" || fType === "yacht") {
-    query = query.eq("user_type", fType);
-  } else {
-    query = query.in("user_type", ["seafarer", "yacht"]);
-  }
+  query = query.eq("user_type", "seafarer");
 
   if (fCountry) {
     query = query.eq("country", fCountry);
@@ -85,8 +81,7 @@ export default async function BrowsePage({
   let profileList = (profiles || []) as ProfileRow[];
 
   // Fetch details
-  const seafarerIds = profileList.filter((p) => p.user_type === "seafarer").map((p) => p.id);
-  const yachtIds = profileList.filter((p) => p.user_type === "yacht").map((p) => p.id);
+  const seafarerIds = profileList.map((p) => p.id);
 
   const detailsMap: Record<string, Record<string, unknown>> = {};
 
@@ -99,15 +94,7 @@ export default async function BrowsePage({
       detailsMap[d.id as string] = d as Record<string, unknown>;
     });
   }
-  if (yachtIds.length > 0) {
-    const { data } = await supabase
-      .from("yacht_details")
-      .select("id, position, years_experience, availability")
-      .in("id", yachtIds);
-    (data || []).forEach((d) => {
-      detailsMap[d.id as string] = d as Record<string, unknown>;
-    });
-  }
+
 
   // Apply detail-based filters in code
   profileList = profileList.filter((p) => {
@@ -229,16 +216,6 @@ export default async function BrowsePage({
         {/* Filters */}
         <form method="get" className="bg-primary-dark border border-white/10 rounded-2xl p-5 md:p-6 mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Type */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Crew Type</label>
-              <select name="type" defaultValue={fType} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                <option value="seafarer">Ship Crew</option>
-                <option value="yacht">Yacht Crew</option>
-              </select>
-            </div>
 
             {/* Rank dropdown */}
             <div>
@@ -254,15 +231,6 @@ export default async function BrowsePage({
                 </optgroup>
                 <optgroup label="Ship — Catering">
                   {SHIP_RANKS["Catering Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-                <optgroup label="Yacht — Deck">
-                  {YACHT_POSITIONS["Deck"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-                <optgroup label="Yacht — Interior">
-                  {YACHT_POSITIONS["Interior"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-                <optgroup label="Yacht — Galley">
-                  {YACHT_POSITIONS["Galley"].map((r) => <option key={r} value={r}>{r}</option>)}
                 </optgroup>
               </select>
             </div>
@@ -344,7 +312,6 @@ export default async function BrowsePage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {profileList.map((p) => {
               const d = detailsMap[p.id] || {};
-              const isStealth = p.visibility === "stealth";
               const roleTitle = (d.rank as string) || (d.position as string) || "Maritime Professional";
               const langs = Array.isArray(d.languages) ? (d.languages as string[]) : [];
               const avail = availLabel(d.availability);
@@ -354,25 +321,17 @@ export default async function BrowsePage({
                   className="bg-primary-dark border border-white/10 hover:border-accent/40 rounded-2xl p-6 transition flex flex-col">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-                      {isStealth ? (
-                        <svg className="w-5 h-5 text-accent" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <span className="font-display text-lg font-bold text-accent">
-                          {(p.full_name || "U").charAt(0).toUpperCase()}
-                        </span>
-                      )}
+                      <span className="font-display text-lg font-bold text-accent">
+                        {(p.full_name || "U").charAt(0).toUpperCase()}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display text-lg font-bold text-white truncate">
-                        {isStealth ? "Hidden Profile" : p.full_name || "Unnamed"}
+                        {p.full_name || "Unnamed"}
                       </h3>
                       <p className="text-accent text-sm font-bold truncate">{roleTitle}</p>
                     </div>
-                    {isStealth && (
-                      <span className="flex-shrink-0 px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-white/5 border border-white/15 text-white/60">🔒</span>
-                    )}
+
                   </div>
 
                   <div className="space-y-1.5 mb-5 text-sm">
