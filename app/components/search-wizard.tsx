@@ -2,27 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
+import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
 
 type Intent = "hire" | "work" | null;
-type CrewType = "seafarer" | "yacht" | null;
+
 
 export default function SearchWizard() {
   const [intent, setIntent] = useState<Intent>(null);
-  const [crewType, setCrewType] = useState<CrewType>(null);
+  const crewType = "seafarer";
   const [country, setCountry] = useState("");
   const [rank, setRank] = useState("");
   const [showResult, setShowResult] = useState(false);
 
   const countries = getSortedCountries();
 
-  const rankGroups =
-    crewType === "yacht" ? YACHT_POSITIONS : SHIP_RANKS;
+  const rankGroups = SHIP_RANKS;
 
   const reset = () => {
     setIntent(null);
-    setCrewType(null);
     setCountry("");
     setRank("");
     setShowResult(false);
@@ -45,9 +43,8 @@ export default function SearchWizard() {
     paddingRight: "2.5rem",
   };
 
-  const canPickCrewType = intent !== null;
-  const canPickCountry = crewType !== null;
-  const canSearch = intent !== null && crewType !== null;
+  const canPickCountry = intent !== null;
+  const canSearch = intent !== null;
 
   return (
     <div className="relative bg-gradient-to-br from-white/[0.07] to-white/[0.02] border-2 border-accent/40 rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 backdrop-blur-sm shadow-[0_0_40px_-8px_rgba(251,191,36,0.35)]">
@@ -67,7 +64,7 @@ export default function SearchWizard() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => { setIntent("hire"); setCrewType(null); setRank(""); }}
+                onClick={() => { setIntent("hire"); setRank(""); }}
                 className={`px-4 py-3 rounded-lg text-base font-bold transition border ${
                   intent === "hire"
                     ? "bg-accent text-primary border-accent"
@@ -78,7 +75,7 @@ export default function SearchWizard() {
               </button>
               <button
                 type="button"
-                onClick={() => { setIntent("work"); setCrewType(null); setRank(""); }}
+                onClick={() => { setIntent("work"); setRank(""); }}
                 className={`px-4 py-3 rounded-lg text-base font-bold transition border ${
                   intent === "work"
                     ? "bg-accent text-primary border-accent"
@@ -89,39 +86,6 @@ export default function SearchWizard() {
               </button>
             </div>
           </div>
-
-          {/* Step 2 — Crew type */}
-          {canPickCrewType && (
-            <div className="mb-4">
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">
-                Category
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => { setCrewType("seafarer"); setRank(""); }}
-                  className={`px-4 py-3 rounded-lg text-sm font-bold transition border ${
-                    crewType === "seafarer"
-                      ? "bg-accent text-primary border-accent"
-                      : "bg-primary border-white/15 text-white/80 hover:border-white/30"
-                  }`}
-                >
-                  Ship Crew
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setCrewType("yacht"); setRank(""); }}
-                  className={`px-4 py-3 rounded-lg text-sm font-bold transition border ${
-                    crewType === "yacht"
-                      ? "bg-accent text-primary border-accent"
-                      : "bg-primary border-white/15 text-white/80 hover:border-white/30"
-                  }`}
-                >
-                  Yacht Crew
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Step 3 — Country */}
           {canPickCountry && (
@@ -196,7 +160,7 @@ export default function SearchWizard() {
               : "Viewing job openings requires a free account."}
           </p>
           <p className="text-white/40 text-xs mb-6">
-            Your search: {crewType === "yacht" ? "Yacht crew" : "Ship crew"}
+            Your search: Ship crew
             {country ? ` · ${countries.find((c) => c.code === country)?.name || country}` : ""}
             {rank ? ` · ${rank}` : ""}
           </p>
