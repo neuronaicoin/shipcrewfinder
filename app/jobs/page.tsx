@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
+import { SHIP_RANKS } from "@/lib/constants/ranks";
 
 export const metadata = {
   title: "Maritime Jobs — ShipCrewFinder",
@@ -14,7 +15,7 @@ export default async function JobsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const fType = sp.type || "";
+  const fRank = sp.rank || "";
   const fCountry = sp.country || "";
 
   const supabase = await createClient();
@@ -25,12 +26,12 @@ export default async function JobsPage({
 
   let query = supabase
     .from("jobs")
-    .select("id, title, position, job_type, location_country, location_city, created_at, company_id")
+    .select("id, title, position, job_type, location_country, location_city, created_at, company_id, salary_min, salary_max, salary_currency, contract_duration")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
-  if (fType === "seafarer" || fType === "yacht") {
-    query = query.eq("job_type", fType);
+  if (fRank) {
+    query = query.eq("position", fRank);
   }
   if (fCountry) {
     query = query.eq("location_country", fCountry);
@@ -38,6 +39,22 @@ export default async function JobsPage({
 
   const { data: jobs } = await query;
   const jobList = jobs || [];
+
+  // Şirket adları (kartlarda göstermek için)
+  const companyIds = [...new Set(jobList.map((j) => j.company_id).filter(Boolean))];
+  const companyNames: Record<string, string> = {};
+  if (companyIds.length > 0) {
+    const { data: comps } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", companyIds);
+    (comps || []).forEach((c) => { companyNames[c.id as string] = (c.full_name as string) || "Verified Company"; });
+  }
+
+  const salaryOf = (j: (typeof jobList)[number]) =>
+    j.salary_min || j.salary_max
+      ? `${j.salary_currency || "USD"} ${j.salary_min || "?"}${j.salary_max ? `–${j.salary_max}` : ""}/mo`
+      : null;
 
   const countries = getSortedCountries();
   const countryName = (code: string | null) => {
@@ -110,12 +127,17 @@ export default async function JobsPage({
         <form method="get" className="bg-primary-dark border border-white/10 rounded-2xl p-5 mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Crew Type</label>
-              <select name="type" defaultValue={fType} style={inputStyle}
+              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Rank</label>
+              <select name="rank" defaultValue={fRank} style={inputStyle}
                 className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                <option value="seafarer">Ship Crew</option>
-                <option value="yacht">Yacht Crew</option>
+                <option value="">All ranks</option>
+                {SHIP_RANKS.map((g) => (
+                  <optgroup key={g.group} label={g.group}>
+                    {g.ranks.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
             </div>
             <div>
@@ -159,16 +181,24 @@ export default async function JobsPage({
                       <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
                         {job.position}
                       </span>
-                      <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-white/60 text-[10px] font-bold uppercase tracking-wider">
-                        {job.job_type === "yacht" ? "Yacht" : "Ship"}
-                      </span>
+                      {salaryOf(job) && (
+                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-300 text-[10px] font-bold tracking-wider">
+                          {salaryOf(job)}
+                        </span>
+                      )}
+                      {job.contract_duration && (
+                        <span className="hidden sm:inline px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-white/60 text-[10px] font-bold tracking-wider">
+                          {job.contract_duration}
+                        </span>
+                      )}
                     </div>
                     <h2 className="font-display text-xl font-bold text-white group-hover:text-accent transition truncate">
                       {job.title}
                     </h2>
-                    <div className="flex items-center gap-3 mt-2 text-white/50 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-white/50 text-sm">
+                      <span className="text-accent/80 font-semibold">{companyNames[job.company_id] || "Verified Company"}</span>
                       {countryName(job.location_country) && (
-                        <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
+                        <><span>·</span><span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span></>
                       )}
                       <span>·</span>
                       <span>{fmtDate(job.created_at)}</span>
