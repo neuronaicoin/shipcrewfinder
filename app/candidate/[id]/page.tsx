@@ -1,11 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
-import { sendConnectRequest } from "@/lib/actions/contact";
 import Link from "next/link";
 
 export const metadata = {
   title: "Candidate — ShipCrewFinder",
+};
+
+// Plan → aylık tam-CV limiti (null = sınırsız)
+const PLAN_LIMITS: Record<string, number | null> = {
+  founding: 100,
+  pro: 100,
+  fleet: null,
 };
 
 export default async function CandidatePage({
@@ -24,10 +30,13 @@ export default async function CandidatePage({
   // Only companies
   const { data: me } = await supabase
     .from("profiles")
-    .select("user_type")
+    .select("user_type, plan")
     .eq("id", user.id)
     .single();
   if (!me || me.user_type !== "company") redirect("/dashboard");
+
+  const myPlan = (me.plan as string) || "founding";
+  const limit = PLAN_LIMITS[myPlan] ?? 100;
 
   // Candidate profile
   const { data: profile } = await supabase
@@ -40,12 +49,12 @@ export default async function CandidatePage({
     notFound();
   }
 
-  // Hidden profiles are not viewable
+  // Hidden profiles are not viewable (crew privacy — kept)
   if (profile.visibility === "hidden") {
     notFound();
   }
 
-  // Did this candidate block the company?
+  // Did this candidate block the company? (crew blocking — kept)
   const { data: blocked } = await supabase
     .from("blocked_companies")
     .select("id")
@@ -53,6 +62,41 @@ export default async function CandidatePage({
     .eq("company_id", user.id)
     .maybeSingle();
   if (blocked) notFound();
+
+  // ── Credit system ─────────────────────────────────────────
+  const monthKey = new Date().toISOString().slice(0, 7); // "2026-07"
+
+  // Already viewed this crew this month? (re-opening is free)
+  const { data: existingView } = await supabase
+    .from("company_profile_views")
+    .select("id")
+    .eq("company_id", user.id)
+    .eq("crew_id", id)
+    .eq("month_key", monthKey)
+    .maybeSingle();
+
+  // How many distinct CVs viewed this month?
+  const { count: usedRaw } = await supabase
+    .from("company_profile_views")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", user.id)
+    .eq("month_key", monthKey);
+  let used = usedRaw || 0;
+
+  let unlocked = false;
+  if (existingView) {
+    unlocked = true;
+  } else if (limit === null || used < limit) {
+    // Spend one credit (unique constraint makes double-insert harmless)
+    const { error: insErr } = await supabase.from("company_profile_views").insert({
+      company_id: user.id,
+      crew_id: id,
+      month_key: monthKey,
+    });
+    if (!insErr) used += 1;
+    unlocked = true;
+  }
+  // else: limit reached → locked view (rank + country only)
 
   // Details
   let details: Record<string, unknown> | null = null;
@@ -71,19 +115,6 @@ export default async function CandidatePage({
       .single();
     details = data;
   }
-
-  // Existing contact request from this company
-  const { data: request } = await supabase
-    .from("contact_requests")
-    .select("status")
-    .eq("from_company_id", user.id)
-    .eq("to_user_id", id)
-    .maybeSingle();
-
-  const isStealth = profile.visibility === "stealth";
-  const isAccepted = request?.status === "accepted";
-  // Unlocked = public OR (stealth and accepted)
-  const unlocked = !isStealth || isAccepted;
 
   const roleTitle =
     (details?.rank as string) ||
@@ -111,9 +142,9 @@ export default async function CandidatePage({
     ? (details?.languages as string[])
     : [];
 
-  const displayName = unlocked
-    ? profile.full_name || "Unnamed"
-    : "Hidden Profile";
+  const displayName = unlocked ? profile.full_name || "Unnamed" : "Profile Locked";
+  const counterText =
+    limit === null ? "Unlimited plan" : `Views this month: ${used}/${limit}`;
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
@@ -139,6 +170,9 @@ export default async function CandidatePage({
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-block px-3 py-1.5 bg-accent/10 border border-accent/25 rounded-lg text-accent text-xs font-bold">
+              {counterText}
+            </span>
             <Link
               href="/browse"
               className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
@@ -193,12 +227,13 @@ export default async function CandidatePage({
           </div>
         </div>
 
-        {/* Professional details (always visible) */}
+        {/* Professional details */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
           <h2 className="font-display text-xl font-bold text-white mb-4">
             Professional Details
           </h2>
           <div className="space-y-3">
+            {/* Rank + Country: her zaman görünür (kilitliyken de) */}
             <div className="flex items-center justify-between py-3 border-b border-white/5">
               <span className="text-white/60 text-sm">
                 {profile.user_type === "yacht" ? "Position" : "Rank"}
@@ -206,33 +241,54 @@ export default async function CandidatePage({
               <span className="text-white font-medium text-sm">{roleTitle}</span>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-white/60 text-sm">Experience</span>
-              <span className="text-white font-medium text-sm">{expLabel}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
               <span className="text-white/60 text-sm">Country</span>
               <span className="text-white font-medium text-sm">
                 {(details?.nationality as string) || profile.country || "—"}
               </span>
             </div>
-            {languages.length > 0 && (
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Languages</span>
-                <span className="text-white font-medium text-sm text-right">
-                  {languages.join(", ")}
-                </span>
-              </div>
+
+            {unlocked ? (
+              <>
+                <div className="flex items-center justify-between py-3 border-b border-white/5">
+                  <span className="text-white/60 text-sm">Experience</span>
+                  <span className="text-white font-medium text-sm">{expLabel}</span>
+                </div>
+                {languages.length > 0 && (
+                  <div className="flex items-center justify-between py-3 border-b border-white/5">
+                    <span className="text-white/60 text-sm">Languages</span>
+                    <span className="text-white font-medium text-sm text-right">
+                      {languages.join(", ")}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-white/60 text-sm">Availability</span>
+                  <span className="text-white font-medium text-sm">
+                    {availLabel || "—"}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Kilitli: bulanık placeholder satırları */}
+                <div className="flex items-center justify-between py-3 border-b border-white/5 select-none">
+                  <span className="text-white/60 text-sm">Experience</span>
+                  <span className="text-white/70 font-medium text-sm blur-sm">3+ years</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-white/5 select-none">
+                  <span className="text-white/60 text-sm">Languages</span>
+                  <span className="text-white/70 font-medium text-sm blur-sm">English, ······</span>
+                </div>
+                <div className="flex items-center justify-between py-3 select-none">
+                  <span className="text-white/60 text-sm">Availability</span>
+                  <span className="text-white/70 font-medium text-sm blur-sm">Available ······</span>
+                </div>
+              </>
             )}
-            <div className="flex items-center justify-between py-3">
-              <span className="text-white/60 text-sm">Availability</span>
-              <span className="text-white font-medium text-sm">
-                {availLabel || "—"}
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Contact & CV: unlocked vs locked */}
+        {/* Contact & CV */}
         {unlocked ? (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
             <h2 className="font-display text-xl font-bold text-white mb-4">
@@ -271,41 +327,29 @@ export default async function CandidatePage({
               </svg>
             </div>
             <h2 className="font-display text-xl font-bold text-white mb-2">
-              Contact details are hidden
+              Monthly view limit reached
             </h2>
-            <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
-              This candidate uses a private profile. Send a connection request — if they accept, you&apos;ll see their name, contact details, and CV.
+            <p className="text-white/60 text-sm mb-2 max-w-md mx-auto">
+              You&apos;ve used {limit === null ? "" : `all ${limit}`} full profile views for this month
+              ({counterText}). This profile shows rank and country only.
             </p>
-
-            {!request && (
-              <form action={sendConnectRequest}>
-                <input type="hidden" name="seafarerId" value={id} />
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-                >
-                  Send Connect Request
-                </button>
-              </form>
-            )}
-
-            {request?.status === "pending" && (
-              <span className="inline-block px-6 py-3 bg-white/5 border border-white/15 text-white/60 font-bold rounded-lg">
-                Request Pending
-              </span>
-            )}
-
-            {request?.status === "rejected" && (
-              <span className="inline-block px-6 py-3 bg-white/5 border border-white/15 text-white/50 font-bold rounded-lg">
-                Request Declined
-              </span>
-            )}
-
-            {request?.status === "expired" && (
-              <span className="inline-block px-6 py-3 bg-white/5 border border-white/15 text-white/50 font-bold rounded-lg">
-                Request Expired
-              </span>
-            )}
+            <p className="text-white/40 text-xs mb-6 max-w-md mx-auto">
+              Your credits reset at the start of next month — or upgrade to Fleet for unlimited views.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/contact"
+                className="px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
+              >
+                Upgrade to Fleet — Unlimited
+              </Link>
+              <Link
+                href="/browse"
+                className="px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
+              >
+                Back to Browse
+              </Link>
+            </div>
           </div>
         )}
       </div>
