@@ -56,6 +56,18 @@ export default async function JobDetailPage({
     alreadyApplied = !!existing;
   }
 
+  // İlan sahibi şirketin bilgileri (üyelere gösterilir)
+  const { data: companyProfile } = await supabase
+    .from("profiles")
+    .select("full_name, email, phone, country")
+    .eq("id", job.company_id)
+    .single();
+  const { data: companyDetails } = await supabase
+    .from("company_details")
+    .select("website, contact_phone, description, company_type")
+    .eq("id", job.company_id)
+    .maybeSingle();
+
   const isOwner = !!user && job.company_id === user.id;
   const isCrew = userType === "seafarer" || userType === "yacht";
 
@@ -149,9 +161,7 @@ export default async function JobDetailPage({
           <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
             {job.position}
           </span>
-          <span className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-white/60 text-[10px] font-bold uppercase tracking-wider">
-            {job.job_type === "yacht" ? "Yacht" : "Ship"}
-          </span>
+
         </div>
         <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
           {job.title}
@@ -188,6 +198,49 @@ export default async function JobDetailPage({
               <p className="text-white/75 text-base leading-relaxed whitespace-pre-line">
                 {job.description}
               </p>
+            </div>
+
+            {/* About the company */}
+            <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
+              <h2 className="font-display text-xl font-bold text-white mb-1">About the Company</h2>
+              <p className="text-accent font-bold mb-4">{companyProfile?.full_name || "Verified Company"}</p>
+              {companyDetails?.description && (
+                <p className="text-white/70 text-sm leading-relaxed mb-5 whitespace-pre-line">
+                  {companyDetails.description}
+                </p>
+              )}
+              <div className="space-y-3">
+                {companyDetails?.website && (
+                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
+                    <span className="text-white/50 text-sm">Website</span>
+                    <a href={companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-accent hover:text-accent-light font-medium text-sm underline underline-offset-2 break-all">
+                      {companyDetails.website}
+                    </a>
+                  </div>
+                )}
+                {(companyDetails?.contact_phone || companyProfile?.phone) && (
+                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
+                    <span className="text-white/50 text-sm">Phone</span>
+                    <span className="text-white font-medium text-sm">{companyDetails?.contact_phone || companyProfile?.phone}</span>
+                  </div>
+                )}
+                {companyProfile?.email && (
+                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
+                    <span className="text-white/50 text-sm">Email</span>
+                    <a href={`mailto:${companyProfile.email}`} className="text-white font-medium text-sm break-all hover:text-accent transition">
+                      {companyProfile.email}
+                    </a>
+                  </div>
+                )}
+                {companyProfile?.country && (
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="text-white/50 text-sm">Country</span>
+                    <span className="text-white font-medium text-sm">{countryName(companyProfile.country) || companyProfile.country}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Apply section */}
