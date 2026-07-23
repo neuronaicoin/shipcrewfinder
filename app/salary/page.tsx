@@ -92,6 +92,17 @@ export default async function SalaryPage({
   .rng{font-size:13px;color:var(--tx2);text-align:right;font-variant-numeric:tabular-nums}
   .thead .rng{color:var(--tx3)}
   .go{color:var(--gold);font-size:11px;font-weight:700;margin-top:2px;display:block}
+  .vguide{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:960px}
+  @media(max-width:820px){.vguide{grid-template-columns:1fr}}
+  .vg{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:24px;position:relative}
+  .vg.hi{border-color:var(--line)}
+  .vg .vtier{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--gold);margin-bottom:8px}
+  .vg h3{font-family:var(--disp);font-size:18px;font-weight:800;margin-bottom:10px}
+  .vg p{font-size:13px;color:var(--tx2);line-height:1.65;margin-bottom:10px}
+  .vg p:last-child{margin-bottom:0}
+  .vg .vk{color:var(--tx);font-weight:600}
+  .sec-head{font-family:var(--disp);font-size:clamp(1.4rem,3.2vw,1.9rem);font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+  .sec-sub2{font-size:13.5px;color:var(--tx2);line-height:1.6;max-width:66ch;margin-bottom:24px}
   .meth{background:rgba(251,191,36,.06);border:1px solid var(--line);border-radius:16px;padding:22px 26px;font-size:13px;color:var(--tx2);line-height:1.7;max-width:860px}
   .meth b{color:var(--tx);font-family:var(--disp)}
   .cta{background:linear-gradient(160deg,var(--navy2),var(--navy));border:1.5px solid var(--line);border-radius:20px;padding:30px;text-align:center;max-width:640px;margin:0 auto}
@@ -154,83 +165,3 @@ export default async function SalaryPage({
           </div>
         </div>
       </div>
-
-      <section style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <div className="filters">
-            <Link href="/salary" className={`fpill ${!activeVessel ? "on" : ""}`}>All vessels</Link>
-            {VESSELS.map((v) => (
-              <Link
-                key={v.key}
-                href={`/salary?vessel=${v.key}`}
-                className={`fpill ${activeVessel === v.key ? "on" : ""}`}
-              >
-                {v.label}
-              </Link>
-            ))}
-          </div>
-
-          {depts.map((dept) => (
-            <div key={dept}>
-              <div className="dept">{dept}</div>
-              <div className="tbl" style={{ ["--cols" as string]: showCols.length }}>
-                <div className="trow thead">
-                  <span>Rank</span>
-                  {showCols.map((v, i) => (
-                    <span key={v.key} className={`rng ${i < showCols.length - 1 ? "hidem" : ""}`}>{v.label}</span>
-                  ))}
-                </div>
-                {SALARY_DATA.filter((r) => r.dept === dept).map((r) => (
-                  <Link key={r.slug} href={`/salary/${r.slug}`} className="trow">
-                    <span>
-                      <span className="rname">{r.rank}</span>
-                      <span className="go">View details →</span>
-                    </span>
-                    {showCols.map((v) => (
-                      <span key={v.key} className="rng">
-                        ${fmtK(r.ranges[v.key].min)}–{fmtK(r.ranges[v.key].max)}
-                      </span>
-                    ))}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <div className="meth">
-            <b>Methodology.</b> Figures are monthly basic wages in USD, excluding overtime, leave
-            pay and bonuses — actual take-home typically runs 15–25% higher with guaranteed
-            overtime. Ranges are compiled from ITF/IBF wage frameworks, published 2026 market
-            data and live listings on ShipCrewFinder. Upper bounds reflect premium operators and
-            specialist tonnage; lower bounds reflect older vessels and budget operators. Updated
-            quarterly. Last update: {LAST_UPDATED}.
-          </div>
-        </div>
-      </section>
-
-      <section style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <div className="cta">
-            <h2>Know what you're worth. Now get found.</h2>
-            <p>
-              Create a free verified profile and let companies come to you — with salary
-              expectations set by real data, not agency talk.
-            </p>
-            <Link className="btn btn-gold" href="/signup/crew">⚓ Create free profile →</Link>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <div className="wrap">
-          © 2026 ShipCrewFinder · <Link href="/salary/tools">Salary Tools</Link> ·{" "}
-          <Link href="/jobs">Browse jobs</Link> · <Link href="/">Home</Link>
-        </div>
-      </footer>
-    </>
-  );
-}
