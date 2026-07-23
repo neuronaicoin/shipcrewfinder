@@ -19,43 +19,33 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const [
+    { data: profile },
+    { data: seafarerDetails },
+    { data: yachtDetails },
+    { data: companyDetails },
+    { count: unreadCount },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("yacht_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("company_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false),
+  ]);
 
   let detailsData: Record<string, unknown> | null = null;
 
   if (profile?.user_type === "seafarer") {
-    const { data } = await supabase
-      .from("seafarer_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
+    detailsData = seafarerDetails;
   } else if (profile?.user_type === "yacht") {
-    const { data } = await supabase
-      .from("yacht_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
+    detailsData = yachtDetails;
   } else if (profile?.user_type === "company") {
-    const { data } = await supabase
-      .from("company_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
+    detailsData = companyDetails;
   }
-
-  // Unread notification count
-  const { count: unreadCount } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("read", false);
 
   let completion = 20;
 
