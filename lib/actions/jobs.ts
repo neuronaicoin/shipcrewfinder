@@ -61,14 +61,9 @@ export async function createJob(formData: FormData) {
     redirect("/jobs/new?error=failed");
   }
 
-  // İş alarmı e-postaları — hata olsa bile ilan verme akışı bozulmaz
-  try {
-    await sendJobAlerts(newJob.id as string);
-  } catch (alertError) {
-    console.error("[createJob] job alert failed", alertError);
-  }
+  const debug = await sendJobAlerts(newJob.id as string);
 
-  redirect("/jobs/mine?created=1");
+  redirect(`/jobs/mine?created=1&debug=${encodeURIComponent(debug)}`);
 }
 
 export async function updateJob(formData: FormData) {
@@ -190,7 +185,6 @@ export async function applyToJob(formData: FormData) {
   const jobId = (formData.get("jobId") as string) || "";
   if (!jobId) redirect("/jobs");
 
-  // Başvuran crew olmalı (company kendi ilanına başvuramaz)
   const { data: me } = await supabase
     .from("profiles")
     .select("user_type, full_name")
@@ -200,7 +194,6 @@ export async function applyToJob(formData: FormData) {
     redirect(`/jobs/${jobId}?error=notcrew`);
   }
 
-  // İlanı çek (company_id + title lazım)
   const { data: job } = await supabase
     .from("jobs")
     .select("id, title, company_id, status")
@@ -210,12 +203,10 @@ export async function applyToJob(formData: FormData) {
     redirect(`/jobs/${jobId}?error=closed`);
   }
 
-  // Mesajı topla (hazır seçenek + opsiyonel serbest metin)
   const preset = (formData.get("preset") as string)?.trim() || "";
   const custom = (formData.get("custom") as string)?.trim() || "";
   const message = [preset, custom].filter(Boolean).join(" — ").slice(0, 500) || null;
 
-  // Başvuruyu kaydet (aynı ilana ikinci kez = unique hatası → zaten başvurmuş)
   const { error } = await supabase.from("job_applications").insert({
     job_id: job.id,
     applicant_id: user.id,
@@ -231,7 +222,6 @@ export async function applyToJob(formData: FormData) {
     redirect(`/jobs/${jobId}?error=failed`);
   }
 
-  // Şirkete bildirim gönder
   const applicantName = (me.full_name as string) || "A candidate";
   await supabase.from("notifications").insert({
     user_id: job.company_id,
