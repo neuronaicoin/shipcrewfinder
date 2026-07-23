@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { blogIndex } from "@/app/data/blog";
+import { SHIP_RANKS } from "@/lib/constants/ranks";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://shipcrewfinder.com";
@@ -101,5 +102,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  // Rank sayfaları (programatik SEO)
+  const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const rankPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/crew`, lastModified, changeFrequency: "weekly", priority: 0.8 },
+    ...Object.values(SHIP_RANKS).flat().map((r) => ({
+      url: `${baseUrl}/crew/${slugify(r as string)}`,
+      lastModified,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    })),
+  ];
+
+  return [...staticPages, ...rankPages, ...blogPages];
 }
