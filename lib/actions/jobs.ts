@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { sendJobAlerts } from "@/lib/send-job-alerts";
 import { redirect } from "next/navigation";
 
 export async function createJob(formData: FormData) {
@@ -36,25 +37,37 @@ export async function createJob(formData: FormData) {
   const salaryMin = salaryMinRaw ? parseInt(salaryMinRaw, 10) : null;
   const salaryMax = salaryMaxRaw ? parseInt(salaryMaxRaw, 10) : null;
 
-  const { error } = await supabase.from("jobs").insert({
-    company_id: user.id,
-    title,
-    position: rank,
-    rank_required: rank,
-    job_type: jobType,
-    location_country: country || null,
-    location_city: city || null,
-    description,
-    contract_duration: contractDuration,
-    salary_min: Number.isFinite(salaryMin as number) ? salaryMin : null,
-    salary_max: Number.isFinite(salaryMax as number) ? salaryMax : null,
-    salary_currency: salaryCurrency,
-    status: "active",
-  });
+  const { data: newJob, error } = await supabase
+    .from("jobs")
+    .insert({
+      company_id: user.id,
+      title,
+      position: rank,
+      rank_required: rank,
+      job_type: jobType,
+      location_country: country || null,
+      location_city: city || null,
+      description,
+      contract_duration: contractDuration,
+      salary_min: Number.isFinite(salaryMin as number) ? salaryMin : null,
+      salary_max: Number.isFinite(salaryMax as number) ? salaryMax : null,
+      salary_currency: salaryCurrency,
+      status: "active",
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !newJob) {
     redirect("/jobs/new?error=failed");
   }
+
+  // İş alarmı e-postaları — hata olsa bile ilan verme akışı bozulmaz
+  try {
+    await sendJobAlerts(newJob.id as string);
+  } catch (alertError) {
+    console.error("[createJob] job alert failed", alertError);
+  }
+
   redirect("/jobs/mine?created=1");
 }
 
