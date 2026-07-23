@@ -1,16 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { login } from "@/lib/actions/auth";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState("");
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let remembered = "";
+    try {
+      remembered = localStorage.getItem("scf_login_email") || "";
+    } catch {}
+    if (remembered) {
+      setSavedEmail(remembered);
+      passwordRef.current?.focus();
+    } else {
+      emailRef.current?.focus();
+    }
+  }, []);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError(null);
+
+    const email = (formData.get("email") as string) || "";
+    try {
+      localStorage.setItem("scf_login_email", email);
+    } catch {}
 
     const result = await login(formData);
 
@@ -69,6 +90,10 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 required
+                ref={emailRef}
+                defaultValue={savedEmail}
+                key={savedEmail}
+                autoComplete="email"
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
               />
@@ -89,6 +114,8 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 required
+                ref={passwordRef}
+                autoComplete="current-password"
                 placeholder="Your password"
                 className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
               />
