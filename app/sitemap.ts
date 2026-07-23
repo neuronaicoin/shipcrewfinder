@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
 import { blogIndex } from "@/app/data/blog";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
-
+import { SALARY_DATA } from "@/lib/data/salary";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://shipcrewfinder.com";
   const lastModified = new Date();
-
   // Statik sayfalar (sadece gerçekten var olanlar)
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -93,7 +92,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ];
-
   // Blog yazıları (otomatik — her yeni yazı buraya kendiliğinden gelir)
   const blogPages: MetadataRoute.Sitemap = blogIndex.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
@@ -101,7 +99,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
     priority: 0.7,
   }));
-
   // Rank sayfaları (programatik SEO)
   const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const rankPages: MetadataRoute.Sitemap = [
@@ -113,6 +110,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     })),
   ];
-
-  return [...staticPages, ...rankPages, ...blogPages];
+  // Salary Index sayfaları (programatik SEO)
+  const salaryPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/salary`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    ...SALARY_DATA.map((r) => ({
+      url: `${baseUrl}/salary/${r.slug}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+  ];
+  return [...staticPages, ...rankPages, ...salaryPages, ...blogPages];
 }
