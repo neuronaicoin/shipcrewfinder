@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
+import JobAlertBox from "@/app/components/job-alert-box";
 
 export const metadata = {
   title: "Maritime Jobs — ShipCrewFinder",
@@ -39,6 +40,30 @@ export default async function JobsPage({
 
   const { data: jobs } = await query;
   const jobList = jobs || [];
+
+  // Job alert durumu (sadece rank filtresi seçiliyse ve giriş yapılmışsa)
+  let alertActive = false;
+  let isCompany = false;
+  if (user) {
+    const { data: myProfile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
+      .single();
+    isCompany = myProfile?.user_type === "company";
+
+    if (fRank && !isCompany) {
+      const { data: myAlert } = await supabase
+        .from("job_alerts")
+        .select("active")
+        .eq("user_id", user.id)
+        .eq("rank", fRank)
+        .maybeSingle();
+      alertActive = myAlert?.active === true;
+    }
+  }
+
+  const alertRedirectTo = `/jobs?rank=${encodeURIComponent(fRank)}${fCountry ? `&country=${encodeURIComponent(fCountry)}` : ""}`;
 
   // Şirket adları (kartlarda göstermek için)
   const companyIds = [...new Set(jobList.map((j) => j.company_id).filter(Boolean))];
@@ -162,6 +187,17 @@ export default async function JobsPage({
             )}
           </div>
         </form>
+
+        {/* Job Alert */}
+        {fRank && (
+          <JobAlertBox
+            rank={fRank}
+            isActive={alertActive}
+            isLoggedIn={!!user}
+            isCompany={isCompany}
+            redirectTo={alertRedirectTo}
+          />
+        )}
 
         {jobList.length === 0 ? (
           <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
