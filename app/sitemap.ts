@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { blogIndex } from "@/app/data/blog";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { SALARY_DATA } from "@/lib/data/salary";
+import { NATIONALITIES } from "@/lib/data/nationalities";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://shipcrewfinder.com";
   const lastModified = new Date();
@@ -113,8 +114,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Salary Index sayfaları (programatik SEO)
   const salaryPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/salary`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${baseUrl}/salary/tools`, lastModified, changeFrequency: "monthly", priority: 0.7 },
     ...SALARY_DATA.map((r) => ({
       url: `${baseUrl}/salary/${r.slug}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+    ...NATIONALITIES.map((n) => ({
+      url: `${baseUrl}/salary/for/${n.slug}`,
       lastModified,
       changeFrequency: "monthly" as const,
       priority: 0.7,
