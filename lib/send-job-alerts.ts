@@ -4,13 +4,12 @@ import { buildJobAlertEmail, type AlertJob } from "@/lib/email/job-alert-email";
 
 const FROM = "ShipCrewFinder <jobs@shipcrewfinder.com>";
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
-const RESEND_KEY_TEST = "re_SZ5scTKb_67qooMuit4okD7BghU2JwW5K";
 
 export async function sendJobAlerts(jobId: string): Promise<string> {
   const steps: string[] = [];
 
-  const resendKey = process.env.RESEND_API_KEY || RESEND_KEY_TEST;
-  steps.push(`KEY_SOURCE=${process.env.RESEND_API_KEY ? "ENV" : "HARDCODED"}`);
+  const resendKey = process.env.SCF_MAIL_KEY || "";
+  steps.push(`MAIL_KEY=${resendKey ? "OK" : "MISSING"}`);
 
   try {
     const admin = createAdminClient();
