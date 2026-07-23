@@ -4,13 +4,13 @@ import { buildJobAlertEmail, type AlertJob } from "@/lib/email/job-alert-email";
 
 const FROM = "ShipCrewFinder <jobs@shipcrewfinder.com>";
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const RESEND_KEY_TEST = "re_SZ5scTKb_67qooMuit4okD7BghU2JwW5K";
 
 export async function sendJobAlerts(jobId: string): Promise<string> {
   const steps: string[] = [];
 
-  steps.push(`URL=${process.env.NEXT_PUBLIC_SUPABASE_URL ? "OK" : "MISSING"}`);
-  steps.push(`SERVICE_KEY=${process.env.SUPABASE_SERVICE_ROLE_KEY ? "OK" : "MISSING"}`);
-  steps.push(`RESEND_KEY=${process.env.RESEND_API_KEY ? "OK" : "MISSING"}`);
+  const resendKey = process.env.RESEND_API_KEY || RESEND_KEY_TEST;
+  steps.push(`KEY_SOURCE=${process.env.RESEND_API_KEY ? "ENV" : "HARDCODED"}`);
 
   try {
     const admin = createAdminClient();
@@ -24,7 +24,6 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
 
     if (jobErr) return steps.join(" | ") + ` | JOB_ERR=${jobErr.message}`;
     if (!job) return steps.join(" | ") + " | JOB=NOT_FOUND";
-    steps.push(`job=${job.rank_required}/${job.status}`);
 
     const rank = (job.rank_required as string) || (job.position as string) || "";
 
@@ -35,9 +34,8 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
       .eq("active", true);
 
     if (alertErr) return steps.join(" | ") + ` | ALERT_ERR=${alertErr.message}`;
-    steps.push(`alerts=${alerts?.length ?? 0}`);
-
     if (!alerts || alerts.length === 0) return steps.join(" | ") + " | NO_SUBSCRIBERS";
+    steps.push(`alerts=${alerts.length}`);
 
     let companyName = "A verified shipping company";
     if (job.company_id) {
@@ -50,13 +48,13 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
       const res = await fetch(RESEND_ENDPOINT, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          Authorization: `Bearer ${resendKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ from: FROM, to: [a.email], subject, html, text }),
       });
       const body = await res.text();
-      steps.push(`resend[${a.email}]=${res.status}:${body.slice(0, 200)}`);
+      steps.push(`resend=${res.status}:${body.slice(0, 150)}`);
     }
 
     return steps.join(" | ");
