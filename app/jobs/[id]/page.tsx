@@ -69,6 +69,47 @@ export default async function JobDetailPage({
     .maybeSingle();
 
   const isOwner = !!user && job.company_id === user.id;
+
+  // ── Google for Jobs: JobPosting yapılandırılmış verisi ──
+  const jobLd = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: job.description || job.title,
+    datePosted: job.created_at,
+    validThrough: new Date(new Date(job.created_at).getTime() + 60 * 24 * 3600 * 1000).toISOString(),
+    employmentType: "CONTRACTOR",
+    directApply: true,
+    hiringOrganization: {
+      "@type": "Organization",
+      name: companyProfile?.full_name || "Verified Maritime Company",
+      ...(companyDetails?.website
+        ? { sameAs: companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}` }
+        : {}),
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        ...(job.location_city ? { addressLocality: job.location_city } : {}),
+        addressCountry: job.location_country || "INT",
+      },
+    },
+    ...(job.salary_min || job.salary_max
+      ? {
+          baseSalary: {
+            "@type": "MonetaryAmount",
+            currency: job.salary_currency || "USD",
+            value: {
+              "@type": "QuantitativeValue",
+              ...(job.salary_min ? { minValue: job.salary_min } : {}),
+              ...(job.salary_max ? { maxValue: job.salary_max } : {}),
+              unitText: "MONTH",
+            },
+          },
+        }
+      : {}),
+  };
   const isCrew = userType === "seafarer" || userType === "yacht";
 
   const countries = getSortedCountries();
@@ -90,6 +131,7 @@ export default async function JobDetailPage({
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobLd) }} />
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
       <div
         className="absolute inset-0 opacity-[0.04]"
