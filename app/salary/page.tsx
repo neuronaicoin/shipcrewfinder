@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SALARY_DATA, VESSELS, fmtK, LAST_UPDATED, type VesselKey } from "@/lib/data/salary";
+import { NATIONALITIES } from "@/lib/data/nationalities";
 import SalarySubmitForm from "@/app/components/salary-submit-form";
 
 export const metadata = {
@@ -93,6 +94,12 @@ export default async function SalaryPage({
   .rng{font-size:13px;color:var(--tx2);text-align:right;font-variant-numeric:tabular-nums}
   .thead .rng{color:var(--tx3)}
   .go{color:var(--gold);font-size:11px;font-weight:700;margin-top:2px;display:block}
+  .natgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;max-width:960px}
+  .nat{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--tx);transition:.2s;display:flex;align-items:center;gap:12px}
+  .nat:hover{transform:translateY(-2px);border-color:var(--gold)}
+  .nat .nf{font-size:26px;line-height:1}
+  .nat .nn{font-family:var(--disp);font-weight:700;font-size:14px}
+  .nat .ns{font-size:11px;color:var(--tx3);margin-top:2px}
   .vguide{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:960px}
   @media(max-width:820px){.vguide{grid-template-columns:1fr}}
   .vg{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:24px;position:relative}
@@ -117,7 +124,7 @@ export default async function SalaryPage({
     .thead span.hidem{display:none}
   }
 `}</style>
-<header className="top">
+      <header className="top">
         <div className="wrap top-in">
           <Link className="logo" href="/">
             <span className="logo-ic">{anchorSvg}</span>
@@ -209,7 +216,28 @@ export default async function SalaryPage({
           ))}
         </div>
       </section>
-<section style={{ paddingTop: 0 }}>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="sec-head">Salaries by nationality</div>
+          <p className="sec-sub2">
+            Where the world's crews come from, what they earn, and how companies hire them —
+            based on the July 2026 BIMCO/ICS Seafarer Workforce Report.
+          </p>
+          <div className="natgrid">
+            {NATIONALITIES.map((n) => (
+              <Link key={n.slug} href={`/salary/for/${n.slug}`} className="nat">
+                <span className="nf">{n.flag}</span>
+                <span>
+                  <span className="nn">{n.nationality}</span>
+                  <span className="ns" style={{ display: "block" }}>{n.officers} officers</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="sec-head">Why vessel type changes everything</div>
           <p className="sec-sub2">
