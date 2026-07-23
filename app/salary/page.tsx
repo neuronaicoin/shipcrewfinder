@@ -209,3 +209,124 @@ export default async function SalaryPage({
           ))}
         </div>
       </section>
+<section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="sec-head">Why vessel type changes everything</div>
+          <p className="sec-sub2">
+            Same rank, same certificate — up to double the pay. The difference is cargo risk,
+            certification burden and how deep the qualified pool runs. Written from the engine
+            room, not from a desk.
+          </p>
+          <div className="vguide">
+            <div className="vg">
+              <div className="vtier">THE BASELINE</div>
+              <h3>Bulk Carrier</h3>
+              <p>
+                Coal, iron ore, grain — <span className="vk">low cargo risk, minimal extra
+                certification</span>, and a huge supply of qualified crew. That combination sets
+                the floor of the pay scale.
+              </p>
+              <p>
+                The trade-off is honest: older tonnage is common, ports sit far from city
+                centers, and loading means crane noise and dust. But port turnarounds are calmer,
+                inspection pressure is lighter than tankers, and{" "}
+                <span className="vk">it is the fastest lane to sea time and promotion</span> —
+                which is why many careers start here.
+              </p>
+            </div>
+            <div className="vg">
+              <div className="vtier">THE MIDDLE GROUND</div>
+              <h3>Container</h3>
+              <p>
+                Liner schedules measure port stays in <span className="vk">hours, not days</span>.
+                There is no "we'll fix it alongside" — every repair happens at sea, on the move.
+              </p>
+              <p>
+                The machinery is enormous: ultra-large container vessels run 11–12 cylinder main
+                engines, backed by heavy generator capacity for thousands of reefer boxes. No
+                explosive cargo means it pays under tankers — but the tempo and machinery stress
+                put it <span className="vk">firmly above bulk</span>.
+              </p>
+            </div>
+            <div className="vg hi">
+              <div className="vtier">THE RISK PREMIUM</div>
+              <h3>Tanker</h3>
+              <p>
+                Basic STCW is not enough — <span className="vk">Advanced Oil/Chemical Tanker
+                Cargo Operations plus a flag-state endorsement</span> are mandatory before you
+                sign on.
+              </p>
+              <p>
+                And the work never stops at the berth: inert gas systems, steam turbine or FRAMO
+                cargo pumps, boilers and vapor recovery all sit on the engine team — under
+                constant OCIMF/SIRE inspection pressure. Add flammable and toxic cargo (H₂S,
+                chemicals) where one static spark matters, and the premium explains itself.
+              </p>
+            </div>
+            <div className="vg hi">
+              <div className="vtier">THE TOP OF THE SCALE</div>
+              <h3>LNG / LPG</h3>
+              <p>
+                IGC and IGF Code training, an advanced gas endorsement — and the hardest part:{" "}
+                <span className="vk">accumulating the required sea time on gas tonnage</span> to
+                even enter the pool.
+              </p>
+              <p>
+                The cargo isn't just carried — it's reliquefied on board or burned in dual-fuel
+                engines (ME-GI, X-DF), with cryogenic systems at −162°C leaving{" "}
+                <span className="vk">zero tolerance for error</span>. Few officers can run this
+                technology, and companies pay top of the market to keep the ones who can.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="meth">
+            <b>Methodology.</b> Figures are monthly basic wages in USD, excluding overtime, leave
+            pay and bonuses — actual take-home typically runs 15–25% higher with guaranteed
+            overtime. Ranges are compiled from ITF/IBF wage frameworks, published 2026 market
+            data and live listings on ShipCrewFinder. Upper bounds reflect premium operators and
+            specialist tonnage; lower bounds reflect older vessels and budget operators. Updated
+            quarterly. Last update: {LAST_UPDATED}.
+          </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="sec-head">Share your salary — anonymously</div>
+          <p className="sec-sub2">
+            Real figures from real seafarers make this index stronger than any agency report.
+            Takes 20 seconds. Completely anonymous.
+          </p>
+          <div style={{ maxWidth: 720, background: "linear-gradient(165deg,var(--navy2),var(--ink))", border: "1px solid var(--line)", borderRadius: 20, padding: 26 }}>
+            <SalarySubmitForm />
+          </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="cta">
+            <h2>Know what you're worth. Now get found.</h2>
+            <p>
+              Create a free verified profile and let companies come to you — with salary
+              expectations set by real data, not agency talk.
+            </p>
+            <Link className="btn btn-gold" href="/signup/crew">⚓ Create free profile →</Link>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/salary/tools">Salary Tools</Link> ·{" "}
+          <Link href="/jobs">Browse jobs</Link> · <Link href="/">Home</Link>
+        </div>
+      </footer>
+    </>
+  );
+}
