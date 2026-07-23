@@ -8,12 +8,21 @@ const RESEND_ENDPOINT = "https://api.resend.com/emails";
 export async function sendJobAlerts(jobId: string): Promise<string> {
   const steps: string[] = [];
 
-  const resendKey = process.env.SCF_MAIL_KEY || "";
-  steps.push(`MAIL_KEY=${resendKey ? "OK" : "MISSING"}`);
-
   try {
     const admin = createAdminClient();
     steps.push("admin=OK");
+
+    const { data: secret, error: secretErr } = await admin
+      .from("app_secrets")
+      .select("value")
+      .eq("key", "resend_api_key")
+      .single();
+
+    if (secretErr || !secret?.value) {
+      return steps.join(" | ") + ` | SECRET_ERR=${secretErr?.message || "empty"}`;
+    }
+    const resendKey = secret.value as string;
+    steps.push("mail_key=OK");
 
     const { data: job, error: jobErr } = await admin
       .from("jobs")
@@ -42,6 +51,8 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
       if (c?.full_name) companyName = c.full_name as string;
     }
 
+    const okIds: string[] = [];
+
     for (const a of alerts) {
       const { subject, html, text } = buildJobAlertEmail(job as unknown as AlertJob, companyName, a.token as string);
       const res = await fetch(RESEND_ENDPOINT, {
@@ -54,6 +65,15 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
       });
       const body = await res.text();
       steps.push(`resend=${res.status}:${body.slice(0, 150)}`);
+      if (res.ok) okIds.push(a.id as string);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+
+    if (okIds.length > 0) {
+      await admin
+        .from("job_alerts")
+        .update({ last_sent_at: new Date().toISOString() })
+        .in("id", okIds);
     }
 
     return steps.join(" | ");
