@@ -61,9 +61,13 @@ export async function createJob(formData: FormData) {
     redirect("/jobs/new?error=failed");
   }
 
-  const debug = await sendJobAlerts(newJob.id as string);
+  try {
+    await sendJobAlerts(newJob.id as string);
+  } catch (alertError) {
+    console.error("[createJob] job alert failed", alertError);
+  }
 
-  redirect(`/jobs/mine?created=1&debug=${encodeURIComponent(debug)}`);
+  redirect("/jobs/mine?created=1");
 }
 
 export async function updateJob(formData: FormData) {
