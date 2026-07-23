@@ -117,3 +117,95 @@ export default async function SalaryPage({
     .thead span.hidem{display:none}
   }
 `}</style>
+<header className="top">
+        <div className="wrap top-in">
+          <Link className="logo" href="/">
+            <span className="logo-ic">{anchorSvg}</span>
+            <b>Ship<span>Crew</span>Finder</b>
+          </Link>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <Link className="btn btn-ghost" href="/jobs">Browse Jobs</Link>
+            <Link className="btn btn-gold" href="/signup/crew">Sign Up Free</Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="hero">
+        <div className="aur aur1"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/" className="back" style={{ marginBottom: 18, display: "inline-flex" }}>
+            ← Back to homepage
+          </Link>
+          <div style={{ height: 6 }} />
+          <div className="badge">SEAFARER SALARY INDEX · UPDATED {LAST_UPDATED.toUpperCase()}</div>
+          <h1>What every rank <span className="g">actually earns</span> in 2026</h1>
+          <p className="sub">
+            Monthly basic wages for 15 maritime ranks across bulk carriers, tankers, container
+            ships and LNG. Built from ITF frameworks, current market data and real listings on
+            ShipCrewFinder — no agency spin.
+          </p>
+          <div className="hcards">
+            <Link className="hcard" href="/salary/master">
+              <div className="hl">Highest command rank</div>
+              <div className="hn">Master</div>
+              <div className="hr">$9k – 21k<span style={{ fontSize: 13, color: "var(--tx3)", fontWeight: 600 }}> /mo</span></div>
+            </Link>
+            <Link className="hcard" href="/salary/chief-engineer">
+              <div className="hl">Highest engineering rank</div>
+              <div className="hn">Chief Engineer</div>
+              <div className="hr">$8.5k – 21k<span style={{ fontSize: 13, color: "var(--tx3)", fontWeight: 600 }}> /mo</span></div>
+            </Link>
+          </div>
+          <div className="toolstrip">
+            <div>
+              <b>🧮 Salary tools</b>
+              <p>Calculator, rank comparison and the full career ladder — interactive.</p>
+            </div>
+            <Link className="btn btn-gold" href="/salary/tools">Open tools →</Link>
+          </div>
+        </div>
+      </div>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="filters">
+            <Link href="/salary" className={`fpill ${!activeVessel ? "on" : ""}`}>All vessels</Link>
+            {VESSELS.map((v) => (
+              <Link
+                key={v.key}
+                href={`/salary?vessel=${v.key}`}
+                className={`fpill ${activeVessel === v.key ? "on" : ""}`}
+              >
+                {v.label}
+              </Link>
+            ))}
+          </div>
+
+          {depts.map((dept) => (
+            <div key={dept}>
+              <div className="dept">{dept}</div>
+              <div className="tbl" style={{ ["--cols" as string]: showCols.length }}>
+                <div className="trow thead">
+                  <span>Rank</span>
+                  {showCols.map((v, i) => (
+                    <span key={v.key} className={`rng ${i < showCols.length - 1 ? "hidem" : ""}`}>{v.label}</span>
+                  ))}
+                </div>
+                {SALARY_DATA.filter((r) => r.dept === dept).map((r) => (
+                  <Link key={r.slug} href={`/salary/${r.slug}`} className="trow">
+                    <span>
+                      <span className="rname">{r.rank}</span>
+                      <span className="go">View details →</span>
+                    </span>
+                    {showCols.map((v) => (
+                      <span key={v.key} className="rng">
+                        ${fmtK(r.ranges[v.key].min)}–{fmtK(r.ranges[v.key].max)}
+                      </span>
+                    ))}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
