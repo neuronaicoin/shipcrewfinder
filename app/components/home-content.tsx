@@ -16,13 +16,21 @@ const ham=document.getElementById('ham'), mnav=document.getElementById('mnav');
 if(ham){ ham.onclick=()=>mnav.classList.toggle('open');
   mnav.querySelectorAll('a').forEach(a=>a.onclick=()=>mnav.classList.remove('open')); }
 
-// dönen örnek profiller (7 sn'de bir rank değişir)
+// dönen örnek profiller (6 sn'de bir rank değişir)
 const PROFILES=[
   {i:'CE',r:'Chief Engineer',l:'Unlimited · Motor · 12 yrs at sea',a:'● Available from Sep 2026',c:'STCW III/2 · COC ✓',v:'Bulk · Tanker · Container',x:'C/E — 82,000 DWT Bulk'},
   {i:'MK',r:'Master',l:'Unlimited · 15 yrs at sea',a:'● Available from Aug 2026',c:'STCW II/2 · COC ✓',v:'Bulk · General Cargo',x:'Master — 58,000 DWT Bulk'},
   {i:'CO',r:'Chief Officer',l:'Unlimited · 9 yrs at sea',a:'● Available now',c:'STCW II/2 · GMDSS ✓',v:'Container · Ro-Ro',x:'C/O — 6,800 TEU Container'},
   {i:'2E',r:'2nd Engineer',l:'Motor · 7 yrs at sea',a:'● Available from Oct 2026',c:'STCW III/2 ✓',v:'Tanker · LPG',x:'2/E — 49,900 DWT Tanker'},
   {i:'ET',r:'ETO',l:'High voltage · 6 yrs at sea',a:'● Available now',c:'STCW III/6 · HV ✓',v:'Container · LNG',x:'ETO — 14,000 TEU Container'}
+];
+// viewed rozeti kartla birlikte döner
+const VIEWS=[
+  {n:'3 companies viewed this profile',s:'this week · via Profile Analytics'},
+  {n:'5 companies viewed this profile',s:'this week · via Profile Analytics'},
+  {n:'2 new messages from companies',s:'this week · direct contact'},
+  {n:'4 companies viewed this profile',s:'this week · via Profile Analytics'},
+  {n:'Shortlisted by 2 companies',s:'this week · via Profile Analytics'}
 ];
 let pIdx=0;
 const pdots=document.getElementById('pdots');
@@ -34,6 +42,7 @@ if(pdots){
     setTimeout(()=>{
       pIdx=(pIdx+1)%PROFILES.length;
       const p=PROFILES[pIdx];
+      const w=VIEWS[pIdx];
       document.getElementById('pc-init').textContent=p.i;
       document.getElementById('pc-rankname').textContent=p.r;
       document.getElementById('pc-line').textContent=p.l;
@@ -41,6 +50,8 @@ if(pdots){
       document.getElementById('pc-cert').textContent=p.c;
       document.getElementById('pc-ves').textContent=p.v;
       document.getElementById('pc-last').textContent=p.x;
+      const vn=document.getElementById('fc-n'), vs=document.getElementById('fc-s');
+      if(vn){vn.textContent=w.n; vs.textContent=w.s;}
       [...pdots.children].forEach((d,k)=>d.classList.toggle('on',k===pIdx));
       f.classList.remove('out');
     },320);
@@ -122,7 +133,6 @@ if(hRot){
   body.light .pcard,body.light .price{box-shadow:0 24px 55px rgba(20,30,70,.16)}
   body.light .aur1{opacity:.4}
   body.light .aur2{opacity:.3}
-  body.light .fcard{box-shadow:0 14px 30px rgba(20,30,70,.18)}
   body.light .marq{background:rgba(255,255,255,.55)}
   body.light nav a{background:rgba(255,255,255,.6)}
   body.light .path:hover{box-shadow:0 14px 30px rgba(20,30,70,.14)}
@@ -142,10 +152,11 @@ if(hRot){
   body.light .price{background:#ffffff}
   body.light .plist li{color:#1c2846}
   body.light .founder{background:rgba(224,160,16,.07)}
-  body.light .fcard{background:#ffffff;border-color:rgba(15,25,60,.14)}
+  body.light .fcard{background:rgba(52,211,153,.08)}
   body.light .hint{color:#6a7a9c}
   body.light .avatar{background:linear-gradient(145deg,#dfe7f6,#c9d6ee);color:#8a6a1e}
   body.light .pcard{background:linear-gradient(165deg,#ffffff,#f2f5fc)}
+  body.light .salstrip{background:#ffffff;border-color:rgba(15,25,60,.14)}
   /* gündüz: SearchWizard (Tailwind adası) kontrast düzeltmeleri */
   body.light #try [class*="bg-primary"]{background:#ffffff !important}
   body.light #try [class*="text-white"]{color:#1c2a4d !important}
@@ -190,7 +201,6 @@ if(hRot){
   .mnav a{color:var(--tx2);text-decoration:none;font-size:14.5px;font-weight:600;
     border:1px solid var(--line2);border-radius:10px;padding:12px 16px;background:rgba(255,255,255,.02)}
   .mnav a:active{color:var(--gold);border-color:var(--gold)}
-
   /* ── hero ── */
   .hero{position:relative;padding:72px 0 60px;overflow:hidden}
   .aur{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.55}
@@ -201,7 +211,6 @@ if(hRot){
   .hero::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);
     width:1200px;height:800px;background:radial-gradient(ellipse,rgba(251,191,36,.1),transparent 60%);pointer-events:none}
   .hero-in{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
-  @media(max-width:960px){ .hero-in{grid-template-columns:1fr} .hero-vis{display:none} }
   .badge{display:inline-flex;align-items:center;gap:9px;background:rgba(251,191,36,.09);
     border:1px solid var(--line);border-radius:22px;padding:7px 16px;font-size:12.5px;font-weight:600;
     color:var(--gold);margin-bottom:22px}
@@ -214,7 +223,6 @@ if(hRot){
   .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
-  @media(max-width:560px){ .paths{grid-template-columns:1fr} }
   .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));border:1.5px solid var(--line2);
     border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);transition:.2s;position:relative;overflow:hidden}
   .path::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
@@ -232,10 +240,9 @@ if(hRot){
   .hero-note b{color:var(--grn)}
 
   /* hero visual: profile mock */
-  .hero-vis{position:relative}
-  .hero-vis{perspective:1100px}
+  .hero-vis{position:relative;perspective:1100px}
   .pcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid rgba(251,191,36,.22);
-    border-radius:22px;padding:26px;box-shadow:0 34px 70px rgba(0,0,0,.5);position:relative;max-width:380px;
+    border-radius:22px;padding:24px;box-shadow:0 34px 70px rgba(0,0,0,.5);position:relative;max-width:380px;
     margin-left:auto;overflow:hidden;animation:cardTilt 9s ease-in-out infinite alternate;transform-style:preserve-3d}
   @keyframes cardTilt{0%{transform:rotateY(-5deg) rotateX(2deg)}100%{transform:rotateY(4deg) rotateX(-2deg)}}
   .pcard::after{content:'';position:absolute;top:0;bottom:0;width:60%;left:-80%;
@@ -244,45 +251,54 @@ if(hRot){
   @keyframes shine{0%,55%{left:-80%}85%,100%{left:130%}}
   .pc-fade{transition:opacity .3s ease, transform .3s ease}
   .pc-fade.out{opacity:0;transform:translateY(-8px)}
-  .pdots{display:flex;gap:6px;justify-content:center;margin-top:14px}
+  .pdots{display:flex;gap:6px;justify-content:center;margin-top:12px}
   .pdots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);transition:.3s}
   .pdots span.on{background:var(--gold);transform:scale(1.25)}
-  .sample-tag{position:absolute;top:-11px;right:18px;background:var(--navy);border:1px solid var(--line);
-    color:var(--tx3);font-size:9.5px;font-weight:700;letter-spacing:.1em;border-radius:7px;padding:4px 10px;z-index:2}
+  .sample-note{text-align:center;font-size:9.5px;color:var(--tx3);margin-top:8px;letter-spacing:.05em;opacity:.75}
   .pcard::before{content:'';position:absolute;inset:0;border-radius:20px;pointer-events:none;
     background:radial-gradient(ellipse at 80% 0%,rgba(251,191,36,.12),transparent 55%)}
-  .pc-top{display:flex;gap:14px;align-items:center;margin-bottom:16px}
-  .avatar{width:58px;height:58px;border-radius:16px;background:linear-gradient(145deg,#2a4a70,#16324f);
-    display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:22px;color:var(--gold)}
+  .pc-top{display:flex;gap:14px;align-items:center;margin-bottom:15px}
+  .avatar{width:56px;height:56px;border-radius:16px;background:linear-gradient(145deg,#2a4a70,#16324f);
+    display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:21px;color:var(--gold)}
   .pc-name{font-family:var(--disp);font-weight:700;font-size:17px}
   .pc-rank{font-size:12.5px;color:var(--tx3);margin-top:2px}
   .vbadge{display:inline-flex;align-items:center;gap:5px;background:rgba(52,211,153,.12);color:var(--grn);
     border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:3px 9px;font-size:10.5px;font-weight:700;margin-top:6px}
-  .pc-rows{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+  .pc-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:13px}
   .pc-row{display:flex;justify-content:space-between;font-size:12.5px;padding:9px 12px;
     background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:10px}
   .pc-row span{color:var(--tx3)}
   .pc-row b{font-weight:600}
   .pc-row b.av{color:var(--grn)}
+  /* viewed rozeti — artık kartın İÇİNDE, kartla birlikte döner */
+  .fcard{display:flex;gap:10px;align-items:center;background:rgba(52,211,153,.07);
+    border:1px solid rgba(52,211,153,.25);border-radius:12px;padding:10px 13px;font-size:12px;margin-bottom:13px}
+  .fcard .ic{width:30px;height:30px;border-radius:9px;background:rgba(52,211,153,.14);display:grid;place-items:center;font-size:14px;flex-shrink:0;animation:blink 2.6s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+  .fcard b{display:block;font-size:12px;line-height:1.3}
+  .fcard span{color:var(--tx3);font-size:10.5px}
   .pc-cta{width:100%;text-align:center;font-size:13px}
-  .fcard{position:absolute;bottom:-22px;left:-14px;background:var(--navy2);border:1px solid var(--line);
-    border-radius:14px;padding:13px 16px;box-shadow:0 18px 40px rgba(0,0,0,.4);font-size:12px;
-    display:flex;gap:10px;align-items:center;animation:float 4s ease-in-out infinite}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-  .fcard .ic{width:32px;height:32px;border-radius:9px;background:rgba(251,191,36,.14);display:grid;place-items:center;font-size:15px}
-  .fcard b{display:block;font-size:12.5px}
-  .fcard span{color:var(--tx3);font-size:11px}
 
   /* ── rank marquee ── */
   .marq{border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:16px 0;overflow:hidden;
     background:rgba(7,26,48,.5)}
-  .marq-in{display:flex;white-space:nowrap;animation:scroll 55s linear infinite;width:max-content}
-  .marq-in{gap:14px}
+  .marq-in{display:flex;white-space:nowrap;animation:scroll 55s linear infinite;width:max-content;gap:14px}
   .marq-in span{font-family:var(--disp);font-weight:700;font-size:13.5px;color:var(--tx2);
     border:1px solid var(--line2);border-radius:11px;padding:9px 18px;background:rgba(255,255,255,.025);
     display:inline-flex;align-items:center;gap:8px}
   .marq-in span::before{content:'⚓';font-size:11px;opacity:.55}
   @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ── salary teaser strip ── */
+  .salstrip{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    background:linear-gradient(160deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:16px;
+    padding:16px 22px;margin:34px auto 0;max-width:1140px}
+  .salstrip .ss-l{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px}
+  .salstrip .ss-t{font-family:var(--disp);font-weight:800;font-size:13.5px;color:var(--gold);white-space:nowrap}
+  .salstrip .ss-i{color:var(--tx2);white-space:nowrap}
+  .salstrip .ss-i b{color:var(--grn);font-weight:700}
+  .salstrip a{color:var(--gold);font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap}
+  .salstrip a:hover{text-decoration:underline}
 
   /* ── sections ── */
   section{padding:76px 0}
@@ -294,7 +310,6 @@ if(hRot){
 
   /* how it works */
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  @media(max-width:860px){ .steps{grid-template-columns:1fr} }
   .step{background:linear-gradient(160deg,var(--navy2),var(--navy));border:1px solid var(--line2);
     border-radius:18px;padding:26px;position:relative}
   .step .num{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--ink);
@@ -305,9 +320,7 @@ if(hRot){
 
   /* crew section */
   .split{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
-  @media(max-width:960px){ .split{grid-template-columns:1fr} }
   .feats{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:26px}
-  @media(max-width:560px){ .feats{grid-template-columns:1fr} }
   .feat{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:14px;padding:17px}
   .feat .fi{font-size:20px;margin-bottom:8px}
   .feat b{display:block;font-size:14px;font-family:var(--disp);font-weight:700;margin-bottom:5px}
@@ -337,13 +350,10 @@ if(hRot){
   .sb-head b{font-family:var(--disp)}
   .sb-head span{font-size:11.5px;color:var(--tx3)}
   .sb-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px}
-  @media(max-width:820px){ .sb-row{grid-template-columns:1fr 1fr} }
-  @media(max-width:540px){ .sb-row{grid-template-columns:1fr} }
   .sb-sel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;
     padding:12px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none;cursor:pointer}
   .sb-sel:focus{border-color:var(--gold)}
   .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px}
-  @media(max-width:820px){ .cplans{grid-template-columns:1fr} }
   .cplan{background:linear-gradient(165deg,var(--navy2),var(--navy));border:1px solid var(--line2);
     border-radius:20px;padding:28px;position:relative}
   .cplan.hot{border:1.5px solid var(--gold);box-shadow:0 20px 50px rgba(0,0,0,.35)}
@@ -354,12 +364,10 @@ if(hRot){
 
   /* why */
   .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  @media(max-width:860px){ .why-grid{grid-template-columns:1fr 1fr} }
-  @media(max-width:560px){ .why-grid{grid-template-columns:1fr} }
   .founder{margin-top:34px;background:rgba(251,191,36,.06);border:1px solid var(--line);border-radius:16px;
     padding:22px 26px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   .founder .fi{font-size:28px}
-  .founder b{font-family:var(--disp);font-size:15.5px;display:block;margin-bottom:4px}
+  .founder b{font-family:var(--disp);font-size:16px;display:block;margin-bottom:4px}
   .founder p{font-size:13px;color:var(--tx2);line-height:1.6;max-width:64ch}
 
   /* FAQ */
@@ -384,7 +392,6 @@ if(hRot){
   /* footer */
   footer{border-top:1px solid var(--line2);padding:52px 0 90px;background:var(--ink)}
   .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
-  @media(max-width:820px){ .foot-grid{grid-template-columns:1fr 1fr} }
   .foot-brand p{font-size:13px;color:var(--tx3);line-height:1.6;margin-top:12px;max-width:32ch}
   footer h4{font-family:var(--disp);font-size:13.5px;font-weight:700;margin-bottom:14px}
   footer ul{list-style:none;display:flex;flex-direction:column;gap:9px}
@@ -397,15 +404,41 @@ if(hRot){
   .mbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;gap:10px;padding:12px 14px;
     background:rgba(7,26,48,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line2)}
   .mbar .btn{flex:1;padding:13px 8px;font-size:13.5px}
-  @media(max-width:640px){ .mbar{display:flex} footer{padding-bottom:120px} }
 
   /* reveal */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
   .rv.in{opacity:1;transform:none}
+
+  /* ══ MOBİL PASS ══ */
+  @media(max-width:960px){
+    .hero-in{grid-template-columns:1fr;gap:36px}
+    .hero-vis{max-width:380px;width:100%;margin:0 auto}
+    .pcard{margin:0 auto;animation:none;transform:none}
+    .split{grid-template-columns:1fr}
+  }
+  @media(max-width:860px){ .steps{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:820px){ .sb-row{grid-template-columns:1fr 1fr} .cplans{grid-template-columns:1fr} .foot-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:640px){
+    .mbar{display:flex} footer{padding-bottom:120px}
+    .hero{padding:40px 0 36px}
+    section{padding:46px 0}
+    .final{padding:56px 0}
+    h1{margin-bottom:14px}
+    .hero p.sub{font-size:15px;margin-bottom:22px}
+    .badge{margin-bottom:16px;font-size:11.5px;padding:6px 13px}
+    .sec-sub{margin-bottom:26px}
+    .pcard{padding:20px;max-width:100%}
+    .salstrip{padding:14px 16px;margin-top:24px}
+    .founder{padding:18px 20px}
+    .price{padding:24px 20px}
+    .cplan{padding:24px 20px}
+  }
+  @media(max-width:560px){ .paths{grid-template-columns:1fr} .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
+  @media(max-width:540px){ .sb-row{grid-template-columns:1fr} }
 `}</style>
-<header className="top">
+      <header className="top">
   <div className="wrap top-in">
-    <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
+    <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
     <nav>
       <a href="#crew">For Crew</a>
       <a href="#companies">For Companies</a>
@@ -465,7 +498,7 @@ if(hRot){
       <div className="hero-note"><b>✓</b> Cancel anytime  ·  <b>✓</b> 0% commission — ever  ·  <b>✓</b> Verified profiles only</div>
     </div>
     <div className="hero-vis">
-      <div className="pcard"><div className="sample-tag">EXAMPLE PROFILE</div>
+      <div className="pcard">
         <div className="pc-fade" id="pc-fade">
         <div className="pc-top">
           <div className="avatar" id="pc-init">CE</div>
@@ -481,13 +514,14 @@ if(hRot){
           <div className="pc-row"><span>Vessel experience</span><b id="pc-ves">Bulk · Tanker · Container</b></div>
           <div className="pc-row"><span>Last contract</span><b id="pc-last">C/E — 82,000 DWT Bulk</b></div>
         </div>
+        <div className="fcard">
+          <div className="ic">👁</div>
+          <div><b id="fc-n">3 companies viewed this profile</b><span id="fc-s">this week · via Profile Analytics</span></div>
+        </div>
         </div>
         <a className="btn btn-gold pc-cta" href="/signup/company">Contact directly →</a>
         <div className="pdots" id="pdots"></div>
-      </div>
-      <div className="fcard">
-        <div className="ic">👁</div>
-        <div><b>3 companies viewed your profile</b><span>this week · via Profile Analytics</span></div>
+        <div className="sample-note">EXAMPLE — real verified profiles rotate here as members join</div>
       </div>
     </div>
   </div>
@@ -497,6 +531,18 @@ if(hRot){
   <div className="marq-in">
     <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
     <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
+  </div>
+</div>
+
+<div className="wrap">
+  <div className="salstrip rv">
+    <div className="ss-l">
+      <span className="ss-t">💰 2026 SALARY INDEX</span>
+      <span className="ss-i">Master <b>$9–12k</b></span>
+      <span className="ss-i">Chief Engineer <b>$8.5–11.5k</b></span>
+      <span className="ss-i">2nd Engineer <b>$6–8k</b></span>
+    </div>
+    <a href="/salary">See all 15 ranks →</a>
   </div>
 </div>
 
@@ -626,8 +672,8 @@ if(hRot){
     <div className="founder rv">
       <div className="fi">⚓</div>
       <div>
-        <b>A note from the founder</b>
-        <p>I've spent over a decade in engine rooms across bulk carriers and tankers. I watched agencies take their cut from every contract while adding delay, noise and zero transparency. ShipCrewFinder is the platform I wished existed — direct, verified, and honest.</p>
+        <b>Built by seafarers, for seafarers.</b>
+        <p>No recruiters in between, no commission — verified crew and companies, direct contact. Every feature here exists because we needed it ourselves at sea.</p>
       </div>
     </div>
   </div>
@@ -666,7 +712,7 @@ if(hRot){
   <div className="wrap">
     <div className="foot-grid">
       <div className="foot-brand">
-        <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
+        <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
         <p>The verified maritime career platform. Direct contact. Zero commission. Built at sea.</p>
       </div>
       <div>
