@@ -273,6 +273,11 @@ export default async function DashboardPage() {
                   <b>Search Crew</b>
                   <p>Filter verified profiles by rank, availability and vessel experience.</p>
                 </Link>
+                <Link href="/radar" className="qcard">
+                  <div className="qi">📡</div>
+                  <b>Rotation Radar</b>
+                  <p>Crew in your ranks whose contracts end within 90 days — contact them first.</p>
+                </Link>
                 <Link href="/jobs/new" className="qcard">
                   <div className="qi">📋</div>
                   <b>Post a Job</b>
