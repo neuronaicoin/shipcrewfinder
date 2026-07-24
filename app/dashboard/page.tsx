@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 import SiteHeader from "@/app/components/site-header";
+import InviteCard from "@/app/components/invite-card";
 import Link from "next/link";
 
 export const metadata = {
@@ -131,6 +132,35 @@ export default async function DashboardPage() {
   const ringR = 42;
   const ringC = 2 * Math.PI * ringR;
   const ringOff = ringC - (completion / 100) * ringC;
+
+  // Davet kartı verileri (sadece crew)
+  let refCode = "";
+  let refJoined = 0;
+  let refMonths = 0;
+  let refLeft = 2;
+  let refReset: string | null = null;
+  if (isCrew) {
+    const { data: myRewards } = await supabase
+      .from("referral_rewards")
+      .select("referrer_rewarded, created_at")
+      .eq("referrer_id", user.id)
+      .order("created_at", { ascending: false });
+    refCode = (profile?.referral_code as string) || "";
+    refMonths = (profile?.bonus_months as number) || 0;
+    const rewards = myRewards || [];
+    refJoined = rewards.length;
+    const sixMonthsAgo = Date.now() - 180 * 24 * 3600 * 1000;
+    const recent = rewards.filter(
+      (r) => r.referrer_rewarded && new Date(r.created_at as string).getTime() > sixMonthsAgo
+    );
+    refLeft = Math.max(0, 2 - recent.length);
+    if (refLeft === 0 && recent.length > 0) {
+      const oldest = recent[recent.length - 1];
+      refReset = new Date(
+        new Date(oldest.created_at as string).getTime() + 180 * 24 * 3600 * 1000
+      ).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    }
+  }
 
   const fmtNotifDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -332,6 +362,20 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {isCrew && refCode ? (
+        <section style={{ paddingTop: 6 }}>
+          <div className="wrap">
+            <InviteCard
+              refCode={refCode}
+              joined={refJoined}
+              monthsEarned={refMonths}
+              invitesLeft={refLeft}
+              resetInfo={refReset}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <section style={{ paddingTop: 6 }}>
         <div className="wrap">
           <div className="grid2">
@@ -351,7 +395,7 @@ export default async function DashboardPage() {
                       className={`nrow ${n.read ? "" : "unread"}`}
                     >
                       <span className="ni">
-                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : "🔔"}
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : "🔔"}
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <b>{n.title as string}</b>
