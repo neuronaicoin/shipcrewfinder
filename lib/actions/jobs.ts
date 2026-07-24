@@ -216,7 +216,7 @@ export async function applyToJob(formData: FormData) {
     applicant_id: user.id,
     company_id: job.company_id,
     message,
-    status: "pending",
+    status: "new",
   });
 
   if (error) {
