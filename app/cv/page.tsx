@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import CvActions from "@/app/components/cv-actions";
+import CvNote from "@/app/components/cv-note";
 import { uploadCvPhoto, removeCvPhoto, toggleCvContact, regenerateCvLink } from "@/lib/actions/cv";
 import { getSortedCountries } from "@/lib/constants/countries";
 import Link from "next/link";
@@ -217,6 +218,8 @@ export default async function CvPage({
     .cv-foot{padding:0 16px 14px}
   }
 `}</style>
+
+      <CvNote />
 
       <SiteHeader
         isLoggedIn={true}
