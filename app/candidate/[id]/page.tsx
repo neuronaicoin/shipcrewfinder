@@ -45,7 +45,7 @@ export default async function CandidatePage({
   // Candidate profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, user_type, full_name, email, phone, country, visibility")
+    .select("id, user_type, full_name, email, phone, country, visibility, cv_share_code")
     .eq("id", id)
     .single();
 
@@ -151,7 +151,7 @@ export default async function CandidatePage({
     limit === null ? "Unlimited plan" : "Views this month: " + used + "/" + limit;
 
   const cvUrl = (details?.cv_url as string) || "";
-
+  const scfCvCode = (profile.cv_share_code as string) || "";
   return (
     <>
       <style>{`
@@ -192,16 +192,21 @@ export default async function CandidatePage({
   .row a{color:var(--gold);text-decoration:none}
   .row a:hover{text-decoration:underline}
   .blur{filter:blur(4px);user-select:none;color:var(--tx2)}
-  .lock{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:32px 26px;text-align:center}
-  .lock .lic{width:52px;height:52px;margin:0 auto 16px;border-radius:15px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:21px}
-  .lock h2{font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:9px}
-  .lock p{font-size:13px;color:var(--tx2);line-height:1.65;max-width:46ch;margin:0 auto 8px}
-  .lock .fine{font-size:11.5px;color:var(--tx3);margin-bottom:20px}
+  .scvbtn{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1.5px solid var(--line);background:rgba(251,191,36,.07);border-radius:14px;padding:14px 16px;margin-top:16px}
+  .scvbtn .si{display:flex;gap:10px;align-items:center;min-width:0}
+  .scvbtn .sic{font-size:20px;flex-shrink:0}
+  .scvbtn b{font-family:var(--disp);font-size:13.5px;display:block}
+  .scvbtn p{font-size:11.5px;color:var(--tx3);margin-top:1px;line-height:1.5}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:12px 22px;font-family:var(--body)}
   .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-gold:hover{transform:translateY(-2px)}
   .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
   .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .lock{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:32px 26px;text-align:center}
+  .lock .lic{width:52px;height:52px;margin:0 auto 16px;border-radius:15px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:21px}
+  .lock h2{font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:9px}
+  .lock p{font-size:13px;color:var(--tx2);line-height:1.65;max-width:46ch;margin:0 auto 8px}
+  .lock .fine{font-size:11.5px;color:var(--tx3);margin-bottom:20px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -305,7 +310,7 @@ export default async function CandidatePage({
                   <b>{profile.phone || "—"}</b>
                 </div>
                 <div className="row">
-                  <span>CV</span>
+                  <span>Uploaded CV</span>
                   {cvUrl ? (
                     <a href={cvUrl} target="_blank" rel="noopener noreferrer">View CV</a>
                   ) : (
@@ -313,6 +318,26 @@ export default async function CandidatePage({
                   )}
                 </div>
               </div>
+
+              {scfCvCode ? (
+                <div className="scvbtn">
+                  <div className="si">
+                    <span className="sic">📄</span>
+                    <div style={{ minWidth: 0 }}>
+                      <b>SCF Verified CV</b>
+                      <p>Live professional CV — sea service log, valid certificates and availability, always up to date.</p>
+                    </div>
+                  </div>
+                  
+                    href={"/cv/share/" + scfCvCode}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-gold"
+                  >
+                    View SCF CV →
+                  </a>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="lock">
