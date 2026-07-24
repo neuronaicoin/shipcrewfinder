@@ -23,7 +23,6 @@ export default async function JobDetailPage({
 
   const supabase = await createClient();
 
-  // getSession: çerezden okur — ekstra ağ turu yok
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -39,7 +38,6 @@ export default async function JobDetailPage({
     notFound();
   }
 
-  // Kullanıcının tipi + başvuru durumu + okunmamış bildirim (paralel)
   let userType: string | null = null;
   let alreadyApplied = false;
   let unreadCount = 0;
@@ -63,7 +61,6 @@ export default async function JobDetailPage({
     unreadCount = unread || 0;
   }
 
-  // İlan sahibi şirketin bilgileri (üyelere gösterilir)
   const [{ data: companyProfile }, { data: companyDetails }] = await Promise.all([
     supabase
       .from("profiles")
@@ -79,7 +76,10 @@ export default async function JobDetailPage({
 
   const isOwner = !!user && job.company_id === user.id;
 
-  // ── Google for Jobs: JobPosting yapılandırılmış verisi ──
+  const websiteUrl = companyDetails?.website
+    ? (companyDetails.website.startsWith("http") ? companyDetails.website : "https://" + companyDetails.website)
+    : null;
+
   const jobLd = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
@@ -92,9 +92,7 @@ export default async function JobDetailPage({
     hiringOrganization: {
       "@type": "Organization",
       name: companyProfile?.full_name || "Verified Maritime Company",
-      ...(companyDetails?.website
-        ? { sameAs: companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}` }
-        : {}),
+      ...(websiteUrl ? { sameAs: websiteUrl } : {}),
     },
     jobLocation: {
       "@type": "Place",
@@ -125,7 +123,7 @@ export default async function JobDetailPage({
   const countryName = (code: string | null) => {
     if (!code) return null;
     const c = countries.find((x) => x.code === code);
-    return c ? `${c.flag} ${c.name}` : code;
+    return c ? c.flag + " " + c.name : code;
   };
 
   const fmtDate = (d: string | null) =>
@@ -133,11 +131,10 @@ export default async function JobDetailPage({
 
   const salary =
     job.salary_min || job.salary_max
-      ? `${job.salary_currency || "USD"} ${job.salary_min || "?"}${job.salary_max ? ` – ${job.salary_max}` : ""} / month`
+      ? (job.salary_currency || "USD") + " " + (job.salary_min || "?") + (job.salary_max ? " – " + job.salary_max : "") + " / month"
       : null;
 
   const isMember = !!user;
-
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobLd) }} />
@@ -204,6 +201,7 @@ export default async function JobDetailPage({
         unreadCount={unreadCount}
         active="jobs"
       />
+
       <div className="jd-hero">
         <div className="aur"></div>
         <div className="wrap" style={{ position: "relative" }}>
@@ -213,16 +211,14 @@ export default async function JobDetailPage({
           <h1>{job.title}</h1>
           <div className="jmeta">
             {countryName(job.location_country) ? (
-              <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
+              <span>{countryName(job.location_country)}{job.location_city ? ", " + job.location_city : ""}</span>
             ) : null}
             <span>Posted {fmtDate(job.created_at)}</span>
           </div>
         </div>
       </div>
-
       <section style={{ paddingTop: 8 }}>
         <div className="wrap">
-          {/* Status banners */}
           {applied === "1" ? (
             <div className="banner ok">Your application has been sent. The company has been notified.</div>
           ) : null}
@@ -241,7 +237,6 @@ export default async function JobDetailPage({
 
           {isMember ? (
             <>
-              {/* Quick facts */}
               <div className="facts">
                 {salary ? (
                   <div className="fact">
@@ -257,13 +252,11 @@ export default async function JobDetailPage({
                 ) : null}
               </div>
 
-              {/* Description */}
               <div className="card">
                 <h2>Job Description</h2>
                 <p className="desc">{job.description}</p>
               </div>
 
-              {/* About the company */}
               <div className="card">
                 <h2 style={{ marginBottom: 4 }}>About the Company</h2>
                 <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
@@ -271,16 +264,10 @@ export default async function JobDetailPage({
                   <p className="desc" style={{ fontSize: 13, marginBottom: 14 }}>{companyDetails.description}</p>
                 ) : null}
                 <div className="rows">
-                  {companyDetails?.website ? (
+                  {websiteUrl ? (
                     <div className="row">
                       <span>Website</span>
-                      
-                        href={companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {companyDetails.website}
-                      </a>
+                      <a href={websiteUrl} target="_blank" rel="noopener noreferrer">{companyDetails?.website}</a>
                     </div>
                   ) : null}
                   {(companyDetails?.contact_phone || companyProfile?.phone) ? (
@@ -292,7 +279,7 @@ export default async function JobDetailPage({
                   {companyProfile?.email ? (
                     <div className="row">
                       <span>Email</span>
-                      <a href={`mailto:${companyProfile.email}`}>{companyProfile.email}</a>
+                      <a href={"mailto:" + companyProfile.email}>{companyProfile.email}</a>
                     </div>
                   ) : null}
                   {companyProfile?.country ? (
@@ -304,11 +291,10 @@ export default async function JobDetailPage({
                 </div>
               </div>
 
-              {/* Apply section */}
               {isOwner ? (
                 <div className="card center">
                   <p style={{ fontSize: 13.5, color: "var(--tx2)", marginBottom: 16 }}>This is your job posting.</p>
-                  <Link href={`/jobs/${job.id}/applications`} className="btn btn-gold">
+                  <Link href={"/jobs/" + job.id + "/applications"} className="btn btn-gold">
                     View Applications
                   </Link>
                 </div>
@@ -331,7 +317,6 @@ export default async function JobDetailPage({
               )}
             </>
           ) : (
-            /* Locked — not a member */
             <div className="lock">
               <div className="lic">🔒</div>
               <h2>Sign in to see the full job</h2>
