@@ -4,6 +4,7 @@ import Link from "next/link";
 import { closeJob, reopenJob } from "@/lib/actions/jobs";
 import DeleteJobButton from "@/app/components/delete-job-button";
 import { getSortedCountries } from "@/lib/constants/countries";
+import SiteHeader from "@/app/components/site-header";
 
 export const metadata = {
   title: "My Job Posts — ShipCrewFinder",
@@ -20,23 +21,29 @@ export default async function MyJobsPage({
   const deleted = sp.deleted;
 
   const supabase = await createClient();
+
+  // getSession: çerezden okur — ekstra ağ turu yok
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .single();
-  if (!profile || profile.user_type !== "company") redirect("/dashboard");
+  const [{ data: profile }, { count: unreadCount }, { data: jobs }] = await Promise.all([
+    supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false),
+    supabase
+      .from("jobs")
+      .select("id, title, position, job_type, location_country, location_city, status, created_at")
+      .eq("company_id", user.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("id, title, position, job_type, location_country, location_city, status, created_at")
-    .eq("company_id", user.id)
-    .order("created_at", { ascending: false });
+  if (!profile || profile.user_type !== "company") redirect("/dashboard");
 
   const jobList = jobs || [];
 
@@ -65,143 +72,142 @@ export default async function MyJobsPage({
     d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "";
 
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  .mj-hero{position:relative;padding:36px 0 20px;overflow:hidden}
+  .aur{position:absolute;width:440px;height:440px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.42;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:16px}
+  .back:hover{color:var(--gold)}
+  .hrow{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.5rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:6px}
+  .sub{font-size:14px;color:var(--tx2)}
+  section{padding:20px 0 44px}
+  .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid}
+  .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
+  .banner.info{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body);white-space:nowrap}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .jlist{display:flex;flex-direction:column;gap:12px}
+  .jcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px 22px}
+  .jtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+  .jtag{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:4px 11px;border:1px solid}
+  .jtag.rank{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .jtag.on{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .jtag.off{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .jtitle{font-family:var(--disp);font-size:17px;font-weight:700;text-decoration:none;color:var(--tx);display:block;margin-bottom:6px}
+  .jtitle:hover{color:var(--gold)}
+  .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3);margin-bottom:14px}
+  .acts{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px solid var(--line2)}
+  .act{font-size:11.5px;font-weight:700;border-radius:9px;padding:7px 13px;border:1px solid;cursor:pointer;text-decoration:none;transition:.15s;font-family:var(--body);background:transparent}
+  .act.gold{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .act.gold:hover{background:rgba(251,191,36,.15)}
+  .act.plain{color:var(--tx2);border-color:var(--line2)}
+  .act.plain:hover{color:var(--tx);border-color:var(--tx3)}
+  .act.grn{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .empty{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:40px;text-align:center;font-size:14px;color:var(--tx2)}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={true}
+        userType="company"
+        unreadCount={unreadCount || 0}
+        active={null}
       />
 
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-          <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">
-            Your Account
-          </Link>
+      <div className="mj-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/dashboard" className="back">← Back to dashboard</Link>
+          <div className="hrow">
+            <div>
+              <h1>My Job <span style={{ color: "var(--gold)" }}>Posts</span></h1>
+              <p className="sub">{jobList.length} job{jobList.length === 1 ? "" : "s"} total</p>
+            </div>
+            <Link href="/jobs/new" className="btn btn-gold">+ Post Job</Link>
+          </div>
         </div>
-      </header>
+      </div>
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
-              My Job Posts
-            </h1>
-            <p className="text-white/60 text-base">{jobList.length} job{jobList.length === 1 ? "" : "s"} total</p>
-          </div>
-          <Link href="/jobs/new" className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20 whitespace-nowrap">
-            + Post Job
-          </Link>
-        </div>
+      <section style={{ paddingTop: 8 }}>
+        <div className="wrap">
+          {created === "1" ? <div className="banner ok">Your job has been published.</div> : null}
+          {updated === "1" ? <div className="banner ok">Your job has been updated.</div> : null}
+          {deleted === "1" ? <div className="banner info">The job has been deleted.</div> : null}
 
-        {created === "1" && (
-          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm">
-            Your job has been published.
-          </div>
-        )}
-        {updated === "1" && (
-          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm">
-            Your job has been updated.
-          </div>
-        )}
-        {deleted === "1" && (
-          <div className="mb-6 bg-white/5 border border-white/15 rounded-xl p-4 text-white/70 text-sm">
-            The job has been deleted.
-          </div>
-        )}
-
-        {jobList.length === 0 ? (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-white/60 mb-4">You haven&apos;t posted any jobs yet.</p>
-            <Link href="/jobs/new" className="inline-block px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition">
-              Post Your First Job
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {jobList.map((job) => {
-              const appCount = appCountMap[job.id as string] || 0;
-              return (
-              <div key={job.id} className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
-                        {job.position}
-                      </span>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                        job.status === "active"
-                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                          : "bg-white/5 border-white/10 text-white/50"
-                      }`}>
+          {jobList.length === 0 ? (
+            <div className="empty">
+              <p style={{ marginBottom: 16 }}>You haven&apos;t posted any jobs yet.</p>
+              <Link href="/jobs/new" className="btn btn-gold">Post Your First Job</Link>
+            </div>
+          ) : (
+            <div className="jlist">
+              {jobList.map((job) => {
+                const appCount = appCountMap[job.id as string] || 0;
+                return (
+                  <div key={job.id} className="jcard">
+                    <div className="jtags">
+                      <span className="jtag rank">{job.position}</span>
+                      <span className={`jtag ${job.status === "active" ? "on" : "off"}`}>
                         {job.status === "active" ? "Active" : "Closed"}
                       </span>
                     </div>
-                    <Link href={`/jobs/${job.id}`} className="font-display text-xl font-bold text-white hover:text-accent transition truncate block">
-                      {job.title}
-                    </Link>
-                    <div className="flex items-center gap-3 mt-2 text-white/50 text-sm">
-                      {countryName(job.location_country) && (
+                    <Link href={`/jobs/${job.id}`} className="jtitle">{job.title}</Link>
+                    <div className="jmeta">
+                      {countryName(job.location_country) ? (
                         <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
-                      )}
-                      <span>·</span>
+                      ) : null}
                       <span>{fmtDate(job.created_at)}</span>
                     </div>
+
+                    <div className="acts">
+                      <Link href={`/jobs/${job.id}/applications`} className="act gold">
+                        Applications{appCount > 0 ? ` (${appCount})` : ""}
+                      </Link>
+                      <Link href={`/jobs/${job.id}/edit`} className="act plain">Edit</Link>
+                      {job.status === "active" ? (
+                        <form action={closeJob} style={{ display: "inline" }}>
+                          <input type="hidden" name="jobId" value={job.id} />
+                          <button type="submit" className="act plain">Close</button>
+                        </form>
+                      ) : (
+                        <form action={reopenJob} style={{ display: "inline" }}>
+                          <input type="hidden" name="jobId" value={job.id} />
+                          <button type="submit" className="act grn">Reopen</button>
+                        </form>
+                      )}
+                      <DeleteJobButton jobId={job.id} />
+                    </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
-                {/* Action buttons */}
-                <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-white/5">
-                  <Link
-                    href={`/jobs/${job.id}/applications`}
-                    className="px-3 py-1.5 bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold rounded-lg transition border border-accent/30"
-                  >
-                    Applications {appCount > 0 && `(${appCount})`}
-                  </Link>
-
-                  <Link
-                    href={`/jobs/${job.id}/edit`}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs font-bold rounded-lg transition border border-white/10"
-                  >
-                    Edit
-                  </Link>
-
-                  {job.status === "active" ? (
-                    <form action={closeJob}>
-                      <input type="hidden" name="jobId" value={job.id} />
-                      <button type="submit" className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-bold rounded-lg transition border border-white/10">
-                        Close
-                      </button>
-                    </form>
-                  ) : (
-                    <form action={reopenJob}>
-                      <input type="hidden" name="jobId" value={job.id} />
-                      <button type="submit" className="px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold rounded-lg transition border border-emerald-500/30">
-                        Reopen
-                      </button>
-                    </form>
-                  )}
-
-                  <DeleteJobButton jobId={job.id} />
-                </div>
-              </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </main>
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/browse">Search Crew</Link> ·{" "}
+          <Link href="/jobs/new">Post a Job</Link> · <Link href="/dashboard">Dashboard</Link>
+        </div>
+      </footer>
+    </>
   );
 }
