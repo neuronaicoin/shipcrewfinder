@@ -17,6 +17,28 @@ export default async function CrewStep3Page() {
   const countries = getSortedCountries();
   const languages = getSortedLanguages();
 
+  // Mevcut değerleri çek — edit modunda dolu göster
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type")
+    .eq("id", user.id)
+    .single();
+
+  const isShip = profile?.user_type === "seafarer";
+  const detailsTable = isShip ? "seafarer_details" : "yacht_details";
+  const { data: details } = await supabase
+    .from(detailsTable)
+    .select("nationality, english_level, languages")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const savedNationality = (details?.nationality as string) || "";
+  const savedEnglish = (details?.english_level as string) || "";
+  const savedLanguages: string[] = Array.isArray(details?.languages)
+    ? (details?.languages as string[])
+    : [];
+  const isEditing = !!savedNationality;
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
       {/* Progress Bar */}
@@ -36,7 +58,9 @@ export default async function CrewStep3Page() {
           Tell us about yourself
         </h1>
         <p className="text-white/60 text-lg">
-          Your nationality and language skills help match you with the right opportunities.
+          {isEditing
+            ? "Your saved details are filled in — change what you need or continue."
+            : "Your nationality and language skills help match you with the right opportunities."}
         </p>
       </div>
 
@@ -51,7 +75,7 @@ export default async function CrewStep3Page() {
             id="nationality"
             name="nationality"
             required
-            defaultValue=""
+            defaultValue={savedNationality}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
@@ -88,7 +112,7 @@ export default async function CrewStep3Page() {
           <select
             id="englishLevel"
             name="englishLevel"
-            defaultValue=""
+            defaultValue={savedEnglish}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
@@ -127,6 +151,7 @@ export default async function CrewStep3Page() {
                   type="checkbox"
                   name="languages"
                   value={language.code}
+                  defaultChecked={savedLanguages.includes(language.code)}
                   className="w-4 h-4 accent-accent cursor-pointer"
                 />
                 <span className="text-white/80 text-sm group-hover:text-white transition truncate">
