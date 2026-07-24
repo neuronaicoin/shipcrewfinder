@@ -1,0 +1,18 @@
+name: Document Expiry Reminders
+
+on:
+  schedule:
+    # Her gün 06:00 UTC (09:00 TR)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger expiry reminder endpoint
+        run: |
+          status=$(curl -s -o /tmp/out.json -w "%{http_code}" --max-time 60 "https://shipcrewfinder.com/api/expiry-reminders?key=${{ secrets.CRON_KEY }}")
+          echo "HTTP status: $status"
+          cat /tmp/out.json
+          if [ "$status" != "200" ]; then exit 1; fi
