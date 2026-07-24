@@ -104,7 +104,6 @@ if(hRot){
 }
 
 // ── PWA kurulum ──
-// Android/Chrome: gerçek kurulum penceresi
 let deferredPrompt=null;
 const pwaBtn=document.getElementById('pwa-install');
 window.addEventListener('beforeinstallprompt',(e)=>{
@@ -124,7 +123,6 @@ if(pwaBtn){
     try{ localStorage.setItem('scf_pwa_dis','1'); }catch(err){}
   };
 }
-// iOS Safari: Paylaş → Ana Ekrana Ekle yönlendirmesi
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 const standalone=window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
 const iosTip=document.getElementById('ios-tip');
@@ -170,11 +168,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   body.light .aur2{opacity:.3}
   body.light .marq{background:rgba(255,255,255,.55)}
   body.light nav a{background:rgba(255,255,255,.6)}
-  body.light .path:hover{box-shadow:0 14px 30px rgba(20,30,70,.14)}
   body.light .rep-pre{background:#ffffff}
-  body.light .mbar{background:rgba(255,255,255,.95)}
-  body.light .mtab{color:#57678a}
-  body.light .mtab.hot{color:#b8860b}
   body.light .pwa-chip{background:#ffffff;box-shadow:0 14px 30px rgba(20,30,70,.2)}
   body.light .feat{background:#f7f9fe;border-color:rgba(15,25,60,.13)}
   body.light .pc-row{background:#f3f6fc;border-color:rgba(15,25,60,.13)}
@@ -183,7 +177,8 @@ if(iosTip && isIOS && !standalone && !iosDis){
   body.light details{background:#f7f9fe;border-color:rgba(15,25,60,.13)}
   body.light .marq-in span{background:#ffffff;border-color:rgba(15,25,60,.15);color:#2e3c5e}
   body.light .step{background:#ffffff;border-color:rgba(15,25,60,.13)}
-  body.light .path{background:#ffffff;border-color:rgba(15,25,60,.14)}
+  body.light .path{background:#ffffff;border-color:rgba(224,160,16,.55)}
+  body.light .path:hover{box-shadow:0 14px 30px rgba(224,160,16,.22)}
   body.light .psteps li{color:#2e3c5e}
   body.light .cplan{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .cplan.hot{border-color:var(--gold)}
@@ -260,11 +255,13 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .hero-rot{display:inline-block;transition:opacity .35s ease, transform .35s ease}
   .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
+  /* ── path kartları: ALTIN ÇERÇEVE ── */
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
-  .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));border:1.5px solid var(--line2);
-    border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);transition:.2s;position:relative;overflow:hidden}
+  .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));
+    border:1.5px solid rgba(251,191,36,.45);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);
+    transition:.2s;position:relative;overflow:hidden;box-shadow:0 0 0 rgba(251,191,36,0)}
   .path::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
-  .path:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 14px 34px rgba(0,0,0,.35)}
+  .path:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 34px rgba(251,191,36,.22)}
   .path .pi{font-size:24px;margin-bottom:8px}
   .path b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:5px}
   .path span{font-size:12.5px;color:var(--tx3);line-height:1.5;display:block}
@@ -418,7 +415,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .final .note{margin-top:18px;font-size:12.5px;color:var(--tx3)}
 
   /* footer */
-  footer{border-top:1px solid var(--line2);padding:52px 0 90px;background:var(--ink)}
+  footer{border-top:1px solid var(--line2);padding:52px 0;background:var(--ink)}
   .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
   .foot-brand p{font-size:13px;color:var(--tx3);line-height:1.6;margin-top:12px;max-width:32ch}
   footer h4{font-family:var(--disp);font-size:13.5px;font-weight:700;margin-bottom:14px}
@@ -428,19 +425,8 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .foot-btm{margin-top:38px;padding-top:20px;border-top:1px solid var(--line2);font-size:12px;color:var(--tx3);
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
-  /* ── APP TAB BAR (mobil) ── */
-  .mbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;
-    background:rgba(7,10,32,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line2);
-    padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-  .mbar-in{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;max-width:520px;margin:0 auto}
-  .mtab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;
-    color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:.02em;padding:7px 2px;border-radius:12px;transition:.15s}
-  .mtab .mi{font-size:19px;line-height:1}
-  .mtab:active{background:rgba(255,255,255,.06)}
-  .mtab.hot{color:var(--gold)}
-
   /* ── PWA install ── */
-  .pwa-chip{position:fixed;z-index:70;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));
+  .pwa-chip{position:fixed;z-index:90;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));
     display:none;align-items:center;gap:12px;background:var(--navy2);border:1.5px solid var(--line);
     border-radius:16px;padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,.5);max-width:440px;margin:0 auto}
   .pwa-chip .pic{width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,var(--gold),var(--gold2));
@@ -464,7 +450,6 @@ if(iosTip && isIOS && !standalone && !iosDis){
   @media(max-width:860px){ .steps{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr 1fr} }
   @media(max-width:820px){ .cplans{grid-template-columns:1fr} .foot-grid{grid-template-columns:1fr 1fr} }
   @media(max-width:640px){
-    .mbar{display:block} footer{padding-bottom:150px}
     .top-in{height:56px}
     .top-cta .btn-gold{display:none}
     .logo-ic{width:32px;height:32px}
@@ -481,7 +466,6 @@ if(iosTip && isIOS && !standalone && !iosDis){
     .founder{padding:18px 20px}
     .price{padding:24px 18px}
     .cplan{padding:24px 18px}
-    /* paths: mobilde YAN YANA kompakt */
     .paths{grid-template-columns:1fr 1fr;gap:10px;max-width:100%}
     .path{padding:13px 12px}
     .path .pi{font-size:19px;margin-bottom:5px}
@@ -494,7 +478,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   }
   @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
-      <header className="top">
+<header className="top">
   <div className="wrap top-in">
     <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
     <nav>
@@ -820,16 +804,6 @@ if(iosTip && isIOS && !standalone && !iosDis){
   <div className="pic">⚓</div>
   <div><b>Add to Home Screen</b><span>Tap Share <span style={{fontSize:"13px"}}>⎋</span> then "Add to Home Screen" — opens like an app</span></div>
   <button className="px" id="ios-tip-x" aria-label="Close">✕</button>
-</div>
-
-{/* APP TAB BAR (mobil) */}
-<div className="mbar">
-  <div className="mbar-in">
-    <a className="mtab hot" href="/signup/crew"><span className="mi">⚓</span>Join Crew</a>
-    <a className="mtab" href="/signup/company"><span className="mi">🏢</span>Hire</a>
-    <a className="mtab" href="#try"><span className="mi">🔍</span>Find Crew</a>
-    <a className="mtab" href="/jobs"><span className="mi">💼</span>Jobs</a>
-  </div>
 </div>
     </>
   );
