@@ -24,7 +24,6 @@ const PROFILES=[
   {i:'2E',r:'2nd Engineer',l:'Motor · 7 yrs at sea',a:'● Available from Oct 2026',c:'STCW III/2 ✓',v:'Tanker · LPG',x:'2/E — 49,900 DWT Tanker'},
   {i:'ET',r:'ETO',l:'High voltage · 6 yrs at sea',a:'● Available now',c:'STCW III/6 · HV ✓',v:'Container · LNG',x:'ETO — 14,000 TEU Container'}
 ];
-// viewed rozeti kartla birlikte döner
 const VIEWS=[
   {n:'3 companies viewed this profile',s:'this week · via Profile Analytics'},
   {n:'5 companies viewed this profile',s:'this week · via Profile Analytics'},
@@ -104,6 +103,42 @@ if(hRot){
   },3400);
 }
 
+// ── PWA kurulum ──
+// Android/Chrome: gerçek kurulum penceresi
+let deferredPrompt=null;
+const pwaBtn=document.getElementById('pwa-install');
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  let dis=false;
+  try{ dis=localStorage.getItem('scf_pwa_dis')==='1'; }catch(err){}
+  if(pwaBtn && !dis) pwaBtn.style.display='flex';
+});
+if(pwaBtn){
+  pwaBtn.onclick=async()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt=null;
+    pwaBtn.style.display='none';
+    try{ localStorage.setItem('scf_pwa_dis','1'); }catch(err){}
+  };
+}
+// iOS Safari: Paylaş → Ana Ekrana Ekle yönlendirmesi
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone=window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+const iosTip=document.getElementById('ios-tip');
+let iosDis=false;
+try{ iosDis=localStorage.getItem('scf_ios_tip')==='1'; }catch(e){}
+if(iosTip && isIOS && !standalone && !iosDis){
+  iosTip.style.display='flex';
+  const x=document.getElementById('ios-tip-x');
+  if(x) x.onclick=()=>{
+    iosTip.style.display='none';
+    try{ localStorage.setItem('scf_ios_tip','1'); }catch(e){}
+  };
+}
+
     return () => {
       __T.forEach(x => x.t === 'i' ? clearInterval(x.h) : clearTimeout(x.h));
       if (typeof io !== 'undefined' && io.disconnect) io.disconnect();
@@ -137,7 +172,10 @@ if(hRot){
   body.light nav a{background:rgba(255,255,255,.6)}
   body.light .path:hover{box-shadow:0 14px 30px rgba(20,30,70,.14)}
   body.light .rep-pre{background:#ffffff}
-  body.light .mbar{background:rgba(255,255,255,.94)}
+  body.light .mbar{background:rgba(255,255,255,.95)}
+  body.light .mtab{color:#57678a}
+  body.light .mtab.hot{color:#b8860b}
+  body.light .pwa-chip{background:#ffffff;box-shadow:0 14px 30px rgba(20,30,70,.2)}
   body.light .feat{background:#f7f9fe;border-color:rgba(15,25,60,.13)}
   body.light .pc-row{background:#f3f6fc;border-color:rgba(15,25,60,.13)}
   body.light .pc-row span{color:#57678a}
@@ -270,7 +308,6 @@ if(hRot){
   .pc-row span{color:var(--tx3)}
   .pc-row b{font-weight:600}
   .pc-row b.av{color:var(--grn)}
-  /* viewed rozeti — artık kartın İÇİNDE, kartla birlikte döner */
   .fcard{display:flex;gap:10px;align-items:center;background:rgba(52,211,153,.07);
     border:1px solid rgba(52,211,153,.25);border-radius:12px;padding:10px 13px;font-size:12px;margin-bottom:13px}
   .fcard .ic{width:30px;height:30px;border-radius:9px;background:rgba(52,211,153,.14);display:grid;place-items:center;font-size:14px;flex-shrink:0;animation:blink 2.6s ease-in-out infinite}
@@ -344,15 +381,6 @@ if(hRot){
   .pfoot{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:12px}
 
   /* companies */
-  .searchbox{background:linear-gradient(160deg,var(--navy2),var(--ink));border:1.5px solid var(--line);
-    border-radius:18px;padding:20px 22px;margin-bottom:26px;max-width:860px}
-  .sb-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:15px}
-  .sb-head b{font-family:var(--disp)}
-  .sb-head span{font-size:11.5px;color:var(--tx3)}
-  .sb-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px}
-  .sb-sel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;
-    padding:12px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none;cursor:pointer}
-  .sb-sel:focus{border-color:var(--gold)}
   .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px}
   .cplan{background:linear-gradient(165deg,var(--navy2),var(--navy));border:1px solid var(--line2);
     border-radius:20px;padding:28px;position:relative}
@@ -400,10 +428,27 @@ if(hRot){
   .foot-btm{margin-top:38px;padding-top:20px;border-top:1px solid var(--line2);font-size:12px;color:var(--tx3);
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
-  /* mobile sticky CTA */
-  .mbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;gap:10px;padding:12px 14px;
-    background:rgba(7,26,48,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line2)}
-  .mbar .btn{flex:1;padding:13px 8px;font-size:13.5px}
+  /* ── APP TAB BAR (mobil) ── */
+  .mbar{position:fixed;bottom:0;left:0;right:0;z-index:60;display:none;
+    background:rgba(7,10,32,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line2);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .mbar-in{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;max-width:520px;margin:0 auto}
+  .mtab{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;
+    color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:.02em;padding:7px 2px;border-radius:12px;transition:.15s}
+  .mtab .mi{font-size:19px;line-height:1}
+  .mtab:active{background:rgba(255,255,255,.06)}
+  .mtab.hot{color:var(--gold)}
+
+  /* ── PWA install ── */
+  .pwa-chip{position:fixed;z-index:70;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));
+    display:none;align-items:center;gap:12px;background:var(--navy2);border:1.5px solid var(--line);
+    border-radius:16px;padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,.5);max-width:440px;margin:0 auto}
+  .pwa-chip .pic{width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,var(--gold),var(--gold2));
+    display:grid;place-items:center;font-size:19px;flex-shrink:0}
+  .pwa-chip b{display:block;font-size:13px;font-family:var(--disp)}
+  .pwa-chip span{font-size:11px;color:var(--tx3);line-height:1.4}
+  .pwa-chip .px{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
+  #pwa-install{cursor:pointer}
 
   /* reveal */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
@@ -411,30 +456,43 @@ if(hRot){
 
   /* ══ MOBİL PASS ══ */
   @media(max-width:960px){
-    .hero-in{grid-template-columns:1fr;gap:36px}
+    .hero-in{grid-template-columns:1fr;gap:32px}
     .hero-vis{max-width:380px;width:100%;margin:0 auto}
     .pcard{margin:0 auto;animation:none;transform:none}
     .split{grid-template-columns:1fr}
   }
   @media(max-width:860px){ .steps{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr 1fr} }
-  @media(max-width:820px){ .sb-row{grid-template-columns:1fr 1fr} .cplans{grid-template-columns:1fr} .foot-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:820px){ .cplans{grid-template-columns:1fr} .foot-grid{grid-template-columns:1fr 1fr} }
   @media(max-width:640px){
-    .mbar{display:flex} footer{padding-bottom:120px}
-    .hero{padding:40px 0 36px}
-    section{padding:46px 0}
+    .mbar{display:block} footer{padding-bottom:150px}
+    .top-in{height:56px}
+    .top-cta .btn-gold{display:none}
+    .logo-ic{width:32px;height:32px}
+    .logo b{font-size:16px}
+    .hero{padding:30px 0 30px}
+    section{padding:44px 0}
     .final{padding:56px 0}
-    h1{margin-bottom:14px}
-    .hero p.sub{font-size:15px;margin-bottom:22px}
-    .badge{margin-bottom:16px;font-size:11.5px;padding:6px 13px}
-    .sec-sub{margin-bottom:26px}
-    .pcard{padding:20px;max-width:100%}
-    .salstrip{padding:14px 16px;margin-top:24px}
+    h1{margin-bottom:12px}
+    .hero p.sub{font-size:14.5px;margin-bottom:20px}
+    .badge{margin-bottom:14px;font-size:10.5px;padding:6px 12px}
+    .sec-sub{margin-bottom:24px}
+    .pcard{padding:18px;max-width:100%}
+    .salstrip{padding:13px 15px;margin-top:20px}
     .founder{padding:18px 20px}
-    .price{padding:24px 20px}
-    .cplan{padding:24px 20px}
+    .price{padding:24px 18px}
+    .cplan{padding:24px 18px}
+    /* paths: mobilde YAN YANA kompakt */
+    .paths{grid-template-columns:1fr 1fr;gap:10px;max-width:100%}
+    .path{padding:13px 12px}
+    .path .pi{font-size:19px;margin-bottom:5px}
+    .path b{font-size:13.5px;margin-bottom:4px}
+    .psteps li{font-size:10.5px;gap:6px}
+    .psteps li::before{width:15px;height:15px;font-size:9px;border-radius:5px}
+    .psteps em{display:none}
+    .path .go{font-size:11px;margin-top:7px}
+    .hero-note{font-size:11px;margin-top:14px}
   }
-  @media(max-width:560px){ .paths{grid-template-columns:1fr} .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
-  @media(max-width:540px){ .sb-row{grid-template-columns:1fr} }
+  @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
       <header className="top">
   <div className="wrap top-in">
@@ -462,6 +520,7 @@ if(hRot){
     <a href="#faq">FAQ</a>
     <a href="/blog">Blog</a>
     <a href="/login">Login</a>
+    <a href="/signup">Sign Up Free</a>
   </div>
 </header>
 
@@ -527,7 +586,15 @@ if(hRot){
   </div>
 </section>
 
-<div className="marq">
+<section id="try" style={{padding:"36px 0 8px"}}>
+  <div className="wrap">
+    <div className="sec-tag rv">Search now</div>
+    <h2 className="rv" style={{marginBottom:"26px"}}>Find crew — or find your next job</h2>
+<SearchWizard />
+  </div>
+</section>
+
+<div className="marq" style={{marginTop:"44px"}}>
   <div className="marq-in">
     <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
     <span>MASTER</span><span>CHIEF ENGINEER</span><span>CHIEF OFFICER</span><span>2ND ENGINEER</span><span>2ND OFFICER</span><span>3RD ENGINEER</span><span>ETO</span><span>BOSUN</span><span>AB</span><span>OS</span><span>OILER</span><span>FITTER</span><span>COOK</span><span>MESSMAN</span><span>PUMPMAN</span><span>ELECTRICIAN</span>
@@ -545,14 +612,6 @@ if(hRot){
     <a href="/salary">See all 15 ranks →</a>
   </div>
 </div>
-
-<section id="try" style={{padding:"56px 0 8px"}}>
-  <div className="wrap">
-    <div className="sec-tag rv">Try it now</div>
-    <h2 className="rv" style={{marginBottom:"26px"}}>Find crew by rank — in seconds</h2>
-<SearchWizard />
-  </div>
-</section>
 
 <section id="how" style={{paddingTop:"56px"}}>
   <div className="wrap">
@@ -750,9 +809,27 @@ if(hRot){
   </div>
 </footer>
 
+{/* PWA: Android kurulum çipi */}
+<div className="pwa-chip" id="pwa-install">
+  <div className="pic">⚓</div>
+  <div><b>Install ShipCrewFinder</b><span>Add to your home screen — works like an app</span></div>
+</div>
+
+{/* PWA: iOS yönlendirme çipi */}
+<div className="pwa-chip" id="ios-tip">
+  <div className="pic">⚓</div>
+  <div><b>Add to Home Screen</b><span>Tap Share <span style={{fontSize:"13px"}}>⎋</span> then "Add to Home Screen" — opens like an app</span></div>
+  <button className="px" id="ios-tip-x" aria-label="Close">✕</button>
+</div>
+
+{/* APP TAB BAR (mobil) */}
 <div className="mbar">
-  <a className="btn btn-gold" href="/signup/crew">⚓ Join as Crew</a>
-  <a className="btn btn-ghost" href="/signup/company">🏢 Hire Crew</a>
+  <div className="mbar-in">
+    <a className="mtab hot" href="/signup/crew"><span className="mi">⚓</span>Join Crew</a>
+    <a className="mtab" href="/signup/company"><span className="mi">🏢</span>Hire</a>
+    <a className="mtab" href="#try"><span className="mi">🔍</span>Find Crew</a>
+    <a className="mtab" href="/jobs"><span className="mi">💼</span>Jobs</a>
+  </div>
 </div>
     </>
   );
