@@ -13,6 +13,23 @@ export default async function CrewStep4Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Mevcut CV kontrolü — edit modunda göster
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type")
+    .eq("id", user.id)
+    .single();
+
+  const isShip = profile?.user_type === "seafarer";
+  const detailsTable = isShip ? "seafarer_details" : "yacht_details";
+  const { data: details } = await supabase
+    .from(detailsTable)
+    .select("cv_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const savedCvUrl = (details?.cv_url as string) || null;
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
       {/* Progress Bar */}
@@ -29,12 +46,41 @@ export default async function CrewStep4Page() {
       {/* Heading */}
       <div className="mb-8">
         <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
-          Upload your CV
+          {savedCvUrl ? "Your CV" : "Upload your CV"}
         </h1>
         <p className="text-white/60 text-lg">
-          A verified CV helps employers trust your profile and increases your chances of getting hired.
+          {savedCvUrl
+            ? "You already have a CV on file. Upload a new one to replace it, or continue."
+            : "A verified CV helps employers trust your profile and increases your chances of getting hired."}
         </p>
       </div>
+
+      {/* Existing CV notice */}
+      {savedCvUrl && (
+        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 mb-6">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-white font-bold text-sm">CV on file ✓</div>
+                <div className="text-white/50 text-xs">Uploading a new file will replace it</div>
+              </div>
+            </div>
+            
+              href={savedCvUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:text-accent-light text-sm font-bold underline underline-offset-2"
+            >
+              View current CV →
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       <form action={uploadCrewCV} className="space-y-6">
@@ -70,14 +116,14 @@ export default async function CrewStep4Page() {
 
         {/* Skip option */}
         <p className="text-center text-white/40 text-sm">
-          Don't have a CV ready? You can{" "}
+          {savedCvUrl ? "Keeping your current CV? You can" : "Don't have a CV ready? You can"}{" "}
           <button
             type="submit"
             className="text-accent hover:text-accent-light font-bold underline underline-offset-2"
           >
-            skip this step
+            {savedCvUrl ? "continue without changes" : "skip this step"}
           </button>{" "}
-          and add it later.
+          {savedCvUrl ? "." : "and add it later."}
         </p>
 
         {/* Actions */}
