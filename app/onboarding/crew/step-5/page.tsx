@@ -23,7 +23,7 @@ export default async function CrewStep5Page() {
   const detailsTable = isShip ? "seafarer_details" : "yacht_details";
   const { data: details } = await supabase
     .from(detailsTable)
-    .select("availability")
+    .select("availability, contract_end_date")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -35,6 +35,7 @@ export default async function CrewStep5Page() {
   };
   const savedRadio = availToRadio[savedAvailability] || "";
   const savedPhone = (profile?.phone as string) || "";
+  const savedContract = (details?.contract_end_date as string) || "";
   const isEditing = !!savedRadio;
 
   const availabilityOptions = [
@@ -150,6 +151,24 @@ export default async function CrewStep5Page() {
               </label>
             ))}
           </div>
+        </div>
+
+        {/* Contract end date — Rotation Radar */}
+        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
+          <label htmlFor="contractEndDate" className="block text-white font-bold mb-2">
+            Current Contract Ends{" "}
+            <span className="text-white/40 text-sm font-normal">(optional)</span>
+          </label>
+          <p className="text-white/50 text-sm mb-4">
+            If you&apos;re on board now, add your sign-off date. Companies hiring your rank get notified as your availability approaches — you get contacted before you even start looking.
+          </p>
+          <input
+            id="contractEndDate"
+            name="contractEndDate"
+            type="date"
+            defaultValue={savedContract}
+            className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
+          />
         </div>
 
         {/* Contact Info */}
