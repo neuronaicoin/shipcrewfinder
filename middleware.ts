@@ -31,7 +31,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  // getSession: çerezden okur, ağ isteği yapmaz (token süresi dolmuşsa otomatik tazeler)
+  await supabase.auth.getSession();
 
   return supabaseResponse;
 }
