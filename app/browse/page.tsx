@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { logout } from "@/lib/actions/auth";
-import NotificationBell from "@/app/components/notification-bell";
+import SiteHeader from "@/app/components/site-header";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
 import { getSortedLanguages } from "@/lib/constants/languages";
@@ -26,7 +25,6 @@ export default async function BrowsePage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const fType = sp.type || "";
   const fRank = sp.rank || "";
   const fCountry = sp.country || "";
   const fExp = sp.exp || "";
@@ -35,30 +33,26 @@ export default async function BrowsePage({
 
   const supabase = await createClient();
 
+  // getSession: çerezden okur — ekstra ağ turu yok
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login");
 
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .single();
+  const [{ data: me }, { count: unreadCount }, { data: blockedRows }] =
+    await Promise.all([
+      supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false),
+      supabase.from("blocked_companies").select("user_id").eq("company_id", user.id),
+    ]);
+
   if (!me || me.user_type !== "company") redirect("/dashboard");
 
-  // Unread notifications
-  const { count: unreadCount } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("read", false);
-
-  // Candidates who blocked this company
-  const { data: blockedRows } = await supabase
-    .from("blocked_companies")
-    .select("user_id")
-    .eq("company_id", user.id);
   const blockedByIds = (blockedRows || []).map((r) => r.user_id as string);
 
   // Base profile query
@@ -95,18 +89,15 @@ export default async function BrowsePage({
     });
   }
 
-
   // Apply detail-based filters in code
   profileList = profileList.filter((p) => {
     const d = detailsMap[p.id] || {};
 
-    // Rank / position (case-insensitive contains)
     if (fRank) {
       const role = ((d.rank as string) || (d.position as string) || "").toUpperCase();
       if (!role.includes(fRank.toUpperCase())) return false;
     }
 
-    // Experience buckets
     if (fExp) {
       const y = (d.years_experience as number) ?? -1;
       if (fExp === "0-1" && !(y >= 0 && y <= 1)) return false;
@@ -114,12 +105,10 @@ export default async function BrowsePage({
       if (fExp === "3+" && !(y >= 4)) return false;
     }
 
-    // Availability
     if (fAvail) {
       if ((d.availability as string) !== fAvail) return false;
     }
 
-    // Language (seafarer has languages array)
     if (fLang) {
       const langs = Array.isArray(d.languages) ? (d.languages as string[]) : [];
       if (!langs.includes(fLang)) return false;
@@ -153,222 +142,215 @@ export default async function BrowsePage({
     return c ? `${c.flag} ${c.name}` : code;
   };
 
-  const inputStyle = {
-    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat" as const,
-    backgroundPosition: "right 0.75rem center",
-    paddingRight: "2rem",
-  };
+  const hasFilter = fRank || fCountry || fExp || fAvail || fLang;
 
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  .br-hero{position:relative;padding:38px 0 22px;overflow:hidden}
+  .aur{position:absolute;width:460px;height:460px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.45;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:16px}
+  .back:hover{color:var(--gold)}
+  h1{font-family:var(--disp);font-size:clamp(1.8rem,4.4vw,2.8rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:8px}
+  .sub{font-size:14.5px;color:var(--tx2)}
+  section{padding:20px 0 44px}
+  .fcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:20px;margin-bottom:22px}
+  .frow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:860px){.frow{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.frow{grid-template-columns:1fr}}
+  label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:7px}
+  select,input[type=text]{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.85rem center;padding-right:2.2rem}
+  select:focus,input[type=text]:focus{border-color:var(--gold)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:960px){.cgrid{grid-template-columns:1fr 1fr}}
+  @media(max-width:620px){.cgrid{grid-template-columns:1fr}}
+  .ccard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px;display:flex;flex-direction:column;transition:.2s}
+  .ccard:hover{transform:translateY(-2px);border-color:var(--gold)}
+  .chead{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .avatar{flex-shrink:0;width:46px;height:46px;border-radius:13px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:18px;color:var(--gold)}
+  .cname{font-family:var(--disp);font-weight:700;font-size:15.5px;line-height:1.25}
+  .crole{color:var(--gold);font-size:12.5px;font-weight:700;margin-top:2px}
+  .crows{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;font-size:12.5px}
+  .crow{display:flex;justify-content:space-between;gap:10px}
+  .crow span{color:var(--tx3)}
+  .crow b{font-weight:600;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crow b.av{color:var(--grn)}
+  .empty{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:40px;text-align:center;font-size:14px;color:var(--tx2)}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={true}
+        userType="company"
+        unreadCount={unreadCount || 0}
+        active="browse"
       />
-
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <NotificationBell count={unreadCount || 0} />
-            <Link
-              href="/dashboard"
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-            >
-              Dashboard
-            </Link>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-              >
-                Log Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="mb-8">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
-            Search for Crew
-          </h1>
-          <p className="text-white/60 text-lg">
-            {profileList.length} maritime professional{profileList.length === 1 ? "" : "s"} found
+      <div className="br-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/dashboard" className="back">← Back to dashboard</Link>
+          <h1>Search for <span style={{ color: "var(--gold)" }}>Crew</span></h1>
+          <p className="sub">
+            {profileList.length} verified maritime professional{profileList.length === 1 ? "" : "s"} found — contact directly, zero commission.
           </p>
         </div>
-
-        {/* Filters */}
-        <form method="get" className="bg-primary-dark border border-white/10 rounded-2xl p-5 md:p-6 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-            {/* Rank dropdown */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Rank / Position</label>
-              <select name="rank" defaultValue={fRank} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                <optgroup label="Ship — Deck">
-                  {SHIP_RANKS["Deck Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-                <optgroup label="Ship — Engine">
-                  {SHIP_RANKS["Engine Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-                <optgroup label="Ship — Catering">
-                  {SHIP_RANKS["Catering Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-              </select>
-            </div>
-
-            {/* Rank free text */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Or search rank</label>
-              <input name="rank" defaultValue={fRank} placeholder="e.g. Master"
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm placeholder-white/30 focus:border-accent focus:outline-none" />
-            </div>
-
-            {/* Country */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Country</label>
-              <select name="country" defaultValue={fCountry} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Experience */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Experience</label>
-              <select name="exp" defaultValue={fExp} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                <option value="0-1">0–1 years</option>
-                <option value="1-3">1–3 years</option>
-                <option value="3+">3+ years</option>
-              </select>
-            </div>
-
-            {/* Availability */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Availability</label>
-              <select name="avail" defaultValue={fAvail} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                <option value="immediate">Within 1 month</option>
-                <option value="1-3_months">1–3 months</option>
-                <option value="3+_months">3+ months</option>
-              </select>
-            </div>
-
-            {/* Language */}
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Language</label>
-              <select name="lang" defaultValue={fLang} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                {languages.map((l) => (
-                  <option key={l.code} value={l.code}>{l.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mt-5">
-            <button type="submit"
-              className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition">
-              Apply Filters
-            </button>
-            <Link href="/browse"
-              className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 font-bold text-sm rounded-lg transition border border-white/10">
-              Clear
-            </Link>
-          </div>
-        </form>
-
-        {/* Results */}
-        {profileList.length === 0 ? (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-white/60">No candidates match your filters. Try adjusting them.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {profileList.map((p) => {
-              const d = detailsMap[p.id] || {};
-              const roleTitle = (d.rank as string) || (d.position as string) || "Maritime Professional";
-              const langs = Array.isArray(d.languages) ? (d.languages as string[]) : [];
-              const avail = availLabel(d.availability);
-
-              return (
-                <div key={p.id}
-                  className="bg-primary-dark border border-white/10 hover:border-accent/40 rounded-2xl p-6 transition flex flex-col">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-                      <span className="font-display text-lg font-bold text-accent">
-                        {(p.full_name || "U").charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display text-lg font-bold text-white truncate">
-                        {p.full_name || "Unnamed"}
-                      </h3>
-                      <p className="text-accent text-sm font-bold truncate">{roleTitle}</p>
-                    </div>
-
-                  </div>
-
-                  <div className="space-y-1.5 mb-5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/50">Experience</span>
-                      <span className="text-white/90">{expLabel(d.years_experience)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/50">Country</span>
-                      <span className="text-white/90 text-right ml-2 truncate">
-                        {countryName((d.nationality as string) || p.country)}
-                      </span>
-                    </div>
-                    {langs.length > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-white/50">Languages</span>
-                        <span className="text-white/90 text-right truncate ml-2">{langs.join(", ")}</span>
-                      </div>
-                    )}
-                    {avail && (
-                      <div className="flex justify-between">
-                        <span className="text-white/50">Availability</span>
-                        <span className="text-emerald-400">{avail}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <Link href={`/candidate/${p.id}`}
-                    className="mt-auto inline-flex items-center justify-center px-4 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition">
-                    View Profile
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
-    </main>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          {/* Filters */}
+          <form method="get" className="fcard">
+            <div className="frow">
+              <div>
+                <label>Rank / Position</label>
+                <select name="rank" defaultValue={fRank}>
+                  <option value="">All ranks</option>
+                  <optgroup label="Deck Department">
+                    {SHIP_RANKS["Deck Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                  </optgroup>
+                  <optgroup label="Engine Department">
+                    {SHIP_RANKS["Engine Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                  </optgroup>
+                  <optgroup label="Catering Department">
+                    {SHIP_RANKS["Catering Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                  </optgroup>
+                </select>
+              </div>
+              <div>
+                <label>Country</label>
+                <select name="country" defaultValue={fCountry}>
+                  <option value="">All countries</option>
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Experience</label>
+                <select name="exp" defaultValue={fExp}>
+                  <option value="">All</option>
+                  <option value="0-1">0–1 years</option>
+                  <option value="1-3">1–3 years</option>
+                  <option value="3+">3+ years</option>
+                </select>
+              </div>
+              <div>
+                <label>Availability</label>
+                <select name="avail" defaultValue={fAvail}>
+                  <option value="">All</option>
+                  <option value="immediate">Within 1 month</option>
+                  <option value="1-3_months">1–3 months</option>
+                  <option value="3+_months">3+ months</option>
+                </select>
+              </div>
+              <div>
+                <label>Language</label>
+                <select name="lang" defaultValue={fLang}>
+                  <option value="">All</option>
+                  {languages.map((l) => (
+                    <option key={l.code} value={l.code}>{l.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+              <button type="submit" className="btn btn-gold">Apply Filters</button>
+              {hasFilter ? (
+                <Link href="/browse" className="btn btn-ghost">Clear</Link>
+              ) : null}
+            </div>
+          </form>
+
+          {/* Results */}
+          {profileList.length === 0 ? (
+            <div className="empty">
+              No candidates match your filters. Try widening your search — new verified profiles join every week.
+            </div>
+          ) : (
+            <div className="cgrid">
+              {profileList.map((p) => {
+                const d = detailsMap[p.id] || {};
+                const roleTitle = (d.rank as string) || (d.position as string) || "Maritime Professional";
+                const langs = Array.isArray(d.languages) ? (d.languages as string[]) : [];
+                const avail = availLabel(d.availability);
+
+                return (
+                  <div key={p.id} className="ccard">
+                    <div className="chead">
+                      <div className="avatar">
+                        {(p.full_name || "U").charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="cname">{p.full_name || "Unnamed"}</div>
+                        <div className="crole">{roleTitle}</div>
+                      </div>
+                    </div>
+
+                    <div className="crows">
+                      <div className="crow">
+                        <span>Experience</span>
+                        <b>{expLabel(d.years_experience)}</b>
+                      </div>
+                      <div className="crow">
+                        <span>Country</span>
+                        <b>{countryName((d.nationality as string) || p.country)}</b>
+                      </div>
+                      {langs.length > 0 ? (
+                        <div className="crow">
+                          <span>Languages</span>
+                          <b>{langs.join(", ")}</b>
+                        </div>
+                      ) : null}
+                      {avail ? (
+                        <div className="crow">
+                          <span>Availability</span>
+                          <b className="av">{avail}</b>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <Link
+                      href={`/candidate/${p.id}`}
+                      className="btn btn-gold"
+                      style={{ marginTop: "auto", width: "100%" }}
+                    >
+                      View Profile →
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/jobs/new">Post a Job</Link> ·{" "}
+          <Link href="/salary">Salary Index</Link> · <Link href="/dashboard">Dashboard</Link>
+        </div>
+      </footer>
+    </>
   );
 }
