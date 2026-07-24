@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
 import ApplyForm from "@/app/components/apply-form";
 import SiteHeader from "@/app/components/site-header";
+import CompanyRating from "@/app/components/company-rating";
 
 export const metadata = {
   title: "Job Details — ShipCrewFinder",
@@ -41,8 +42,9 @@ export default async function JobDetailPage({
   let userType: string | null = null;
   let alreadyApplied = false;
   let unreadCount = 0;
+  let myRating: number | null = null;
   if (user) {
-    const [{ data: me }, { data: existing }, { count: unread }] = await Promise.all([
+    const [{ data: me }, { data: existing }, { count: unread }, { data: myVote }] = await Promise.all([
       supabase.from("profiles").select("user_type").eq("id", user.id).single(),
       supabase
         .from("job_applications")
@@ -55,13 +57,20 @@ export default async function JobDetailPage({
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("read", false),
+      supabase
+        .from("company_ratings")
+        .select("rating")
+        .eq("company_id", job.company_id)
+        .eq("crew_id", user.id)
+        .maybeSingle(),
     ]);
     userType = (me?.user_type as string) || null;
     alreadyApplied = !!existing;
     unreadCount = unread || 0;
+    myRating = (myVote?.rating as number) ?? null;
   }
 
-  const [{ data: companyProfile }, { data: companyDetails }] = await Promise.all([
+  const [{ data: companyProfile }, { data: companyDetails }, { data: ratingData }] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, email, phone, country")
@@ -72,7 +81,11 @@ export default async function JobDetailPage({
       .select("website, contact_phone, description, company_type")
       .eq("id", job.company_id)
       .maybeSingle(),
+    supabase.rpc("get_company_rating", { cid: job.company_id }),
   ]);
+
+  const companyScore =
+    typeof ratingData === "number" ? ratingData : Number(ratingData) || 3.0;
 
   const isOwner = !!user && job.company_id === user.id;
 
@@ -172,7 +185,11 @@ export default async function JobDetailPage({
   .fact .fv{font-family:var(--disp);font-weight:700;font-size:15px}
   .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:24px 26px;margin-bottom:18px}
   .card h2{font-family:var(--disp);font-size:18px;font-weight:800;margin-bottom:12px}
-  .card .co{color:var(--gold);font-weight:700;font-size:14px;margin-bottom:12px}
+  .co-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .card .co{color:var(--gold);font-weight:700;font-size:14px}
+  .rscore{display:inline-flex;align-items:center;gap:6px;background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.35);border-radius:999px;padding:5px 13px;font-family:var(--disp);font-weight:800;font-size:13.5px;color:var(--gold)}
+  .rscore svg{display:block}
+  .rbox{border-top:1px solid var(--line2);margin-top:16px;padding-top:16px}
   .desc{font-size:14px;color:var(--tx2);line-height:1.75;white-space:pre-line}
   .rows{display:flex;flex-direction:column}
   .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
@@ -259,7 +276,13 @@ export default async function JobDetailPage({
 
               <div className="card">
                 <h2 style={{ marginBottom: 4 }}>About the Company</h2>
-                <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
+                <div className="co-head">
+                  <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
+                  <span className="rscore">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/></svg>
+                    {companyScore.toFixed(1)}
+                  </span>
+                </div>
                 {companyDetails?.description ? (
                   <p className="desc" style={{ fontSize: 13, marginBottom: 14 }}>{companyDetails.description}</p>
                 ) : null}
@@ -289,6 +312,12 @@ export default async function JobDetailPage({
                     </div>
                   ) : null}
                 </div>
+
+                {isCrew && !isOwner ? (
+                  <div className="rbox">
+                    <CompanyRating companyId={job.company_id as string} myRating={myRating} />
+                  </div>
+                ) : null}
               </div>
 
               {isOwner ? (
