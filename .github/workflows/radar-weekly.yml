@@ -1,0 +1,18 @@
+name: Rotation Radar Weekly
+
+on:
+  schedule:
+    # Her pazartesi 06:00 UTC (09:00 TR)
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly radar email
+        run: |
+          status=$(curl -s -o /tmp/out.json -w "%{http_code}" --max-time 120 "https://shipcrewfinder.com/api/radar-weekly?key=${{ secrets.CRON_KEY }}")
+          echo "HTTP status: $status"
+          cat /tmp/out.json
+          if [ "$status" != "200" ]; then exit 1; fi
