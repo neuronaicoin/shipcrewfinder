@@ -3,52 +3,92 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 
+const anchorSvg = (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="5" r="2.4" />
+    <line x1="12" y1="7.4" x2="12" y2="20.5" />
+    <line x1="7.5" y1="10.4" x2="16.5" y2="10.4" />
+    <path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7" />
+    <path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4" />
+    <path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4" />
+  </svg>
+);
+
 export default async function OnboardingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user) {
     redirect("/login");
   }
 
   return (
-    <div className="min-h-screen bg-primary relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: "#0d1030" }}
+    >
+      {/* Aurora background */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute pointer-events-none"
         style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          width: 520, height: 520, top: -200, right: -100, borderRadius: "50%",
+          filter: "blur(90px)", opacity: 0.45,
+          background: "radial-gradient(circle, rgba(251,191,36,.28), transparent 65%)",
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: 460, height: 460, bottom: -220, left: -140, borderRadius: "50%",
+          filter: "blur(90px)", opacity: 0.35,
+          background: "radial-gradient(circle, rgba(37,99,235,.33), transparent 65%)",
         }}
       />
 
       {/* Header */}
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
+      <header
+        className="relative border-b border-white/10 backdrop-blur-md"
+        style={{ background: "rgba(13,16,48,.88)" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <span
+              className="grid place-items-center"
+              style={{
+                width: 34, height: 34, borderRadius: 9,
+                background: "linear-gradient(145deg,#fbbf24,#e0a010)",
+              }}
+            >
+              {anchorSvg}
+            </span>
             <span className="text-white font-display font-bold text-lg tracking-tight">
               Ship<span className="text-accent">Crew</span>Finder
             </span>
           </Link>
 
-          <form action={logout}>
-            <button
-              type="submit"
-              className="px-3 py-1.5 text-white/60 hover:text-white text-sm font-medium transition"
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="px-3 py-1.5 text-white/60 hover:text-accent text-sm font-medium transition"
             >
-              Log Out
-            </button>
-          </form>
+              ← Dashboard
+            </Link>
+            <form action={logout}>
+              <button
+                type="submit"
+                className="px-3 py-1.5 text-white/60 hover:text-white text-sm font-medium transition"
+              >
+                Log Out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
