@@ -249,7 +249,6 @@ export default async function CandidatePage({
           <div className="card">
             <h2>Professional Details</h2>
             <div className="rows">
-              {/* Rank + Country: her zaman görünür (kilitliyken de) */}
               <div className="row">
                 <span>{profile.user_type === "yacht" ? "Position" : "Rank"}</span>
                 <b>{roleTitle}</b>
@@ -278,7 +277,6 @@ export default async function CandidatePage({
                 </>
               ) : (
                 <>
-                  {/* Kilitli: bulanık placeholder satırları */}
                   <div className="row">
                     <span>Experience</span>
                     <b className="blur">3+ years</b>
@@ -328,14 +326,7 @@ export default async function CandidatePage({
                       <p>Live professional CV — sea service log, valid certificates and availability, always up to date.</p>
                     </div>
                   </div>
-                  
-                    href={"/cv/share/" + scfCvCode}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-gold"
-                  >
-                    View SCF CV →
-                  </a>
+                  <a href={"/cv/share/" + scfCvCode} target="_blank" rel="noopener noreferrer" className="btn btn-gold">View SCF CV →</a>
                 </div>
               ) : null}
             </div>
