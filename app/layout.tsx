@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Bricolage_Grotesque } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -16,6 +16,13 @@ const bricolage = Bricolage_Grotesque({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0d1030",
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "ShipCrewFinder — Global Maritime Career Platform",
   description:
@@ -28,6 +35,11 @@ export const metadata: Metadata = {
     "global seafarer platform",
   ],
   authors: [{ name: "ShipCrewFinder" }],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ShipCrewFinder",
+  },
   verification: {
     other: {
       "msvalidate.01": "9CB03E8E93C7289160D5677D71AB3ACB",
