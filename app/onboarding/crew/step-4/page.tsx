@@ -13,7 +13,6 @@ export default async function CrewStep4Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Mevcut CV kontrolü — edit modunda göster
   const { data: profile } = await supabase
     .from("profiles")
     .select("user_type")
@@ -32,7 +31,6 @@ export default async function CrewStep4Page() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-      {/* Progress Bar */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
           <span className="text-white/60 text-sm font-bold">Step 4 of 5</span>
@@ -43,7 +41,6 @@ export default async function CrewStep4Page() {
         </div>
       </div>
 
-      {/* Heading */}
       <div className="mb-8">
         <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
           {savedCvUrl ? "Your CV" : "Upload your CV"}
@@ -55,8 +52,7 @@ export default async function CrewStep4Page() {
         </p>
       </div>
 
-      {/* Existing CV notice */}
-      {savedCvUrl && (
+      {savedCvUrl ? (
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 mb-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
@@ -76,18 +72,15 @@ export default async function CrewStep4Page() {
               rel="noopener noreferrer"
               className="text-accent hover:text-accent-light text-sm font-bold underline underline-offset-2"
             >
-              View current CV →
+              View current CV
             </a>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Form */}
       <form action={uploadCrewCV} className="space-y-6">
-        {/* Upload Area (client component) */}
         <CVUpload />
 
-        {/* Why CV? */}
         <div className="bg-accent/5 border border-accent/20 rounded-xl p-5">
           <h4 className="text-accent font-extrabold text-xs uppercase tracking-wider mb-3">
             Why upload your CV?
@@ -114,7 +107,6 @@ export default async function CrewStep4Page() {
           </ul>
         </div>
 
-        {/* Skip option */}
         <p className="text-center text-white/40 text-sm">
           {savedCvUrl ? "Keeping your current CV? You can" : "Don't have a CV ready? You can"}{" "}
           <button
@@ -122,11 +114,10 @@ export default async function CrewStep4Page() {
             className="text-accent hover:text-accent-light font-bold underline underline-offset-2"
           >
             {savedCvUrl ? "continue without changes" : "skip this step"}
-          </button>{" "}
-          {savedCvUrl ? "." : "and add it later."}
+          </button>
+          {savedCvUrl ? "." : " and add it later."}
         </p>
 
-        {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           <Link
             href="/onboarding/crew/step-3"
