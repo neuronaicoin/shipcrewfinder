@@ -28,6 +28,7 @@ export default async function DashboardPage() {
     { data: companyDetails },
     { count: unreadCount },
     { data: notifications },
+    { data: vaultDocs },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
@@ -44,6 +45,10 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(6),
+    supabase
+      .from("crew_documents")
+      .select("expiry_date")
+      .eq("user_id", user.id),
   ]);
 
   let detailsData: Record<string, unknown> | null = null;
@@ -75,6 +80,18 @@ export default async function DashboardPage() {
 
   completion = Math.min(completion, 100);
   const isComplete = completion === 100;
+
+  // Vault özeti: 90 gün içinde bitecek + süresi geçmiş belge sayısı
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 3600 * 1000;
+  let vaultWarn = 0;
+  (vaultDocs || []).forEach((d) => {
+    if (!d.expiry_date) return;
+    const days = Math.round((new Date((d.expiry_date as string) + "T00:00:00").getTime() - today.getTime()) / dayMs);
+    if (days <= 90) vaultWarn++;
+  });
+  const vaultCount = (vaultDocs || []).length;
 
   const onboardingUrl =
     profile?.user_type === "company"
@@ -152,13 +169,15 @@ export default async function DashboardPage() {
   .ring-lbl p{font-size:12px;color:var(--tx3);max-width:22ch;line-height:1.5}
   section{padding:22px 0}
   .stitle{font-family:var(--disp);font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
-  .qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-  .qcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:18px 20px;text-decoration:none;color:var(--tx);transition:.2s;display:block}
+  .qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .qcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:18px 20px;text-decoration:none;color:var(--tx);transition:.2s;display:block;position:relative}
   .qcard:hover{transform:translateY(-3px);border-color:var(--gold)}
   .qcard .qi{font-size:22px;margin-bottom:8px}
   .qcard b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:4px}
   .qcard p{font-size:12px;color:var(--tx3);line-height:1.5}
   .qcard.gold{border-color:var(--line);background:linear-gradient(160deg,rgba(251,191,36,.12),var(--ink))}
+  .qbadge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
+  .qbadge.warn{color:#f87171;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
   .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px}
   .rows{display:flex;flex-direction:column}
   .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
@@ -277,6 +296,16 @@ export default async function DashboardPage() {
                   <b>Search Jobs</b>
                   <p>Open positions from verified companies — apply directly.</p>
                 </Link>
+                <Link href="/vault" className="qcard">
+                  {vaultWarn > 0 ? (
+                    <span className="qbadge warn">{vaultWarn} expiring</span>
+                  ) : vaultCount > 0 ? (
+                    <span className="qbadge">{vaultCount} docs</span>
+                  ) : null}
+                  <div className="qi">📁</div>
+                  <b>Document Vault</b>
+                  <p>Certificates in one place — expiry reminders 90/30/7 days ahead.</p>
+                </Link>
                 <Link href={`/jobs${rankLabel ? `?rank=${encodeURIComponent(String(rankLabel).toUpperCase())}` : ""}`} className="qcard">
                   <div className="qi">🔔</div>
                   <b>Job Alerts</b>
@@ -317,7 +346,7 @@ export default async function DashboardPage() {
                       className={`nrow ${n.read ? "" : "unread"}`}
                     >
                       <span className="ni">
-                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : "🔔"}
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : "🔔"}
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <b>{n.title as string}</b>
@@ -352,6 +381,20 @@ export default async function DashboardPage() {
                     <div className="row">
                       <span>Nationality</span>
                       <b>{(detailsData?.nationality as string) || profile?.country || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Documents</span>
+                      <b>
+                        {vaultCount > 0 ? (
+                          <Link href="/vault" style={{ color: "var(--gold)", textDecoration: "none" }}>
+                            {vaultCount} in vault{vaultWarn > 0 ? " · " + vaultWarn + " expiring" : ""}
+                          </Link>
+                        ) : (
+                          <Link href="/vault" style={{ color: "var(--gold)", textDecoration: "none" }}>
+                            Add documents →
+                          </Link>
+                        )}
+                      </b>
                     </div>
                     <div className="row">
                       <span>CV</span>
