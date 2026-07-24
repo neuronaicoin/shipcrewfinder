@@ -14,6 +14,7 @@ export async function signupCrew(formData: FormData) {
   const password = formData.get("password") as string;
   const fullName = formData.get("fullName") as string;
   const crewType = formData.get("crewType") as string; // "seafarer" or "yacht"
+  const refCode = ((formData.get("refCode") as string) || "").trim().toUpperCase();
 
   if (!email || !password || !fullName || !crewType) {
     return { error: "All fields are required" };
@@ -21,6 +22,19 @@ export async function signupCrew(formData: FormData) {
 
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters" };
+  }
+
+  // Davet kodu geçerli mi? (kayıttan ÖNCE bak — auth değişmeden)
+  let referredBy: string | null = null;
+  if (refCode) {
+    const { data: refOwner } = await supabase
+      .from("profiles")
+      .select("id, user_type")
+      .eq("referral_code", refCode)
+      .maybeSingle();
+    if (refOwner && ["seafarer", "yacht"].includes(refOwner.user_type as string)) {
+      referredBy = refOwner.id as string;
+    }
   }
 
   // Sign up with Supabase Auth
@@ -43,6 +57,11 @@ export async function signupCrew(formData: FormData) {
     return { error: "Failed to create account" };
   }
 
+  // Kendi kodunla kaydolamazsın
+  if (referredBy === data.user.id) {
+    referredBy = null;
+  }
+
   // Insert into profiles table
   const { error: profileError } = await supabase.from("profiles").insert({
     id: data.user.id,
@@ -50,6 +69,7 @@ export async function signupCrew(formData: FormData) {
     full_name: fullName,
     email: email,
     visibility: "hidden", // Hidden until onboarding complete
+    referred_by: referredBy,
   });
 
   if (profileError) {
