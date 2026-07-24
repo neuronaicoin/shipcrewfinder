@@ -76,15 +76,19 @@ export default async function JobsPage({
 
   const alertRedirectTo = `/jobs?rank=${encodeURIComponent(fRank)}${fCountry ? `&country=${encodeURIComponent(fCountry)}` : ""}`;
 
-  // Şirket adları (kartlarda göstermek için)
-  const companyIds = [...new Set(jobList.map((j) => j.company_id).filter(Boolean))];
+  // Şirket adları + puanları (tek turda)
+  const companyIds = [...new Set(jobList.map((j) => j.company_id).filter(Boolean))] as string[];
   const companyNames: Record<string, string> = {};
+  const companyScores: Record<string, number> = {};
   if (companyIds.length > 0) {
-    const { data: comps } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", companyIds);
+    const [{ data: comps }, { data: scores }] = await Promise.all([
+      supabase.from("profiles").select("id, full_name").in("id", companyIds),
+      supabase.rpc("get_company_ratings", { cids: companyIds }),
+    ]);
     (comps || []).forEach((c) => { companyNames[c.id as string] = (c.full_name as string) || "Verified Company"; });
+    ((scores || []) as { company_id: string; score: number }[]).forEach((s) => {
+      companyScores[s.company_id] = Number(s.score) || 3.0;
+    });
   }
 
   const salaryOf = (j: (typeof jobList)[number]) =>
@@ -151,8 +155,9 @@ export default async function JobsPage({
   .jtag.dur{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
   .jtitle{font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:6px}
   .jcard:hover .jtitle{color:var(--gold)}
-  .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3)}
+  .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3);align-items:center}
   .jmeta .co{color:var(--gold);font-weight:600}
+  .rmini{display:inline-flex;align-items:center;gap:4px;font-weight:800;color:var(--gold);font-size:12px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.07);border-radius:999px;padding:2px 9px}
   .empty{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:40px;text-align:center;font-size:14px;color:var(--tx2)}
   .salarycta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);border-radius:14px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--tx2)}
   .salarycta b{color:var(--tx);font-family:var(--disp)}
@@ -254,6 +259,10 @@ export default async function JobsPage({
                   <div className="jtitle">{job.title}</div>
                   <div className="jmeta">
                     <span className="co">{companyNames[job.company_id] || "Verified Company"}</span>
+                    <span className="rmini">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/></svg>
+                      {(companyScores[job.company_id] ?? 3.0).toFixed(1)}
+                    </span>
                     {countryName(job.location_country) ? (
                       <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
                     ) : null}
