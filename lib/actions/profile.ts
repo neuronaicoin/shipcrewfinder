@@ -212,6 +212,7 @@ export async function uploadCrewCV(formData: FormData): Promise<void> {
 }
 // ============================================
 // CREW: Step 5 - Availability + Contact (FINAL)
+// + Davet ödül motoru (6 ayda 2 limiti)
 // ============================================
 export async function completeCrewOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
@@ -244,7 +245,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("user_type")
+    .select("user_type, referred_by, referral_rewarded, full_name")
     .eq("id", user.id)
     .single();
 
@@ -266,6 +267,96 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
         contract_end_date: contractEndDate || null,
       })
       .eq("id", user.id);
+  }
+
+  // ── Davet ödülü: profil TAMAMLANINCA, bir kez ──
+  if (profile.referred_by && !profile.referral_rewarded) {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+
+      const referrerId = profile.referred_by as string;
+
+      // Ödül kaydı (unique referred_id — çift ödülü DB engeller)
+      const { error: insErr } = await admin.from("referral_rewards").insert({
+        referrer_id: referrerId,
+        referred_id: user.id,
+        referrer_rewarded: false,
+      });
+
+      if (!insErr) {
+        // Davetliye +1 ay (her zaman)
+        const { data: meRow } = await admin
+          .from("profiles")
+          .select("bonus_months")
+          .eq("id", user.id)
+          .single();
+        await admin
+          .from("profiles")
+          .update({
+            bonus_months: ((meRow?.bonus_months as number) || 0) + 1,
+            referral_rewarded: true,
+          })
+          .eq("id", user.id);
+
+        await admin.from("notifications").insert({
+          user_id: user.id,
+          type: "referral",
+          title: "🎁 +1 free month earned",
+          message: "Welcome aboard — your shipmate invite bonus is active.",
+          link: "/dashboard",
+          read: false,
+        });
+
+        // Davet edene +1 ay — son 180 günde en fazla 2 ödül
+        const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 3600 * 1000).toISOString();
+        const { count: recentRewards } = await admin
+          .from("referral_rewards")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_id", referrerId)
+          .eq("referrer_rewarded", true)
+          .gte("created_at", sixMonthsAgo);
+
+        if ((recentRewards || 0) < 2) {
+          const { data: refRow } = await admin
+            .from("profiles")
+            .select("bonus_months")
+            .eq("id", referrerId)
+            .single();
+          await admin
+            .from("profiles")
+            .update({
+              bonus_months: ((refRow?.bonus_months as number) || 0) + 1,
+            })
+            .eq("id", referrerId);
+
+          await admin
+            .from("referral_rewards")
+            .update({ referrer_rewarded: true })
+            .eq("referred_id", user.id);
+
+          await admin.from("notifications").insert({
+            user_id: referrerId,
+            type: "referral",
+            title: "🎁 +1 free month earned",
+            message: "A shipmate you invited just completed their profile.",
+            link: "/dashboard",
+            read: false,
+          });
+        } else {
+          await admin.from("notifications").insert({
+            user_id: referrerId,
+            type: "referral",
+            title: "A shipmate you invited joined",
+            message: "Invite reward limit reached (2 per 6 months) — this one didn't earn a bonus month.",
+            link: "/dashboard",
+            read: false,
+          });
+        }
+      }
+    } catch {
+      // Ödül hatası onboarding'i asla bozmasın
+    }
   }
 
   revalidatePath("/", "layout");
