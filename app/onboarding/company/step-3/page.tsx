@@ -12,6 +12,24 @@ export default async function CompanyStep3Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Mevcut değerleri çek — edit modunda dolu göster
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("phone")
+    .eq("id", user.id)
+    .single();
+
+  const { data: details } = await supabase
+    .from("company_details")
+    .select("description, contact_phone")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const savedDescription = (details?.description as string) || "";
+  const savedPhone =
+    (details?.contact_phone as string) || (profile?.phone as string) || "";
+  const isEditing = !!(savedDescription || savedPhone);
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
       {/* Progress Bar */}
@@ -31,7 +49,9 @@ export default async function CompanyStep3Page() {
           Finish your company profile
         </h1>
         <p className="text-white/60 text-lg">
-          Add the finishing touches to attract top maritime talent.
+          {isEditing
+            ? "Your saved details are filled in — update them or save to finish."
+            : "Add the finishing touches to attract top maritime talent."}
         </p>
       </div>
 
@@ -47,6 +67,7 @@ export default async function CompanyStep3Page() {
             name="description"
             rows={4}
             maxLength={500}
+            defaultValue={savedDescription}
             placeholder="Briefly describe your company, fleet, areas of operation, what makes you a great employer..."
             className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition resize-none"
           />
@@ -62,6 +83,7 @@ export default async function CompanyStep3Page() {
             id="contactPhone"
             name="contactPhone"
             type="tel"
+            defaultValue={savedPhone}
             placeholder="+90 555 123 4567"
             className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
           />
@@ -79,9 +101,15 @@ export default async function CompanyStep3Page() {
               </svg>
             </div>
             <div>
-              <h4 className="text-emerald-400 font-extrabold text-sm mb-1">Ready to launch!</h4>
+              <h4 className="text-emerald-400 font-extrabold text-sm mb-1">
+                {isEditing ? "Saving updates your live profile" : "Ready to launch!"}
+              </h4>
               <p className="text-white/70 text-sm leading-relaxed">
-                Your company profile will become <strong className="text-white">public</strong> and you'll get <strong className="text-white">3 free profile views</strong> to start finding maritime talent.
+                {isEditing ? (
+                  <>Completing this step saves your changes — your company profile stays <strong className="text-white">public</strong> and visible to crew.</>
+                ) : (
+                  <>Your company profile will become <strong className="text-white">public</strong> and your <strong className="text-white">first month is completely free</strong> — full access to search and contact verified crew.</>
+                )}
               </p>
             </div>
           </div>
@@ -99,7 +127,7 @@ export default async function CompanyStep3Page() {
             type="submit"
             className="px-8 py-3 bg-accent hover:bg-accent-dark text-primary font-extrabold rounded-lg transition shadow-lg shadow-accent/30"
           >
-            Complete Profile 🎉
+            {isEditing ? "Save Changes ✓" : "Complete Profile 🎉"}
           </button>
         </div>
       </form>
