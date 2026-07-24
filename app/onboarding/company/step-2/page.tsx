@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
 import { updateCompanyHiring } from "@/lib/actions/profile";
+import SelectAll from "@/app/onboarding/select-all";
 import Link from "next/link";
 
 export const metadata = {
@@ -10,7 +11,8 @@ export const metadata = {
 
 export default async function CompanyStep2Page() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login");
 
   // Mevcut değerleri çek — edit modunda işaretli göster
@@ -74,12 +76,13 @@ export default async function CompanyStep2Page() {
       {/* Form */}
       <form action={updateCompanyHiring} className="space-y-6">
         {/* Fleet Types */}
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-          <label className="block text-white font-bold mb-2">
-            Vessel Types You Operate
-          </label>
+        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6" id="fleet-box">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+            <label className="text-white font-bold">Vessel Types You Operate</label>
+            <SelectAll containerId="fleet-box" />
+          </div>
           <p className="text-white/40 text-xs mb-4">
-            Select all that apply
+            Select all that apply — or use the buttons above
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {fleetTypes.map((type) => (
@@ -101,12 +104,13 @@ export default async function CompanyStep2Page() {
         </div>
 
         {/* Ship Ranks */}
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-          <label className="block text-white font-bold mb-2">
-            Ship Crew Positions You Hire
-          </label>
+        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6" id="ship-box">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+            <label className="text-white font-bold">Ship Crew Positions You Hire</label>
+            <SelectAll containerId="ship-box" />
+          </div>
           <p className="text-white/40 text-xs mb-4">
-            Select all positions you typically recruit for
+            Select all positions you typically recruit for — or select all with one click
           </p>
           <div className="space-y-4">
             {Object.entries(SHIP_RANKS).map(([department, ranks]) => (
@@ -137,10 +141,11 @@ export default async function CompanyStep2Page() {
         </div>
 
         {/* Yacht Positions */}
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-          <label className="block text-white font-bold mb-2">
-            Yacht Crew Positions You Hire
-          </label>
+        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6" id="yacht-box">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+            <label className="text-white font-bold">Yacht Crew Positions You Hire</label>
+            <SelectAll containerId="yacht-box" />
+          </div>
           <p className="text-white/40 text-xs mb-4">
             Skip if you don't recruit yacht crew
           </p>
