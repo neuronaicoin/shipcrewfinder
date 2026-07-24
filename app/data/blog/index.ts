@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import bimcoSeafarerWorkforceReport2026 from "./bimco-seafarer-workforce-report-2026";
 import maritimeHiringTrends2026 from "./maritime-hiring-trends-2026";
 import seafarerSalaries2026 from "./seafarer-salaries-2026";
 import maritimeCvGuide from "./maritime-cv-guide";
@@ -13,6 +14,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  bimcoSeafarerWorkforceReport2026,
   tankerVsCargoShipJobs,
   howToBecomeYachtCrew,
   seafarerContractLengthRotation,
