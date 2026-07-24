@@ -19,6 +19,9 @@ const STATUS_META: Record<string, { label: string; icon: string; cls: string }> 
 
 const STATUS_ORDER = ["new", "contacted", "shortlisted", "hired", "rejected"];
 
+type ProfEntry = { full_name: string; user_type: string; country: string | null; cv_share_code: string | null };
+type DetEntry = { rank: string | null; availability: string | null; nationality: string | null };
+
 export default async function JobApplicationsPage({
   params,
   searchParams,
@@ -65,11 +68,8 @@ export default async function JobApplicationsPage({
 
   // Başvuran profilleri + detayları (tek turda)
   const applicantIds = [...new Set(apps.map((a) => a.applicant_id as string))];
-  const profileMap: Record
-    string,
-    { full_name: string; user_type: string; country: string | null; cv_share_code: string | null }
-  > = {};
-  const detailMap: Record<string, { rank: string | null; availability: string | null; nationality: string | null }> = {};
+  const profileMap: Record<string, ProfEntry> = {};
+  const detailMap: Record<string, DetEntry> = {};
 
   if (applicantIds.length > 0) {
     const [{ data: profiles }, { data: sfDetails }, { data: ytDetails }] = await Promise.all([
@@ -156,7 +156,7 @@ export default async function JobApplicationsPage({
 
   const filterHref = (s: string) =>
     "/jobs/" + job.id + "/applications" + (s === "all" ? "" : "?status=" + s);
-return (
+  return (
     <>
       <style>{`
   *{margin:0;padding:0;box-sizing:border-box}
@@ -214,12 +214,7 @@ return (
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
 
-      <SiteHeader
-        isLoggedIn={true}
-        userType="company"
-        unreadCount={unreadCount || 0}
-        active={null}
-      />
+      <SiteHeader isLoggedIn={true} userType="company" unreadCount={unreadCount || 0} active={null} />
 
       <div className="a-hero">
         <div className="aur"></div>
@@ -236,13 +231,9 @@ return (
         <div className="wrap">
           {/* Durum sekmeleri */}
           <div className="tabs">
-            <Link href={filterHref("all")} className={"tab" + (filter === "all" ? " on" : "")}>
-              All <span className="n">{counts.all}</span>
-            </Link>
+            <Link href={filterHref("all")} className={"tab" + (filter === "all" ? " on" : "")}>All <span className="n">{counts.all}</span></Link>
             {STATUS_ORDER.map((s) => (
-              <Link key={s} href={filterHref(s)} className={"tab" + (filter === s ? " on" : "")}>
-                {STATUS_META[s].icon} {STATUS_META[s].label} <span className="n">{counts[s]}</span>
-              </Link>
+              <Link key={s} href={filterHref(s)} className={"tab" + (filter === s ? " on" : "")}>{STATUS_META[s].icon} {STATUS_META[s].label} <span className="n">{counts[s]}</span></Link>
             ))}
           </div>
 
@@ -259,49 +250,31 @@ return (
                 const meta = STATUS_META[st] || STATUS_META.new;
                 const prof = profileMap[a.applicant_id as string];
                 const det = detailMap[a.applicant_id as string];
-                const cardCls =
-                  "acard" +
-                  (st === "rejected" ? " rej" : st === "hired" ? " hired" : st === "shortlisted" ? " short" : "");
+                const cardCls = "acard" + (st === "rejected" ? " rej" : st === "hired" ? " hired" : st === "shortlisted" ? " short" : "");
+                const natText = countryLabel(det?.nationality || prof?.country || null) || "—";
+                const avText = availLabel(det?.availability || null);
                 return (
                   <div key={a.id as string} className={cardCls}>
                     <div className="a-top">
-                      <div className="aname">
-                        {prof?.full_name || "A candidate"}{" "}
-                        {det?.rank ? <small>— {det.rank}</small> : null}
-                      </div>
+                      <div className="aname">{prof?.full_name || "A candidate"} {det?.rank ? <small>— {det.rank}</small> : null}</div>
                       <span className={"stpill " + meta.cls}>{meta.icon} {meta.label.toUpperCase()}</span>
                     </div>
                     <div className="ameta">
-                      {countryLabel(det?.nationality || prof?.country || null) || "—"}
-                      {availLabel(det?.availability || null) ? (
-                        <> <span className="dot">·</span> <span style={{ color: "var(--grn)" }}>{availLabel(det?.availability || null)}</span></>
-                      ) : null}
+                      {natText}
+                      {avText ? <> <span className="dot">·</span> <span style={{ color: "var(--grn)" }}>{avText}</span></> : null}
                       <span className="dot"> · </span>applied {ago(a.created_at as string)}
                     </div>
 
                     {a.message ? <div className="amsg">{a.message as string}</div> : null}
 
                     <div className="abtns">
-                      <Link href={"/candidate/" + (a.applicant_id as string)} className="abtn gold">
-                        View profile →
-                      </Link>
+                      <Link href={"/candidate/" + (a.applicant_id as string)} className="abtn gold">View profile →</Link>
                       {prof?.cv_share_code ? (
-                        
-                          href={"/cv/share/" + prof.cv_share_code}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="abtn ghost"
-                        >
-                          📄 SCF CV
-                        </a>
+                        <a href={"/cv/share/" + prof.cv_share_code} target="_blank" rel="noopener noreferrer" className="abtn ghost">📄 SCF CV</a>
                       ) : null}
                     </div>
 
-                    <ApplicationControls
-                      applicationId={a.id as string}
-                      status={st}
-                      note={(a.company_note as string) || null}
-                    />
+                    <ApplicationControls applicationId={a.id as string} status={st} note={(a.company_note as string) || null} />
                   </div>
                 );
               })}
