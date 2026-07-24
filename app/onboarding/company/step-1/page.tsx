@@ -13,12 +13,18 @@ export default async function CompanyStep1Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Get company name from existing record
+  // Mevcut değerleri çek — edit modunda dolu göster
   const { data: companyDetails } = await supabase
     .from("company_details")
-    .select("company_name")
+    .select("company_name, headquarters_country, company_type, company_size, website")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  const savedCountry = (companyDetails?.headquarters_country as string) || "";
+  const savedType = (companyDetails?.company_type as string) || "";
+  const savedSize = (companyDetails?.company_size as string) || "";
+  const savedWebsite = (companyDetails?.website as string) || "";
+  const isEditing = !!(savedCountry || savedType);
 
   const countries = getSortedCountries();
 
@@ -61,10 +67,12 @@ export default async function CompanyStep1Page() {
           <span className="text-accent text-xs font-extrabold tracking-wider uppercase">For Companies</span>
         </div>
         <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
-          Tell us about your company
+          {isEditing ? "Your company details" : "Tell us about your company"}
         </h1>
         <p className="text-white/60 text-lg">
-          {companyDetails?.company_name || "Your company"} — let's complete your profile to start finding talent.
+          {isEditing
+            ? `${companyDetails?.company_name || "Your company"} — your saved details are filled in. Change what you need or continue.`
+            : `${companyDetails?.company_name || "Your company"} — let's complete your profile to start finding talent.`}
         </p>
       </div>
 
@@ -79,7 +87,7 @@ export default async function CompanyStep1Page() {
             id="country"
             name="country"
             required
-            defaultValue=""
+            defaultValue={savedCountry}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
@@ -117,7 +125,7 @@ export default async function CompanyStep1Page() {
             id="companyType"
             name="companyType"
             required
-            defaultValue=""
+            defaultValue={savedType}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
@@ -145,7 +153,7 @@ export default async function CompanyStep1Page() {
           <select
             id="companySize"
             name="companySize"
-            defaultValue=""
+            defaultValue={savedSize}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
@@ -174,6 +182,7 @@ export default async function CompanyStep1Page() {
             id="website"
             name="website"
             type="url"
+            defaultValue={savedWebsite}
             placeholder="https://yourcompany.com"
             className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
           />
@@ -183,7 +192,7 @@ export default async function CompanyStep1Page() {
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           <Link href="/dashboard" className="text-white/40 hover:text-white/60 text-sm transition">
-            ← Skip for now
+            ← Back to dashboard
           </Link>
           <button
             type="submit"
