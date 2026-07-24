@@ -272,7 +272,7 @@ export default async function DashboardPage() {
               <>
                 <Link href="/jobs" className="qcard gold">
                   <div className="qi">⚓</div>
-                  <b>Browse Jobs</b>
+                  <b>Search Jobs</b>
                   <p>Open positions from verified companies — apply directly.</p>
                 </Link>
                 <Link href={`/jobs${rankLabel ? `?rank=${encodeURIComponent(String(rankLabel).toUpperCase())}` : ""}`} className="qcard">
