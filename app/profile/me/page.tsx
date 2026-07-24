@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { logout } from "@/lib/actions/auth";
-import NotificationBell from "@/app/components/notification-bell";
+import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
 
 export const metadata = {
@@ -12,54 +11,40 @@ export default async function MyProfilePage() {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  const [
+    { data: profile },
+    { data: seafarerDetails },
+    { data: yachtDetails },
+    { data: companyDetails },
+    { count: unreadCount },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("yacht_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase.from("company_details").select("*").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false),
+  ]);
 
   if (!profile) {
     redirect("/dashboard");
   }
 
   let detailsData: Record<string, unknown> | null = null;
-
-  if (profile.user_type === "seafarer") {
-    const { data } = await supabase
-      .from("seafarer_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
-  } else if (profile.user_type === "yacht") {
-    const { data } = await supabase
-      .from("yacht_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
-  } else if (profile.user_type === "company") {
-    const { data } = await supabase
-      .from("company_details")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    detailsData = data;
-  }
-
-  // Unread notification count
-  const { count: unreadCount } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("read", false);
+  if (profile.user_type === "seafarer") detailsData = seafarerDetails;
+  else if (profile.user_type === "yacht") detailsData = yachtDetails;
+  else if (profile.user_type === "company") detailsData = companyDetails;
 
   const isCrew =
     profile.user_type === "seafarer" || profile.user_type === "yacht";
@@ -112,239 +97,204 @@ export default async function MyProfilePage() {
 
   const isPublic = profile.visibility === "public";
 
+  const cvUrl = (detailsData?.cv_url as string) || "";
+  const webRaw = (detailsData?.website as string) || "";
+  const webUrl = webRaw
+    ? (webRaw.startsWith("http") ? webRaw : "https://" + webRaw)
+    : "";
+
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px}
+  .pm-hero{position:relative;padding:34px 0 8px;overflow:hidden}
+  .aur{position:absolute;width:440px;height:440px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.42;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:18px}
+  .back:hover{color:var(--gold)}
+  section{padding:14px 0 44px}
+  .idcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:26px;margin-bottom:16px}
+  .idrow{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap}
+  .avatar{flex-shrink:0;width:72px;height:72px;border-radius:18px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:28px;color:var(--gold)}
+  .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:rgba(251,191,36,.09);border:1px solid var(--line);border-radius:8px;padding:4px 11px;margin-bottom:8px}
+  h1{font-family:var(--disp);font-size:clamp(1.5rem,3.8vw,2.2rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;word-break:break-word}
+  .vis{display:flex;align-items:center;gap:9px;margin-top:9px;flex-wrap:wrap}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+  .pill.ok{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .pill.off{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .vnote{font-size:11.5px;color:var(--tx3)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:16px}
+  .card h2{font-family:var(--disp);font-size:17px;font-weight:800;margin-bottom:10px}
+  .rows{display:flex;flex-direction:column}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+  .row:last-child{border-bottom:none}
+  .row span{color:var(--tx3)}
+  .row b,.row a{font-weight:600;text-align:right;word-break:break-all;min-width:0}
+  .row a{color:var(--gold);text-decoration:none}
+  .row a:hover{text-decoration:underline}
+  .about{font-size:13px;color:var(--tx2);line-height:1.7;margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
+  .fine{font-size:11.5px;color:var(--tx3);margin-top:12px;line-height:1.5}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={true}
+        userType={profile.user_type as "seafarer" | "yacht" | "company" | null}
+        unreadCount={unreadCount || 0}
+        active={null}
       />
-
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <NotificationBell count={unreadCount || 0} />
-            <Link
-              href="/dashboard"
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-            >
-              Your Account
-            </Link>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-              >
-                Log Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6"
-        >
-          ← Back to Your Account
-        </Link>
-
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-          <div className="flex items-start gap-5">
-            <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-              <span className="font-display text-3xl font-bold text-accent">
-                {initial}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="inline-block px-3 py-1 bg-accent/15 border border-accent/30 rounded-full mb-2">
-                <span className="text-accent text-xs font-extrabold tracking-wider uppercase">
-                  {accountTypeLabel}
-                </span>
-              </div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight break-words">
-                {displayName}
-              </h1>
-              <div className="mt-2 flex items-center gap-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-bold uppercase border ${
-                    isPublic
-                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                      : "bg-white/5 border-white/10 text-white/60"
-                  }`}
-                >
-                  {isPublic ? "Public" : "Hidden"}
-                </span>
-                <span className="text-white/40 text-xs">
-                  {isPublic
-                    ? "Visible to verified companies"
-                    : "Not visible in search"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Link
-              href={onboardingUrl}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10 text-sm"
-            >
-              Edit Profile
-            </Link>
-          </div>
-        </div>
-
-        {isCrew && (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-            <h2 className="font-display text-xl font-bold text-white mb-4">
-              Professional Details
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">
-                  {profile.user_type === "yacht" ? "Position" : "Rank"}
-                </span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.rank as string) ||
-                    (detailsData?.position as string) ||
-                    "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Experience</span>
-                <span className="text-white font-medium text-sm">
-                  {experienceLabel || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Nationality</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.nationality as string) ||
-                    profile.country ||
-                    "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Languages</span>
-                <span className="text-white font-medium text-sm text-right">
-                  {languages.length > 0 ? languages.join(", ") : "—"}
-                </span>
-              </div>
-              {detailsData?.english_level ? (
-                <div className="flex items-center justify-between py-3 border-b border-white/5">
-                  <span className="text-white/60 text-sm">English Level</span>
-                  <span className="text-white font-medium text-sm">
-                    {detailsData.english_level as string}
-                  </span>
-                </div>
-              ) : null}
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Availability</span>
-                <span className="text-white font-medium text-sm">
-                  {availabilityLabel || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <span className="text-white/60 text-sm">CV</span>
-                <span className="text-white font-medium text-sm">
-                  {detailsData?.cv_url ? (
-                    <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2">View CV</a>
-                  ) : (
-                    "Not uploaded"
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {profile.user_type === "company" && (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-            <h2 className="font-display text-xl font-bold text-white mb-4">
-              Company Details
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Company Type</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.company_type as string) || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Headquarters</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.headquarters_country as string) || "—"}
-                </span>
-              </div>
-              {detailsData?.website ? (
-                <div className="flex items-center justify-between py-3 border-b border-white/5">
-                  <span className="text-white/60 text-sm">Website</span>
-                  <a href={detailsData.website as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2 text-sm font-medium break-all text-right">{detailsData.website as string}</a>
-                </div>
-              ) : null}
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Hiring For</span>
-                <span className="text-white font-medium text-sm text-right">
-                  {hiringRanks.length > 0 ? hiringRanks.join(", ") : "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <span className="text-white/60 text-sm">Fleet Types</span>
-                <span className="text-white font-medium text-sm text-right">
-                  {fleetTypes.length > 0 ? fleetTypes.join(", ") : "—"}
-                </span>
-              </div>
-            </div>
-            {detailsData?.description ? (
-              <div className="mt-4 pt-4 border-t border-white/5">
-                <span className="text-white/60 text-sm block mb-2">About</span>
-                <p className="text-white/80 text-sm leading-relaxed">
-                  {detailsData.description as string}
-                </p>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-white mb-4">
-            Contact
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-white/60 text-sm">Email</span>
-              <span className="text-white font-medium text-sm">
-                {user.email}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="text-white/60 text-sm">Phone</span>
-              <span className="text-white font-medium text-sm">
-                {profile.phone || "—"}
-              </span>
-            </div>
-          </div>
-          <p className="text-white/40 text-xs mt-4">
-            Your contact details are only shared with companies after they
-            unlock your profile.
-          </p>
+      <div className="pm-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/dashboard" className="back">← Back to dashboard</Link>
         </div>
       </div>
-    </main>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          {/* Identity card */}
+          <div className="idcard">
+            <div className="idrow">
+              <div className="avatar">{initial}</div>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <span className="tag">{accountTypeLabel}</span>
+                <h1>{displayName}</h1>
+                <div className="vis">
+                  <span className={"pill " + (isPublic ? "ok" : "off")}>
+                    {isPublic ? "Public" : "Hidden"}
+                  </span>
+                  <span className="vnote">
+                    {isPublic ? "Visible to verified companies" : "Not visible in search"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <Link href={onboardingUrl} className="btn btn-ghost">Edit Profile</Link>
+            </div>
+          </div>
+
+          {/* Crew details */}
+          {isCrew ? (
+            <div className="card">
+              <h2>Professional Details</h2>
+              <div className="rows">
+                <div className="row">
+                  <span>{profile.user_type === "yacht" ? "Position" : "Rank"}</span>
+                  <b>{(detailsData?.rank as string) || (detailsData?.position as string) || "—"}</b>
+                </div>
+                <div className="row">
+                  <span>Experience</span>
+                  <b>{experienceLabel || "—"}</b>
+                </div>
+                <div className="row">
+                  <span>Nationality</span>
+                  <b>{(detailsData?.nationality as string) || profile.country || "—"}</b>
+                </div>
+                <div className="row">
+                  <span>Languages</span>
+                  <b>{languages.length > 0 ? languages.join(", ") : "—"}</b>
+                </div>
+                {detailsData?.english_level ? (
+                  <div className="row">
+                    <span>English Level</span>
+                    <b>{detailsData.english_level as string}</b>
+                  </div>
+                ) : null}
+                <div className="row">
+                  <span>Availability</span>
+                  <b>{availabilityLabel || "—"}</b>
+                </div>
+                <div className="row">
+                  <span>CV</span>
+                  {cvUrl ? (
+                    <a href={cvUrl} target="_blank" rel="noopener noreferrer">View CV</a>
+                  ) : (
+                    <b>Not uploaded</b>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Company details */}
+          {profile.user_type === "company" ? (
+            <div className="card">
+              <h2>Company Details</h2>
+              <div className="rows">
+                <div className="row">
+                  <span>Company Type</span>
+                  <b>{(detailsData?.company_type as string) || "—"}</b>
+                </div>
+                <div className="row">
+                  <span>Headquarters</span>
+                  <b>{(detailsData?.headquarters_country as string) || "—"}</b>
+                </div>
+                {webUrl ? (
+                  <div className="row">
+                    <span>Website</span>
+                    <a href={webUrl} target="_blank" rel="noopener noreferrer">{webRaw}</a>
+                  </div>
+                ) : null}
+                <div className="row">
+                  <span>Hiring For</span>
+                  <b>{hiringRanks.length > 0 ? hiringRanks.join(", ") : "—"}</b>
+                </div>
+                <div className="row">
+                  <span>Fleet Types</span>
+                  <b>{fleetTypes.length > 0 ? fleetTypes.join(", ") : "—"}</b>
+                </div>
+              </div>
+              {detailsData?.description ? (
+                <div className="about">{detailsData.description as string}</div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Contact */}
+          <div className="card">
+            <h2>Contact</h2>
+            <div className="rows">
+              <div className="row">
+                <span>Email</span>
+                <b>{user.email}</b>
+              </div>
+              <div className="row">
+                <span>Phone</span>
+                <b>{profile.phone || "—"}</b>
+              </div>
+            </div>
+            <p className="fine">
+              Your contact details are only shared with companies after they unlock your profile.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/dashboard">Dashboard</Link> ·{" "}
+          <Link href="/jobs">Jobs</Link> · <Link href="/salary">Salary Index</Link>
+        </div>
+      </footer>
+    </>
   );
 }
