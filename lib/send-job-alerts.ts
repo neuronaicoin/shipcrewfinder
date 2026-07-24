@@ -37,7 +37,7 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
 
     const { data: alerts, error: alertErr } = await admin
       .from("job_alerts")
-      .select("id, email, token")
+      .select("id, user_id, email, token")
       .eq("rank", rank)
       .eq("active", true);
 
@@ -52,6 +52,7 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
     }
 
     const okIds: string[] = [];
+    const okUserIds: string[] = [];
 
     for (const a of alerts) {
       const { subject, html, text } = buildJobAlertEmail(job as unknown as AlertJob, companyName, a.token as string);
@@ -65,7 +66,10 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
       });
       const body = await res.text();
       steps.push(`resend=${res.status}:${body.slice(0, 150)}`);
-      if (res.ok) okIds.push(a.id as string);
+      if (res.ok) {
+        okIds.push(a.id as string);
+        if (a.user_id) okUserIds.push(a.user_id as string);
+      }
       await new Promise((r) => setTimeout(r, 120));
     }
 
@@ -74,6 +78,24 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
         .from("job_alerts")
         .update({ last_sent_at: new Date().toISOString() })
         .in("id", okIds);
+    }
+
+    // Uygulama içi bildirim — zil kutusuna düşer
+    if (okUserIds.length > 0) {
+      const notifRows = okUserIds.map((uid) => ({
+        user_id: uid,
+        type: "job_alert",
+        title: `New ${rank} position`,
+        message: `${companyName} posted "${job.title}" — matching your ${rank} alert.`,
+        link: `/jobs/${job.id}`,
+        read: false,
+      }));
+      const { error: notifErr } = await admin.from("notifications").insert(notifRows);
+      if (notifErr) {
+        steps.push(`notif_err=${notifErr.message}`);
+      } else {
+        steps.push(`notif=${notifRows.length}`);
+      }
     }
 
     return steps.join(" | ");
