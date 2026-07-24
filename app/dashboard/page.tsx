@@ -111,6 +111,24 @@ export default async function DashboardPage() {
 
   const isCompany = profile?.user_type === "company";
 
+  // ── Company: başvuru özeti (Applications kartı için) ──
+  let appTotal = 0;
+  let appNew = 0;
+  let appLink = "/jobs/mine";
+  if (isCompany) {
+    const { data: myApps } = await supabase
+      .from("job_applications")
+      .select("id, job_id, status, created_at")
+      .eq("company_id", user.id)
+      .order("created_at", { ascending: false });
+    const list = myApps || [];
+    appTotal = list.length;
+    appNew = list.filter((a) => ((a.status as string) || "new") === "new").length;
+    if (list.length > 0) {
+      appLink = "/jobs/" + (list[0].job_id as string) + "/applications";
+    }
+  }
+
   const rankLabel =
     (detailsData?.rank as string) || (detailsData?.position as string) || null;
 
@@ -208,6 +226,7 @@ export default async function DashboardPage() {
   .qcard.gold{border-color:var(--line);background:linear-gradient(160deg,rgba(251,191,36,.12),var(--ink))}
   .qbadge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
   .qbadge.warn{color:#f87171;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .qbadge.grn{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
   .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px}
   .rows{display:flex;flex-direction:column}
   .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
@@ -303,6 +322,16 @@ export default async function DashboardPage() {
                   <b>Search Crew</b>
                   <p>Filter verified profiles by rank, availability and vessel experience.</p>
                 </Link>
+                <Link href={appLink} className="qcard gold">
+                  {appNew > 0 ? (
+                    <span className="qbadge grn">{appNew} new</span>
+                  ) : appTotal > 0 ? (
+                    <span className="qbadge">{appTotal} total</span>
+                  ) : null}
+                  <div className="qi">📥</div>
+                  <b>Applications</b>
+                  <p>Every applicant in one place — New → Contacted → Shortlisted → Hired.</p>
+                </Link>
                 <Link href="/radar" className="qcard">
                   <div className="qi">📡</div>
                   <b>Rotation Radar</b>
@@ -316,7 +345,7 @@ export default async function DashboardPage() {
                 <Link href="/jobs/mine" className="qcard">
                   <div className="qi">🗂️</div>
                   <b>My Job Posts</b>
-                  <p>Manage listings and review applications.</p>
+                  <p>Manage listings — each post links to its applications.</p>
                 </Link>
                 <Link href="/salary" className="qcard">
                   <div className="qi">💰</div>
@@ -405,7 +434,7 @@ export default async function DashboardPage() {
                       className={`nrow ${n.read ? "" : "unread"}`}
                     >
                       <span className="ni">
-                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : n.type === "rotation_radar" ? "📡" : "🔔"}
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📥" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : n.type === "rotation_radar" ? "📡" : n.type === "hired" ? "🎉" : "🔔"}
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <b>{n.title as string}</b>
@@ -467,6 +496,18 @@ export default async function DashboardPage() {
                 )}
                 {isCompany && (
                   <>
+                    <div className="row">
+                      <span>Applications received</span>
+                      <b>
+                        {appTotal > 0 ? (
+                          <Link href={appLink} style={{ color: "var(--gold)", textDecoration: "none" }}>
+                            {appTotal} total{appNew > 0 ? " · " + appNew + " new" : ""}
+                          </Link>
+                        ) : (
+                          "0"
+                        )}
+                      </b>
+                    </div>
                     <div className="row">
                       <span>Company type</span>
                       <b>{(detailsData?.company_type as string) || "—"}</b>
