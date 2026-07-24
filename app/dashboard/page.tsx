@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
-import NotificationBell from "@/app/components/notification-bell";
+import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
 
 export const metadata = {
@@ -25,6 +25,7 @@ export default async function DashboardPage() {
     { data: yachtDetails },
     { data: companyDetails },
     { count: unreadCount },
+    { data: notifications },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
@@ -35,6 +36,12 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("read", false),
+    supabase
+      .from("notifications")
+      .select("id, type, title, message, link, read, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(6),
   ]);
 
   let detailsData: Record<string, unknown> | null = null;
@@ -84,13 +91,8 @@ export default async function DashboardPage() {
 
   const isCompany = profile?.user_type === "company";
 
-  const experienceLabel = (() => {
-    const y = detailsData?.years_experience as number | undefined | null;
-    if (y === undefined || y === null) return null;
-    if (y <= 1) return "0–1 years";
-    if (y <= 3) return "1–3 years";
-    return "3+ years";
-  })();
+  const rankLabel =
+    (detailsData?.rank as string) || (detailsData?.position as string) || null;
 
   const availabilityLabel = (() => {
     const a = detailsData?.availability as string | undefined | null;
@@ -101,320 +103,326 @@ export default async function DashboardPage() {
     return a;
   })();
 
-  const languages = Array.isArray(detailsData?.languages)
-    ? (detailsData?.languages as string[])
-    : [];
-
   const hiringRanks = Array.isArray(detailsData?.hiring_for_ranks)
     ? (detailsData?.hiring_for_ranks as string[])
     : [];
 
-  const fleetTypes = Array.isArray(detailsData?.fleet_types)
-    ? (detailsData?.fleet_types as string[])
-    : [];
+  const firstName = (profile?.full_name || "there").split(" ")[0];
+
+  const ringR = 42;
+  const ringC = 2 * Math.PI * ringR;
+  const ringOff = ringC - (completion / 100) * ringC;
+
+  const fmtNotifDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  .dash-hero{position:relative;padding:40px 0 28px;overflow:hidden}
+  .aur{position:absolute;width:480px;height:480px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.45;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:rgba(251,191,36,.09);border:1px solid var(--line);border-radius:8px;padding:5px 12px;margin-bottom:12px}
+  h1{font-family:var(--disp);font-size:clamp(1.7rem,4vw,2.5rem);font-weight:800;line-height:1.1;letter-spacing:-.02em}
+  .sub{font-size:14px;color:var(--tx2);margin-top:8px}
+  .hero-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+  @media(max-width:640px){.hero-grid{grid-template-columns:1fr}}
+  .ring-box{display:flex;align-items:center;gap:16px;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:18px 22px}
+  .ring{width:96px;height:96px;flex-shrink:0}
+  .ring circle{fill:none;stroke-width:8}
+  .ring .bg{stroke:var(--line2)}
+  .ring .fg{stroke:var(--gold);stroke-linecap:round;transform:rotate(-90deg);transform-origin:center}
+  .ring-num{font-family:var(--disp);font-weight:800;font-size:22px;fill:var(--tx)}
+  .ring-lbl b{font-family:var(--disp);font-size:15px;display:block;margin-bottom:4px}
+  .ring-lbl p{font-size:12px;color:var(--tx3);max-width:22ch;line-height:1.5}
+  section{padding:22px 0}
+  .stitle{font-family:var(--disp);font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+  .qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .qcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:18px 20px;text-decoration:none;color:var(--tx);transition:.2s;display:block}
+  .qcard:hover{transform:translateY(-3px);border-color:var(--gold)}
+  .qcard .qi{font-size:22px;margin-bottom:8px}
+  .qcard b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:4px}
+  .qcard p{font-size:12px;color:var(--tx3);line-height:1.5}
+  .qcard.gold{border-color:var(--line);background:linear-gradient(160deg,rgba(251,191,36,.12),var(--ink))}
+  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px}
+  .rows{display:flex;flex-direction:column}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+  .row:last-child{border-bottom:none}
+  .row span{color:var(--tx3)}
+  .row b{font-weight:600;text-align:right}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+  .pill.ok{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .pill.warn{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .notif{display:flex;flex-direction:column;gap:9px}
+  .nrow{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--line2);border-radius:12px;text-decoration:none;color:var(--tx);transition:.15s;background:rgba(255,255,255,.02)}
+  .nrow:hover{border-color:var(--gold)}
+  .nrow.unread{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.05)}
+  .nrow .ni{font-size:16px;flex-shrink:0;margin-top:1px}
+  .nrow b{font-size:13px;display:block;font-family:var(--disp)}
+  .nrow p{font-size:12px;color:var(--tx2);margin-top:2px;line-height:1.5}
+  .nrow .nd{font-size:10.5px;color:var(--tx3);margin-left:auto;flex-shrink:0;white-space:nowrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .foot{padding:30px 0 44px;text-align:center}
+  .foot form{display:inline}
+  .foot button{background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;font-family:var(--body);text-decoration:underline;text-underline-offset:3px}
+  .foot button:hover{color:var(--gold)}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={true}
+        userType={profile?.user_type as "seafarer" | "yacht" | "company" | null}
+        unreadCount={unreadCount || 0}
+        active="dashboard"
       />
-
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <NotificationBell count={unreadCount || 0} />
-            <form action={logout}>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10"
-              >
-                Log Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div className="mb-10">
-          <div className="inline-block px-4 py-1.5 bg-accent/15 border border-accent/30 rounded-full mb-4">
-            <span className="text-accent text-xs font-extrabold tracking-wider uppercase">
-              {accountTypeLabel}
-            </span>
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
-            Welcome, {profile?.full_name || "there"}!
-          </h1>
-          <p className="text-white/60 text-lg">
-            {isComplete
-              ? "Your profile is live and ready."
-              : "Let's complete your profile to start receiving offers."}
-          </p>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          {isCompany && (
-            <>
-              <Link
-                href="/browse"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-              >
-                Search for Crew
-              </Link>
-              <Link
-                href="/jobs/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-              >
-                Post a Job
-              </Link>
-              <Link
-                href="/jobs/mine"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-              >
-                My Jobs
-              </Link>
-            </>
-          )}
-          {isCrew && (
-            <>
-              <Link
-                href="/jobs"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-              >
-                Search Jobs
-              </Link>
-
-            </>
-          )}
-        </div>
-
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-          <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="dash-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <div className="hero-grid">
             <div>
-              <h2 className="font-display text-2xl font-bold text-white mb-2">
-                Profile Status
-              </h2>
-              <p className="text-white/60 text-sm">
+              <div className="tag">{accountTypeLabel}</div>
+              <h1>Welcome back, {firstName} ⚓</h1>
+              <p className="sub">
                 {isComplete
-                  ? "Your profile is complete and live"
-                  : "Complete your profile to unlock all features"}
+                  ? isCompany
+                    ? "Your company profile is live. The crew pool is waiting."
+                    : "Your profile is live and visible to verified companies."
+                  : "Complete your profile to unlock full visibility."}
               </p>
             </div>
-            <div
-              className={`px-3 py-1 border rounded-full ${
-                isComplete
-                  ? "bg-emerald-500/15 border-emerald-500/30"
-                  : "bg-amber-500/15 border-amber-500/30"
-              }`}
-            >
-              <span
-                className={`text-xs font-bold uppercase tracking-wide ${
-                  isComplete ? "text-emerald-400" : "text-amber-400"
-                }`}
-              >
-                {isComplete ? "Complete" : "Incomplete"}
-              </span>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white/70 text-sm font-bold">Profile completion</span>
-              <span className="text-white/70 text-sm">{completion}%</span>
-            </div>
-            <div className="h-2 bg-primary border border-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-all duration-500"
-                style={{ width: `${completion}%` }}
-              />
-            </div>
-          </div>
-
-          {!isComplete ? (
-            <Link
-              href={onboardingUrl}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-            >
-              Complete Profile
-              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" />
+            <div className="ring-box">
+              <svg className="ring" viewBox="0 0 96 96">
+                <circle className="bg" cx="48" cy="48" r="42" />
+                <circle
+                  className="fg"
+                  cx="48"
+                  cy="48"
+                  r="42"
+                  strokeDasharray={ringC}
+                  strokeDashoffset={ringOff}
+                />
+                <text className="ring-num" x="48" y="55" textAnchor="middle">
+                  {completion}%
+                </text>
               </svg>
-            </Link>
-          ) : (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href={onboardingUrl}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10"
-              >
-                Edit Profile
-              </Link>
-              <Link
-                href="/profile/me"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20"
-              >
-                View My Profile
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {isComplete && isCrew && (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-            <h2 className="font-display text-xl font-bold text-white mb-4">
-              Your Profile
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">
-                  {profile?.user_type === "yacht" ? "Position" : "Rank"}
-                </span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.rank as string) ||
-                    (detailsData?.position as string) ||
-                    "—"}
-                </span>
+              <div className="ring-lbl">
+                <b>Profile completion</b>
+                <p>
+                  {isComplete
+                    ? "Fully complete — you appear in search results."
+                    : "Incomplete profiles get significantly fewer views."}
+                </p>
+                {!isComplete && (
+                  <Link href={onboardingUrl} className="btn btn-gold" style={{ marginTop: 10, padding: "8px 14px", fontSize: 12.5 }}>
+                    Complete now →
+                  </Link>
+                )}
               </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Experience</span>
-                <span className="text-white font-medium text-sm">
-                  {experienceLabel || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Nationality</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.nationality as string) ||
-                    profile?.country ||
-                    "—"}
-                </span>
-              </div>
-              {languages.length > 0 && (
-                <div className="flex items-center justify-between py-3 border-b border-white/5">
-                  <span className="text-white/60 text-sm">Languages</span>
-                  <span className="text-white font-medium text-sm text-right">
-                    {languages.join(", ")}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Availability</span>
-                <span className="text-white font-medium text-sm">
-                  {availabilityLabel || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <span className="text-white/60 text-sm">CV</span>
-                <span className="text-white font-medium text-sm">
-                  {detailsData?.cv_url ? (
-                    <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light underline underline-offset-2">View CV</a>
-                  ) : (
-                    "Not uploaded"
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isComplete && profile?.user_type === "company" && (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8 mb-6">
-            <h2 className="font-display text-xl font-bold text-white mb-4">
-              Your Company
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Company Type</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.company_type as string) || "—"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-white/60 text-sm">Headquarters</span>
-                <span className="text-white font-medium text-sm">
-                  {(detailsData?.headquarters_country as string) || "—"}
-                </span>
-              </div>
-              {hiringRanks.length > 0 && (
-                <div className="flex items-center justify-between py-3 border-b border-white/5">
-                  <span className="text-white/60 text-sm">Hiring For</span>
-                  <span className="text-white font-medium text-sm text-right">
-                    {hiringRanks.join(", ")}
-                  </span>
-                </div>
-              )}
-              {fleetTypes.length > 0 && (
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-white/60 text-sm">Fleet Types</span>
-                  <span className="text-white font-medium text-sm text-right">
-                    {fleetTypes.join(", ")}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
-          <h2 className="font-display text-xl font-bold text-white mb-4">
-            Account Information
-          </h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-white/60 text-sm">Email</span>
-              <span className="text-white font-medium text-sm">{user.email}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-white/60 text-sm">Account Type</span>
-              <span className="text-white font-medium text-sm">
-                {accountTypeLabel}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-white/60 text-sm">Member Since</span>
-              <span className="text-white font-medium text-sm">
-                {new Date(user.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="text-white/60 text-sm">Profile Visibility</span>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-bold uppercase border ${
-                  profile?.visibility === "public"
-                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                    : "bg-white/5 border-white/10 text-white/60"
-                }`}
-              >
-                {profile?.visibility === "public" ? "Public" : "Hidden"}
-              </span>
             </div>
           </div>
         </div>
-
-        <p className="text-center text-white/40 text-sm mt-8">
-          Direct messaging coming soon
-        </p>
       </div>
-    </main>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <div className="stitle">Quick actions</div>
+          <div className="qgrid">
+            {isCompany ? (
+              <>
+                <Link href="/browse" className="qcard gold">
+                  <div className="qi">🔍</div>
+                  <b>Search Crew</b>
+                  <p>Filter verified profiles by rank, availability and vessel experience.</p>
+                </Link>
+                <Link href="/jobs/new" className="qcard">
+                  <div className="qi">📋</div>
+                  <b>Post a Job</b>
+                  <p>Matching crew get an instant email + in-app alert.</p>
+                </Link>
+                <Link href="/jobs/mine" className="qcard">
+                  <div className="qi">🗂️</div>
+                  <b>My Job Posts</b>
+                  <p>Manage listings and review applications.</p>
+                </Link>
+                <Link href="/salary" className="qcard">
+                  <div className="qi">💰</div>
+                  <b>Salary Index</b>
+                  <p>2026 wage benchmarks by rank, vessel type and nationality.</p>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/jobs" className="qcard gold">
+                  <div className="qi">⚓</div>
+                  <b>Browse Jobs</b>
+                  <p>Open positions from verified companies — apply directly.</p>
+                </Link>
+                <Link href={`/jobs${rankLabel ? `?rank=${encodeURIComponent(String(rankLabel).toUpperCase())}` : ""}`} className="qcard">
+                  <div className="qi">🔔</div>
+                  <b>Job Alerts</b>
+                  <p>Get emailed the moment a matching position is posted.</p>
+                </Link>
+                <Link href="/salary" className="qcard">
+                  <div className="qi">💰</div>
+                  <b>Salary Index</b>
+                  <p>Know your market rate before you negotiate.</p>
+                </Link>
+                <Link href="/profile/me" className="qcard">
+                  <div className="qi">👤</div>
+                  <b>My Profile</b>
+                  <p>See your profile exactly as companies see it.</p>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 6 }}>
+        <div className="wrap">
+          <div className="grid2">
+            <div className="card">
+              <div className="stitle" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Notifications</span>
+                {(unreadCount || 0) > 0 && (
+                  <span className="pill warn">{unreadCount} new</span>
+                )}
+              </div>
+              {notifications && notifications.length > 0 ? (
+                <div className="notif">
+                  {notifications.map((n) => (
+                    <Link
+                      key={n.id as string}
+                      href={(n.link as string) || "/dashboard"}
+                      className={`nrow ${n.read ? "" : "unread"}`}
+                    >
+                      <span className="ni">
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : "🔔"}
+                      </span>
+                      <span style={{ minWidth: 0 }}>
+                        <b>{n.title as string}</b>
+                        <p>{n.message as string}</p>
+                      </span>
+                      <span className="nd">{fmtNotifDate(n.created_at as string)}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: "var(--tx3)", padding: "8px 0" }}>
+                  No notifications yet. {isCrew ? "Set a job alert and new matching positions will appear here." : "Applications to your job posts will appear here."}
+                </p>
+              )}
+            </div>
+
+            <div className="card">
+              <div className="stitle">
+                {isCompany ? "Company summary" : "Profile summary"}
+              </div>
+              <div className="rows">
+                {isCrew && (
+                  <>
+                    <div className="row">
+                      <span>{profile?.user_type === "yacht" ? "Position" : "Rank"}</span>
+                      <b>{rankLabel || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Availability</span>
+                      <b>{availabilityLabel || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Nationality</span>
+                      <b>{(detailsData?.nationality as string) || profile?.country || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>CV</span>
+                      <b>
+                        {detailsData?.cv_url ? (
+                          <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gold)" }}>
+                            View CV
+                          </a>
+                        ) : (
+                          "Not uploaded"
+                        )}
+                      </b>
+                    </div>
+                  </>
+                )}
+                {isCompany && (
+                  <>
+                    <div className="row">
+                      <span>Company type</span>
+                      <b>{(detailsData?.company_type as string) || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Headquarters</span>
+                      <b>{(detailsData?.headquarters_country as string) || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Hiring for</span>
+                      <b style={{ maxWidth: "60%" }}>{hiringRanks.length > 0 ? hiringRanks.join(", ") : "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Plan</span>
+                      <b>{(profile?.plan as string) || "Founding"}</b>
+                    </div>
+                  </>
+                )}
+                <div className="row">
+                  <span>Email</span>
+                  <b>{user.email}</b>
+                </div>
+                <div className="row">
+                  <span>Visibility</span>
+                  <b>
+                    <span className={`pill ${profile?.visibility === "public" ? "ok" : "warn"}`}>
+                      {profile?.visibility === "public" ? "Public" : "Hidden"}
+                    </span>
+                  </b>
+                </div>
+                <div className="row">
+                  <span>Member since</span>
+                  <b>
+                    {new Date(user.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                    })}
+                  </b>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
+                <Link href={onboardingUrl} className="btn btn-ghost">Edit profile</Link>
+                {isCrew && (
+                  <Link href="/profile/me" className="btn btn-gold">View my profile</Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="foot">
+        <form action={logout}>
+          <button type="submit">Log out</button>
+        </form>
+      </div>
+    </>
   );
 }
