@@ -210,7 +210,6 @@ export async function uploadCrewCV(formData: FormData): Promise<void> {
   revalidatePath("/onboarding/crew");
   redirect("/onboarding/crew/step-5");
 }
-
 // ============================================
 // CREW: Step 5 - Availability + Contact (FINAL)
 // ============================================
@@ -222,6 +221,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
 
   const availability = formData.get("availability") as string;
   const phone = formData.get("phone") as string;
+  const contractEndDate = formData.get("contractEndDate") as string;
 
   if (!availability) {
     redirect("/onboarding/crew/step-5?error=required");
@@ -253,12 +253,18 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
   if (profile.user_type === "seafarer") {
     await supabase
       .from("seafarer_details")
-      .update({ availability: availabilityValue })
+      .update({
+        availability: availabilityValue,
+        contract_end_date: contractEndDate || null,
+      })
       .eq("id", user.id);
   } else if (profile.user_type === "yacht") {
     await supabase
       .from("yacht_details")
-      .update({ availability: availabilityValue })
+      .update({
+        availability: availabilityValue,
+        contract_end_date: contractEndDate || null,
+      })
       .eq("id", user.id);
   }
 
