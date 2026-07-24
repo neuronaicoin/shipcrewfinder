@@ -12,6 +12,31 @@ export default async function CrewStep5Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Mevcut değerleri çek — edit modunda dolu göster
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_type, phone")
+    .eq("id", user.id)
+    .single();
+
+  const isShip = profile?.user_type === "seafarer";
+  const detailsTable = isShip ? "seafarer_details" : "yacht_details";
+  const { data: details } = await supabase
+    .from(detailsTable)
+    .select("availability")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const savedAvailability = (details?.availability as string) || "";
+  const availToRadio: Record<string, string> = {
+    immediate: "0-1",
+    "1-3_months": "1-3",
+    "3+_months": "3+",
+  };
+  const savedRadio = availToRadio[savedAvailability] || "";
+  const savedPhone = (profile?.phone as string) || "";
+  const isEditing = !!savedRadio;
+
   const availabilityOptions = [
     {
       value: "0-1",
@@ -71,7 +96,9 @@ export default async function CrewStep5Page() {
           When can you start?
         </h1>
         <p className="text-white/60 text-lg">
-          Almost done! Set your availability and contact preferences.
+          {isEditing
+            ? "Your saved availability is selected — update it or complete your profile."
+            : "Almost done! Set your availability and contact preferences."}
         </p>
       </div>
 
@@ -90,6 +117,7 @@ export default async function CrewStep5Page() {
                   name="availability"
                   value={option.value}
                   required
+                  defaultChecked={savedRadio === option.value}
                   className="peer sr-only"
                 />
                 <div className="bg-primary-dark border-2 border-white/10 hover:border-white/20 peer-checked:border-accent peer-checked:bg-accent/5 rounded-2xl p-5 transition-all">
@@ -142,6 +170,7 @@ export default async function CrewStep5Page() {
               id="phone"
               name="phone"
               type="tel"
+              defaultValue={savedPhone}
               placeholder="+90 555 123 4567"
               className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
             />
@@ -178,9 +207,15 @@ export default async function CrewStep5Page() {
               </svg>
             </div>
             <div>
-              <h4 className="text-emerald-400 font-extrabold text-sm mb-1">Almost there!</h4>
+              <h4 className="text-emerald-400 font-extrabold text-sm mb-1">
+                {isEditing ? "Saving updates your live profile" : "Almost there!"}
+              </h4>
               <p className="text-white/70 text-sm leading-relaxed">
-                After this step, your profile becomes <strong className="text-white">public</strong> and discoverable by verified maritime companies worldwide.
+                {isEditing ? (
+                  <>Completing this step saves your changes — your profile stays <strong className="text-white">public</strong> and up to date for companies.</>
+                ) : (
+                  <>After this step, your profile becomes <strong className="text-white">public</strong> and discoverable by verified maritime companies worldwide.</>
+                )}
               </p>
             </div>
           </div>
@@ -198,7 +233,7 @@ export default async function CrewStep5Page() {
             type="submit"
             className="px-8 py-3 bg-accent hover:bg-accent-dark text-primary font-extrabold rounded-lg transition shadow-lg shadow-accent/30"
           >
-            Complete Profile 🎉
+            {isEditing ? "Save Changes ✓" : "Complete Profile 🎉"}
           </button>
         </div>
       </form>
