@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createJob } from "@/lib/actions/jobs";
 import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
+import SiteHeader from "@/app/components/site-header";
 
 export const metadata = {
   title: "Post a Job — ShipCrewFinder",
@@ -18,215 +19,229 @@ export default async function NewJobPage({
   const error = sp.error;
 
   const supabase = await createClient();
+
+  // getSession: çerezden okur — ekstra ağ turu yok
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { count: unreadCount }] = await Promise.all([
+    supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false),
+  ]);
+
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
 
   const countries = getSortedCountries();
 
-  const inputStyle = {
-    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat" as const,
-    backgroundPosition: "right 1rem center",
-    paddingRight: "2.5rem",
-  };
-
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px}
+  .nj-hero{position:relative;padding:36px 0 8px;overflow:hidden}
+  .aur{position:absolute;width:440px;height:440px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.42;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:16px}
+  .back:hover{color:var(--gold)}
+  h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.5rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:8px}
+  .sub{font-size:14px;color:var(--tx2);line-height:1.6}
+  section{padding:20px 0 44px}
+  .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid;color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:14px}
+  .flabel{display:block;font-family:var(--disp);font-weight:700;font-size:14.5px;margin-bottom:12px}
+  .flabel .req{color:var(--gold)}
+  .hint{font-size:11.5px;color:var(--tx3);margin-top:8px;line-height:1.5}
+  select,input[type=text],input[type=number],textarea{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:12px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.85rem center;padding-right:2.2rem}
+  select:focus,input:focus,textarea:focus{border-color:var(--gold)}
+  textarea{resize:vertical;min-height:160px;line-height:1.6}
+  .radio2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rlab{display:flex;align-items:center;gap:9px;padding:12px 15px;background:var(--navy);border:1px solid var(--line2);border-radius:11px;cursor:pointer;transition:.15s;font-size:13.5px;font-weight:600}
+  .rlab:has(:checked){border-color:var(--gold);background:rgba(251,191,36,.08)}
+  .rlab input{accent-color:var(--gold);width:15px;height:15px}
+  .opt3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:560px){.opt3{grid-template-columns:1fr}}
+  .slabel{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+  .osec{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:12px 24px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;box-shadow:0 4px 20px rgba(251,191,36,.25)}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .factions{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:6px}
+  .cancel{color:var(--tx3);font-size:13px;text-decoration:none;transition:.15s}
+  .cancel:hover{color:var(--gold)}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={true}
+        userType="company"
+        unreadCount={unreadCount || 0}
+        active={null}
       />
 
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-          <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">
-            Dashboard
-          </Link>
+      <div className="nj-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/jobs/mine" className="back">← My Job Posts</Link>
+          <h1>Post a <span style={{ color: "var(--gold)" }}>Job</span></h1>
+          <p className="sub">
+            Create a listing — matching crew get an instant email and in-app alert the moment you publish.
+          </p>
         </div>
-      </header>
+      </div>
+      <section style={{ paddingTop: 8 }}>
+        <div className="wrap">
+          {error === "missing" ? (
+            <div className="banner">Please fill in the required fields: crew type, rank, title, and description.</div>
+          ) : null}
+          {error === "failed" ? (
+            <div className="banner">Something went wrong while posting the job. Please try again.</div>
+          ) : null}
 
-      <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <Link href="/jobs/mine" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6">
-          ← My Job Posts
-        </Link>
-
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
-          Post a Job
-        </h1>
-        <p className="text-white/60 text-base mb-8">
-          Create a job listing. Crew will see the title and details, and can contact you through the platform.
-        </p>
-
-        {error === "missing" && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
-            Please fill in the required fields: crew type, rank, title, and description.
-          </div>
-        )}
-        {error === "failed" && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
-            Something went wrong while posting the job. Please try again.
-          </div>
-        )}
-
-        <form action={createJob} className="space-y-5">
-          {/* Crew Type */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-            <label className="block text-white font-bold mb-3">
-              Crew Type <span className="text-accent">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex items-center gap-2 px-4 py-3 bg-primary border border-white/15 rounded-lg cursor-pointer transition has-[:checked]:border-accent has-[:checked]:bg-accent/10">
-                <input type="radio" name="jobType" value="seafarer" defaultChecked className="w-4 h-4 accent-accent" />
-                <span className="text-white text-sm font-medium">Ship Crew</span>
-              </label>
-              <label className="flex items-center gap-2 px-4 py-3 bg-primary border border-white/15 rounded-lg cursor-pointer transition has-[:checked]:border-accent has-[:checked]:bg-accent/10">
-                <input type="radio" name="jobType" value="yacht" className="w-4 h-4 accent-accent" />
-                <span className="text-white text-sm font-medium">Yacht Crew</span>
-              </label>
+          <form action={createJob}>
+            {/* Crew Type */}
+            <div className="card">
+              <label className="flabel">Crew Type <span className="req">*</span></label>
+              <div className="radio2">
+                <label className="rlab">
+                  <input type="radio" name="jobType" value="seafarer" defaultChecked />
+                  <span>⚓ Ship Crew</span>
+                </label>
+                <label className="rlab">
+                  <input type="radio" name="jobType" value="yacht" />
+                  <span>🛥️ Yacht Crew</span>
+                </label>
+              </div>
+              <p className="hint">Pick the rank list below accordingly.</p>
             </div>
-            <p className="text-white/40 text-xs mt-2">Pick the rank list below accordingly.</p>
-          </div>
 
-          {/* Rank */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-            <label htmlFor="rank" className="block text-white font-bold mb-3">
-              Rank / Position <span className="text-accent">*</span>
-            </label>
-            <select id="rank" name="rank" required defaultValue="" style={inputStyle}
-              className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none appearance-none">
-              <option value="" disabled>-- Select rank --</option>
-              <optgroup label="Ship — Deck">
-                {SHIP_RANKS["Deck Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Ship — Engine">
-                {SHIP_RANKS["Engine Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Ship — Catering">
-                {SHIP_RANKS["Catering Department"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Ship — Other">
-                {SHIP_RANKS["Other"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Yacht — Deck">
-                {YACHT_POSITIONS["Deck"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Yacht — Interior">
-                {YACHT_POSITIONS["Interior"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Yacht — Engineering">
-                {YACHT_POSITIONS["Engineering"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Yacht — Galley">
-                {YACHT_POSITIONS["Galley"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-              <optgroup label="Yacht — Other">
-                {YACHT_POSITIONS["Other"].map((r) => <option key={r} value={r}>{r}</option>)}
-              </optgroup>
-            </select>
-          </div>
-
-          {/* Title */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-            <label htmlFor="title" className="block text-white font-bold mb-3">
-              Job Title <span className="text-accent">*</span>
-            </label>
-            <input id="title" name="title" required maxLength={120} placeholder="e.g. Chief Engineer for LNG Carrier"
-              className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none" />
-          </div>
-
-          {/* Country + City */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 space-y-4">
-            <div>
-              <label htmlFor="country" className="block text-white font-bold mb-3">Country</label>
-              <select id="country" name="country" defaultValue="" style={inputStyle}
-                className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none appearance-none">
-                <option value="">-- Any / Not specified --</option>
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
-                ))}
+            {/* Rank */}
+            <div className="card">
+              <label htmlFor="rank" className="flabel">Rank / Position <span className="req">*</span></label>
+              <select id="rank" name="rank" required defaultValue="">
+                <option value="" disabled>-- Select rank --</option>
+                <optgroup label="Ship — Deck">
+                  {SHIP_RANKS["Deck Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Ship — Engine">
+                  {SHIP_RANKS["Engine Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Ship — Catering">
+                  {SHIP_RANKS["Catering Department"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Ship — Other">
+                  {SHIP_RANKS["Other"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Yacht — Deck">
+                  {YACHT_POSITIONS["Deck"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Yacht — Interior">
+                  {YACHT_POSITIONS["Interior"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Yacht — Engineering">
+                  {YACHT_POSITIONS["Engineering"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Yacht — Galley">
+                  {YACHT_POSITIONS["Galley"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
+                <optgroup label="Yacht — Other">
+                  {YACHT_POSITIONS["Other"].map((r) => <option key={r} value={r}>{r}</option>)}
+                </optgroup>
               </select>
             </div>
-            <div>
-              <label htmlFor="city" className="block text-white font-bold mb-3">City / Port (optional)</label>
-              <input id="city" name="city" maxLength={80} placeholder="e.g. Rotterdam"
-                className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none" />
+
+            {/* Title */}
+            <div className="card">
+              <label htmlFor="title" className="flabel">Job Title <span className="req">*</span></label>
+              <input id="title" name="title" type="text" required maxLength={120} placeholder="e.g. Chief Engineer for LNG Carrier" />
             </div>
-          </div>
 
-          {/* Description */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-            <label htmlFor="description" className="block text-white font-bold mb-3">
-              Description <span className="text-accent">*</span>
-            </label>
-            <textarea id="description" name="description" required rows={8}
-              placeholder="Describe the role, vessel, requirements, rotation, and anything else candidates should know..."
-              className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white placeholder-white/30 focus:border-accent focus:outline-none resize-y" />
-            <p className="text-white/40 text-xs mt-2">Write whatever you want candidates to know — requirements, conditions, certificates, rotation, etc.</p>
-          </div>
-
-          {/* Optional: salary + contract */}
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 space-y-4">
-            <p className="text-white/60 text-sm font-bold uppercase tracking-wider">Optional details</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label htmlFor="salaryMin" className="block text-white/70 text-xs mb-1">Salary min</label>
-                <input id="salaryMin" name="salaryMin" type="number" min="0" placeholder="e.g. 6000"
-                  className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm placeholder-white/30 focus:border-accent focus:outline-none" />
-              </div>
-              <div>
-                <label htmlFor="salaryMax" className="block text-white/70 text-xs mb-1">Salary max</label>
-                <input id="salaryMax" name="salaryMax" type="number" min="0" placeholder="e.g. 8000"
-                  className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm placeholder-white/30 focus:border-accent focus:outline-none" />
-              </div>
-              <div>
-                <label htmlFor="salaryCurrency" className="block text-white/70 text-xs mb-1">Currency</label>
-                <select id="salaryCurrency" name="salaryCurrency" defaultValue="USD"
-                  className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none">
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
+            {/* Country + City */}
+            <div className="card">
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="country" className="flabel">Country</label>
+                <select id="country" name="country" defaultValue="">
+                  <option value="">-- Any / Not specified --</option>
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                  ))}
                 </select>
               </div>
+              <div>
+                <label htmlFor="city" className="flabel">City / Port (optional)</label>
+                <input id="city" name="city" type="text" maxLength={80} placeholder="e.g. Rotterdam" />
+              </div>
             </div>
-            <div>
-              <label htmlFor="contractDuration" className="block text-white/70 text-xs mb-1">Contract duration</label>
-              <input id="contractDuration" name="contractDuration" maxLength={60} placeholder="e.g. 4 months on / 2 months off"
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm placeholder-white/30 focus:border-accent focus:outline-none" />
-            </div>
-          </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <Link href="/jobs/mine" className="text-white/40 hover:text-white/60 text-sm transition">Cancel</Link>
-            <button type="submit"
-              className="px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20">
-              Publish Job
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
+            {/* Description */}
+            <div className="card">
+              <label htmlFor="description" className="flabel">Description <span className="req">*</span></label>
+              <textarea id="description" name="description" required rows={8}
+                placeholder="Describe the role, vessel, requirements, rotation, and anything else candidates should know..." />
+              <p className="hint">Write whatever you want candidates to know — requirements, conditions, certificates, rotation, etc.</p>
+            </div>
+
+            {/* Optional: salary + contract */}
+            <div className="card">
+              <div className="osec">Optional details</div>
+              <div className="opt3" style={{ marginBottom: 14 }}>
+                <div>
+                  <label htmlFor="salaryMin" className="slabel">Salary min</label>
+                  <input id="salaryMin" name="salaryMin" type="number" min="0" placeholder="e.g. 6000" />
+                </div>
+                <div>
+                  <label htmlFor="salaryMax" className="slabel">Salary max</label>
+                  <input id="salaryMax" name="salaryMax" type="number" min="0" placeholder="e.g. 8000" />
+                </div>
+                <div>
+                  <label htmlFor="salaryCurrency" className="slabel">Currency</label>
+                  <select id="salaryCurrency" name="salaryCurrency" defaultValue="USD">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="contractDuration" className="slabel">Contract duration</label>
+                <input id="contractDuration" name="contractDuration" type="text" maxLength={60} placeholder="e.g. 4 months on / 2 months off" />
+              </div>
+              <p className="hint">Jobs with a visible salary range get significantly more applications.</p>
+            </div>
+
+            <div className="factions">
+              <Link href="/jobs/mine" className="cancel">Cancel</Link>
+              <button type="submit" className="btn btn-gold">Publish Job →</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/jobs/mine">My Job Posts</Link> ·{" "}
+          <Link href="/browse">Search Crew</Link> · <Link href="/dashboard">Dashboard</Link>
+        </div>
+      </footer>
+    </>
   );
 }
