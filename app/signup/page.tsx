@@ -5,28 +5,53 @@ export const metadata = {
   description: "Create your free ShipCrewFinder account. Join as crew or as a company.",
 };
 
+const anchorSvg = (
+  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="5" r="2.4" />
+    <line x1="12" y1="7.4" x2="12" y2="20.5" />
+    <line x1="7.5" y1="10.4" x2="16.5" y2="10.4" />
+    <path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7" />
+    <path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4" />
+    <path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4" />
+  </svg>
+);
+
 export default function SignupChoicePage() {
   return (
-    <main className="min-h-screen bg-primary flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Background gradient + grid */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
+    <main
+      className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden"
+      style={{ background: "#0d1030" }}
+    >
+      {/* Aurora background */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute pointer-events-none"
         style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          width: 560, height: 560, top: -180, right: -80, borderRadius: "50%",
+          filter: "blur(90px)", opacity: 0.5,
+          background: "radial-gradient(circle, rgba(251,191,36,.28), transparent 65%)",
         }}
       />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-accent/10 rounded-full blur-3xl" />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: 480, height: 480, bottom: -200, left: -120, borderRadius: "50%",
+          filter: "blur(90px)", opacity: 0.4,
+          background: "radial-gradient(circle, rgba(37,99,235,.33), transparent 65%)",
+        }}
+      />
 
       <div className="relative w-full max-w-4xl">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2.5 mb-10">
-          <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-            <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-            <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
+          <span
+            className="grid place-items-center"
+            style={{
+              width: 38, height: 38, borderRadius: 10,
+              background: "linear-gradient(145deg,#fbbf24,#e0a010)",
+            }}
+          >
+            {anchorSvg}
+          </span>
           <span className="text-white font-display font-bold text-lg tracking-tight">
             Ship<span className="text-accent">Crew</span>Finder
           </span>
@@ -47,7 +72,8 @@ export default function SignupChoicePage() {
           {/* Crew */}
           <Link
             href="/signup/crew"
-            className="group relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.04] border-2 border-white/15 hover:border-accent/60 rounded-3xl p-8 md:p-10 transition-all duration-300"
+            className="group relative overflow-hidden border-2 border-white/15 hover:border-accent/60 rounded-3xl p-8 md:p-10 transition-all duration-300"
+            style={{ background: "linear-gradient(165deg,#141845,#050716)" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/15 group-hover:to-transparent transition-all duration-500" />
             <div className="relative">
@@ -72,7 +98,8 @@ export default function SignupChoicePage() {
           {/* Company */}
           <Link
             href="/signup/company"
-            className="group relative overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.04] border-2 border-white/15 hover:border-accent/60 rounded-3xl p-8 md:p-10 transition-all duration-300"
+            className="group relative overflow-hidden border-2 border-white/15 hover:border-accent/60 rounded-3xl p-8 md:p-10 transition-all duration-300"
+            style={{ background: "linear-gradient(165deg,#141845,#050716)" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/15 group-hover:to-transparent transition-all duration-500" />
             <div className="relative">
@@ -100,6 +127,13 @@ export default function SignupChoicePage() {
           Already have an account?{" "}
           <Link href="/login" className="text-accent hover:text-accent-light font-bold transition">
             Log in
+          </Link>
+        </p>
+
+        {/* Back */}
+        <p className="text-center mt-4">
+          <Link href="/" className="text-white/40 hover:text-white/60 text-sm transition">
+            ← Back to homepage
           </Link>
         </p>
       </div>
