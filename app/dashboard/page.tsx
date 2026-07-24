@@ -11,9 +11,11 @@ export const metadata = {
 export default async function DashboardPage() {
   const supabase = await createClient();
 
+  // getSession: çerezden okur — getUser'ın yaptığı ekstra ağ turunu atlar
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   if (!user) {
     redirect("/login");
