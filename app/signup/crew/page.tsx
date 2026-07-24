@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signupCrew } from "@/lib/actions/auth";
 
 const anchorSvg = (
@@ -19,12 +19,28 @@ export default function SignupCrewPage() {
   const crewType = "seafarer";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refCode, setRefCode] = useState("");
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const r = (params.get("ref") || "").trim().toUpperCase();
+      if (r) {
+        setRefCode(r);
+        localStorage.setItem("scf_ref", r);
+      } else {
+        const saved = localStorage.getItem("scf_ref") || "";
+        if (saved) setRefCode(saved);
+      }
+    } catch {}
+  }, []);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     setError(null);
 
     formData.append("crewType", crewType);
+    if (refCode) formData.append("refCode", refCode);
     const result = await signupCrew(formData);
 
     if (result?.error) {
@@ -86,6 +102,19 @@ export default function SignupCrewPage() {
             First month completely free · No credit card required
           </p>
         </div>
+
+        {/* Referral banner */}
+        {refCode ? (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-5 flex items-start gap-3">
+            <span style={{ fontSize: 18 }}>🎁</span>
+            <div>
+              <div className="text-emerald-400 font-extrabold text-sm">Invited by a shipmate</div>
+              <div className="text-white/70 text-xs mt-0.5 leading-relaxed">
+                Complete your profile after signup and <b className="text-white">you both earn +1 free month</b>.
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Form Card */}
         <div
