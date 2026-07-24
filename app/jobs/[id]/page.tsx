@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
 import ApplyForm from "@/app/components/apply-form";
+import SiteHeader from "@/app/components/site-header";
 
 export const metadata = {
   title: "Job Details — ShipCrewFinder",
@@ -22,9 +23,11 @@ export default async function JobDetailPage({
 
   const supabase = await createClient();
 
+  // getSession: çerezden okur — ekstra ağ turu yok
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const { data: job } = await supabase
     .from("jobs")
@@ -36,37 +39,43 @@ export default async function JobDetailPage({
     notFound();
   }
 
-  // Kullanıcının tipi + bu ilana başvurup başvurmadığı
+  // Kullanıcının tipi + başvuru durumu + okunmamış bildirim (paralel)
   let userType: string | null = null;
   let alreadyApplied = false;
+  let unreadCount = 0;
   if (user) {
-    const { data: me } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .single();
+    const [{ data: me }, { data: existing }, { count: unread }] = await Promise.all([
+      supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+      supabase
+        .from("job_applications")
+        .select("id")
+        .eq("job_id", job.id)
+        .eq("applicant_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false),
+    ]);
     userType = (me?.user_type as string) || null;
-
-    const { data: existing } = await supabase
-      .from("job_applications")
-      .select("id")
-      .eq("job_id", job.id)
-      .eq("applicant_id", user.id)
-      .maybeSingle();
     alreadyApplied = !!existing;
+    unreadCount = unread || 0;
   }
 
   // İlan sahibi şirketin bilgileri (üyelere gösterilir)
-  const { data: companyProfile } = await supabase
-    .from("profiles")
-    .select("full_name, email, phone, country")
-    .eq("id", job.company_id)
-    .single();
-  const { data: companyDetails } = await supabase
-    .from("company_details")
-    .select("website, contact_phone, description, company_type")
-    .eq("id", job.company_id)
-    .maybeSingle();
+  const [{ data: companyProfile }, { data: companyDetails }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, email, phone, country")
+      .eq("id", job.company_id)
+      .single(),
+    supabase
+      .from("company_details")
+      .select("website, contact_phone, description, company_type")
+      .eq("id", job.company_id)
+      .maybeSingle(),
+  ]);
 
   const isOwner = !!user && job.company_id === user.id;
 
@@ -130,210 +139,221 @@ export default async function JobDetailPage({
   const isMember = !!user;
 
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobLd) }} />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px}
+  .jd-hero{position:relative;padding:34px 0 8px;overflow:hidden}
+  .aur{position:absolute;width:440px;height:440px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.42;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:18px}
+  .back:hover{color:var(--gold)}
+  .jtag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);border-radius:999px;padding:4px 12px;margin-bottom:12px}
+  h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.6rem);font-weight:800;line-height:1.12;letter-spacing:-.02em;margin-bottom:10px}
+  .jmeta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--tx3);margin-bottom:8px}
+  section{padding:20px 0 44px}
+  .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid}
+  .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
+  .banner.info{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .banner.err{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  @media(max-width:560px){.facts{grid-template-columns:1fr}}
+  .fact{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:14px;padding:15px 18px}
+  .fact .fl{font-size:11px;color:var(--tx3);margin-bottom:4px}
+  .fact .fv{font-family:var(--disp);font-weight:700;font-size:15px}
+  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:24px 26px;margin-bottom:18px}
+  .card h2{font-family:var(--disp);font-size:18px;font-weight:800;margin-bottom:12px}
+  .card .co{color:var(--gold);font-weight:700;font-size:14px;margin-bottom:12px}
+  .desc{font-size:14px;color:var(--tx2);line-height:1.75;white-space:pre-line}
+  .rows{display:flex;flex-direction:column}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+  .row:last-child{border-bottom:none}
+  .row span{color:var(--tx3)}
+  .row b,.row a{font-weight:600;text-align:right;word-break:break-all}
+  .row a{color:var(--gold);text-decoration:none}
+  .row a:hover{text-decoration:underline}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:12px 22px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .center{text-align:center}
+  .lock{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:36px 28px;text-align:center}
+  .lock .lic{width:54px;height:54px;margin:0 auto 18px;border-radius:16px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:22px}
+  .lock h2{font-family:var(--disp);font-size:22px;font-weight:800;margin-bottom:10px}
+  .lock p{font-size:13.5px;color:var(--tx2);line-height:1.65;max-width:46ch;margin:0 auto 20px}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={isMember}
+        userType={userType as "seafarer" | "yacht" | "company" | null}
+        unreadCount={unreadCount}
+        active="jobs"
       />
-
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            {isMember ? (
-              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Your Account</Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition">Login</Link>
-                <Link href="/signup" className="px-4 py-2 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition shadow-lg shadow-accent/20">Sign Up Free</Link>
-              </>
-            )}
+      <div className="jd-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href="/jobs" className="back">← All Jobs</Link>
+          <div style={{ height: 2 }} />
+          <span className="jtag">{job.position}</span>
+          <h1>{job.title}</h1>
+          <div className="jmeta">
+            {countryName(job.location_country) ? (
+              <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
+            ) : null}
+            <span>Posted {fmtDate(job.created_at)}</span>
           </div>
         </div>
-      </header>
-
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <Link href="/jobs" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/60 text-sm transition mb-6">
-          ← All Jobs
-        </Link>
-
-        {/* Status banners */}
-        {applied === "1" && (
-          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm">
-            Your application has been sent. The company has been notified.
-          </div>
-        )}
-        {applied === "already" && (
-          <div className="mb-6 bg-white/5 border border-white/15 rounded-xl p-4 text-white/70 text-sm">
-            You have already applied to this job.
-          </div>
-        )}
-        {error === "closed" && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
-            This job is no longer accepting applications.
-          </div>
-        )}
-        {error === "notcrew" && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
-            Only crew accounts can apply to jobs.
-          </div>
-        )}
-        {error === "failed" && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
-            Something went wrong. Please try again.
-          </div>
-        )}
-
-        {/* Title block — always visible */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
-            {job.position}
-          </span>
-
-        </div>
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-          {job.title}
-        </h1>
-        <div className="flex flex-wrap items-center gap-3 text-white/50 text-sm mb-8">
-          {countryName(job.location_country) && (
-            <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
-          )}
-          <span>·</span>
-          <span>Posted {fmtDate(job.created_at)}</span>
-        </div>
-
-        {isMember ? (
-          <>
-            {/* Quick facts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              {salary && (
-                <div className="bg-primary-dark border border-white/10 rounded-xl p-4">
-                  <div className="text-white/50 text-xs mb-1">Salary</div>
-                  <div className="text-white font-bold text-sm">{salary}</div>
-                </div>
-              )}
-              {job.contract_duration && (
-                <div className="bg-primary-dark border border-white/10 rounded-xl p-4">
-                  <div className="text-white/50 text-xs mb-1">Contract</div>
-                  <div className="text-white font-bold text-sm">{job.contract_duration}</div>
-                </div>
-              )}
-            </div>
-
-            {/* Description */}
-            <div className="bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
-              <h2 className="font-display text-xl font-bold text-white mb-4">Job Description</h2>
-              <p className="text-white/75 text-base leading-relaxed whitespace-pre-line">
-                {job.description}
-              </p>
-            </div>
-
-            {/* About the company */}
-            <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 md:p-8">
-              <h2 className="font-display text-xl font-bold text-white mb-1">About the Company</h2>
-              <p className="text-accent font-bold mb-4">{companyProfile?.full_name || "Verified Company"}</p>
-              {companyDetails?.description && (
-                <p className="text-white/70 text-sm leading-relaxed mb-5 whitespace-pre-line">
-                  {companyDetails.description}
-                </p>
-              )}
-              <div className="space-y-3">
-                {companyDetails?.website && (
-                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
-                    <span className="text-white/50 text-sm">Website</span>
-                    <a href={companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="text-accent hover:text-accent-light font-medium text-sm underline underline-offset-2 break-all">
-                      {companyDetails.website}
-                    </a>
-                  </div>
-                )}
-                {(companyDetails?.contact_phone || companyProfile?.phone) && (
-                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
-                    <span className="text-white/50 text-sm">Phone</span>
-                    <span className="text-white font-medium text-sm">{companyDetails?.contact_phone || companyProfile?.phone}</span>
-                  </div>
-                )}
-                {companyProfile?.email && (
-                  <div className="flex items-center justify-between py-2.5 border-b border-white/5">
-                    <span className="text-white/50 text-sm">Email</span>
-                    <a href={`mailto:${companyProfile.email}`} className="text-white font-medium text-sm break-all hover:text-accent transition">
-                      {companyProfile.email}
-                    </a>
-                  </div>
-                )}
-                {companyProfile?.country && (
-                  <div className="flex items-center justify-between py-2.5">
-                    <span className="text-white/50 text-sm">Country</span>
-                    <span className="text-white font-medium text-sm">{countryName(companyProfile.country) || companyProfile.country}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Apply section */}
-            {isOwner ? (
-              <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 text-center">
-                <p className="text-white/70 text-sm mb-4">This is your job posting.</p>
-                <Link href={`/jobs/${job.id}/applications`} className="inline-block px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition">
-                  View Applications
-                </Link>
-              </div>
-            ) : alreadyApplied ? (
-              <div className="mt-8 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 text-center">
-                <p className="text-emerald-300 font-bold text-sm">✓ You have applied to this job</p>
-                <p className="text-white/50 text-xs mt-1">The company can see your application and profile.</p>
-              </div>
-            ) : isCrew ? (
-              <div className="mt-8 bg-primary-dark border border-accent/20 rounded-2xl p-6">
-                <h2 className="font-display text-xl font-bold text-white mb-4">Apply for this position</h2>
-                <ApplyForm jobId={job.id} />
-              </div>
-            ) : (
-              <div className="mt-8 bg-primary-dark border border-white/10 rounded-2xl p-6 text-center">
-                <p className="text-white/60 text-sm">Only crew accounts can apply to jobs.</p>
-              </div>
-            )}
-          </>
-        ) : (
-          /* Locked — not a member */
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-8 md:p-10 text-center">
-            <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center">
-              <svg className="w-6 h-6 text-accent" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h2 className="font-display text-2xl font-bold text-white mb-3">
-              Sign in to see the full job
-            </h2>
-            <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
-              You can see the job title and basics, but the full description and details are available to members only. Create a free account to view it.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/signup/crew" className="px-6 py-3 bg-accent hover:bg-accent-dark text-primary font-bold rounded-lg transition shadow-lg shadow-accent/20">
-                Sign Up Free
-              </Link>
-              <Link href="/login" className="px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-bold rounded-lg transition border border-white/10">
-                Login
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
-    </main>
+
+      <section style={{ paddingTop: 8 }}>
+        <div className="wrap">
+          {/* Status banners */}
+          {applied === "1" ? (
+            <div className="banner ok">Your application has been sent. The company has been notified.</div>
+          ) : null}
+          {applied === "already" ? (
+            <div className="banner info">You have already applied to this job.</div>
+          ) : null}
+          {error === "closed" ? (
+            <div className="banner err">This job is no longer accepting applications.</div>
+          ) : null}
+          {error === "notcrew" ? (
+            <div className="banner err">Only crew accounts can apply to jobs.</div>
+          ) : null}
+          {error === "failed" ? (
+            <div className="banner err">Something went wrong. Please try again.</div>
+          ) : null}
+
+          {isMember ? (
+            <>
+              {/* Quick facts */}
+              <div className="facts">
+                {salary ? (
+                  <div className="fact">
+                    <div className="fl">Salary</div>
+                    <div className="fv" style={{ color: "var(--grn)" }}>{salary}</div>
+                  </div>
+                ) : null}
+                {job.contract_duration ? (
+                  <div className="fact">
+                    <div className="fl">Contract</div>
+                    <div className="fv">{job.contract_duration}</div>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Description */}
+              <div className="card">
+                <h2>Job Description</h2>
+                <p className="desc">{job.description}</p>
+              </div>
+
+              {/* About the company */}
+              <div className="card">
+                <h2 style={{ marginBottom: 4 }}>About the Company</h2>
+                <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
+                {companyDetails?.description ? (
+                  <p className="desc" style={{ fontSize: 13, marginBottom: 14 }}>{companyDetails.description}</p>
+                ) : null}
+                <div className="rows">
+                  {companyDetails?.website ? (
+                    <div className="row">
+                      <span>Website</span>
+                      
+                        href={companyDetails.website.startsWith("http") ? companyDetails.website : `https://${companyDetails.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {companyDetails.website}
+                      </a>
+                    </div>
+                  ) : null}
+                  {(companyDetails?.contact_phone || companyProfile?.phone) ? (
+                    <div className="row">
+                      <span>Phone</span>
+                      <b>{companyDetails?.contact_phone || companyProfile?.phone}</b>
+                    </div>
+                  ) : null}
+                  {companyProfile?.email ? (
+                    <div className="row">
+                      <span>Email</span>
+                      <a href={`mailto:${companyProfile.email}`}>{companyProfile.email}</a>
+                    </div>
+                  ) : null}
+                  {companyProfile?.country ? (
+                    <div className="row">
+                      <span>Country</span>
+                      <b>{countryName(companyProfile.country) || companyProfile.country}</b>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Apply section */}
+              {isOwner ? (
+                <div className="card center">
+                  <p style={{ fontSize: 13.5, color: "var(--tx2)", marginBottom: 16 }}>This is your job posting.</p>
+                  <Link href={`/jobs/${job.id}/applications`} className="btn btn-gold">
+                    View Applications
+                  </Link>
+                </div>
+              ) : alreadyApplied ? (
+                <div className="banner ok center" style={{ padding: "22px" }}>
+                  <b>✓ You have applied to this job</b>
+                  <div style={{ fontSize: 12, color: "var(--tx3)", marginTop: 5 }}>
+                    The company can see your application and profile.
+                  </div>
+                </div>
+              ) : isCrew ? (
+                <div className="card" style={{ borderColor: "var(--line)" }}>
+                  <h2>Apply for this position</h2>
+                  <ApplyForm jobId={job.id} />
+                </div>
+              ) : (
+                <div className="card center">
+                  <p style={{ fontSize: 13.5, color: "var(--tx2)" }}>Only crew accounts can apply to jobs.</p>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Locked — not a member */
+            <div className="lock">
+              <div className="lic">🔒</div>
+              <h2>Sign in to see the full job</h2>
+              <p>
+                You can see the job title and basics, but the full description, salary and company
+                details are available to members only. Create a free account to view everything.
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                <Link href="/signup/crew" className="btn btn-gold">⚓ Sign Up Free</Link>
+                <Link href="/login" className="btn btn-ghost">Login</Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/jobs">All Jobs</Link> ·{" "}
+          <Link href="/salary">Salary Index</Link> · <Link href="/">Home</Link>
+        </div>
+      </footer>
+    </>
   );
 }
