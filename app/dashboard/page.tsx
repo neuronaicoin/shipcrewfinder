@@ -331,6 +331,16 @@ export default async function DashboardPage() {
                   <b>Search Jobs</b>
                   <p>Open positions from verified companies — apply directly.</p>
                 </Link>
+                <Link href="/cv" className="qcard gold">
+                  <div className="qi">📄</div>
+                  <b>My CV</b>
+                  <p>Professional maritime CV — download as PDF or share by link.</p>
+                </Link>
+                <Link href="/seatime" className="qcard">
+                  <div className="qi">⏱</div>
+                  <b>Sea Time</b>
+                  <p>Log contracts — sea service totals and licence renewal check.</p>
+                </Link>
                 <Link href="/vault" className="qcard">
                   {vaultWarn > 0 ? (
                     <span className="qbadge warn">{vaultWarn} expiring</span>
@@ -395,7 +405,7 @@ export default async function DashboardPage() {
                       className={`nrow ${n.read ? "" : "unread"}`}
                     >
                       <span className="ni">
-                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : "🔔"}
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📩" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : n.type === "rotation_radar" ? "📡" : "🔔"}
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <b>{n.title as string}</b>
@@ -448,13 +458,9 @@ export default async function DashboardPage() {
                     <div className="row">
                       <span>CV</span>
                       <b>
-                        {detailsData?.cv_url ? (
-                          <a href={detailsData.cv_url as string} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gold)" }}>
-                            View CV
-                          </a>
-                        ) : (
-                          "Not uploaded"
-                        )}
+                        <Link href="/cv" style={{ color: "var(--gold)", textDecoration: "none" }}>
+                          Open SCF CV →
+                        </Link>
                       </b>
                     </div>
                   </>
