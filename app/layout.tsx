@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Bricolage_Grotesque } from "next/font/google";
 import Script from "next/script";
+import MobileTabBar from "@/app/components/mobile-tabbar";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -69,6 +70,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jakarta.variable} ${bricolage.variable} font-sans`}>
         {children}
+        <MobileTabBar />
 
         {/* Google Analytics (GA4) */}
         <Script
