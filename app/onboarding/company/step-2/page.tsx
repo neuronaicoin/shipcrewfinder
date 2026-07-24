@@ -13,6 +13,21 @@ export default async function CompanyStep2Page() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Mevcut değerleri çek — edit modunda işaretli göster
+  const { data: details } = await supabase
+    .from("company_details")
+    .select("hiring_for_ranks, fleet_types")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const savedRanks: string[] = Array.isArray(details?.hiring_for_ranks)
+    ? (details?.hiring_for_ranks as string[])
+    : [];
+  const savedFleets: string[] = Array.isArray(details?.fleet_types)
+    ? (details?.fleet_types as string[])
+    : [];
+  const isEditing = savedRanks.length > 0 || savedFleets.length > 0;
+
   const fleetTypes = [
     "Container Ships",
     "Bulk Carriers",
@@ -50,7 +65,9 @@ export default async function CompanyStep2Page() {
           What are you hiring for?
         </h1>
         <p className="text-white/60 text-lg">
-          Select the positions and vessel types you typically recruit for. This helps us match you with the right candidates.
+          {isEditing
+            ? "Your saved selections are checked — adjust them or continue."
+            : "Select the positions and vessel types you typically recruit for. This helps us match you with the right candidates."}
         </p>
       </div>
 
@@ -74,6 +91,7 @@ export default async function CompanyStep2Page() {
                   type="checkbox"
                   name="fleetTypes"
                   value={type}
+                  defaultChecked={savedFleets.includes(type)}
                   className="w-4 h-4 accent-accent cursor-pointer"
                 />
                 <span className="text-white/80 text-sm">{type}</span>
@@ -106,6 +124,7 @@ export default async function CompanyStep2Page() {
                         type="checkbox"
                         name="hiringRanks"
                         value={rank}
+                        defaultChecked={savedRanks.includes(rank)}
                         className="w-4 h-4 accent-accent cursor-pointer"
                       />
                       <span className="text-white/80 text-sm truncate">{rank}</span>
@@ -141,6 +160,7 @@ export default async function CompanyStep2Page() {
                         type="checkbox"
                         name="hiringRanks"
                         value={position}
+                        defaultChecked={savedRanks.includes(position)}
                         className="w-4 h-4 accent-accent cursor-pointer"
                       />
                       <span className="text-white/80 text-sm truncate">{position}</span>
