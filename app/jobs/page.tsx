@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import JobAlertBox from "@/app/components/job-alert-box";
+import SiteHeader from "@/app/components/site-header";
 
 export const metadata = {
   title: "Maritime Jobs — ShipCrewFinder",
@@ -21,9 +22,11 @@ export default async function JobsPage({
 
   const supabase = await createClient();
 
+  // getSession: çerezden okur — ekstra ağ turu yok
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   let query = supabase
     .from("jobs")
@@ -41,16 +44,24 @@ export default async function JobsPage({
   const { data: jobs } = await query;
   const jobList = jobs || [];
 
-  // Job alert durumu (sadece rank filtresi seçiliyse ve giriş yapılmışsa)
+  // Job alert durumu + kullanıcı tipi + okunmamış bildirim (paralel)
   let alertActive = false;
   let isCompany = false;
+  let userType: "seafarer" | "yacht" | "company" | null = null;
+  let unreadCount = 0;
+
   if (user) {
-    const { data: myProfile } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .single();
-    isCompany = myProfile?.user_type === "company";
+    const [{ data: myProfile }, { count: unread }] = await Promise.all([
+      supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false),
+    ]);
+    userType = (myProfile?.user_type as typeof userType) || null;
+    isCompany = userType === "company";
+    unreadCount = unread || 0;
 
     if (fRank && !isCompany) {
       const { data: myAlert } = await supabase
@@ -95,160 +106,172 @@ export default async function JobsPage({
 
   const hasFilter = fRank || fCountry;
 
-  const inputStyle = {
-    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat" as const,
-    backgroundPosition: "right 0.75rem center",
-    paddingRight: "2rem",
-  };
-
   return (
-    <main className="min-h-screen bg-primary relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(#fbbf24 1px, transparent 1px), linear-gradient(90deg, #fbbf24 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-        }}
+    <>
+      <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  .jobs-hero{position:relative;padding:38px 0 22px;overflow:hidden}
+  .aur{position:absolute;width:460px;height:460px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.45;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:16px}
+  .back:hover{color:var(--gold)}
+  h1{font-family:var(--disp);font-size:clamp(1.8rem,4.4vw,2.8rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:8px}
+  .sub{font-size:14.5px;color:var(--tx2)}
+  section{padding:20px 0 44px}
+  .fcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:20px;margin-bottom:20px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.frow{grid-template-columns:1fr}}
+  label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:7px}
+  select{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;font-weight:500;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.85rem center;padding-right:2.2rem}
+  select:focus{border-color:var(--gold)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .jlist{display:flex;flex-direction:column;gap:12px}
+  .jcard{display:block;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px 22px;text-decoration:none;color:var(--tx);transition:.2s}
+  .jcard:hover{transform:translateY(-2px);border-color:var(--gold)}
+  .jtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+  .jtag{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;border-radius:999px;padding:4px 11px;border:1px solid}
+  .jtag.rank{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .jtag.sal{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .jtag.dur{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .jtitle{font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:6px}
+  .jcard:hover .jtitle{color:var(--gold)}
+  .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3)}
+  .jmeta .co{color:var(--gold);font-weight:600}
+  .empty{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:40px;text-align:center;font-size:14px;color:var(--tx2)}
+  .salarycta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);border-radius:14px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--tx2)}
+  .salarycta b{color:var(--tx);font-family:var(--disp)}
+  .salarycta a{color:var(--gold);font-weight:700;text-decoration:none;white-space:nowrap}
+  footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
+  footer a{color:var(--gold);text-decoration:none}
+`}</style>
+
+      <SiteHeader
+        isLoggedIn={!!user}
+        userType={userType}
+        unreadCount={unreadCount}
+        active="jobs"
       />
-
-      <header className="relative border-b border-white/10 backdrop-blur-md bg-primary/85">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.3" />
-              <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" />
-              <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            <span className="text-white font-display font-bold text-lg tracking-tight">
-              Ship<span className="text-accent">Crew</span>Finder
-            </span>
+      <div className="jobs-hero">
+        <div className="aur"></div>
+        <div className="wrap" style={{ position: "relative" }}>
+          <Link href={user ? "/dashboard" : "/"} className="back">
+            ← {user ? "Back to dashboard" : "Back to homepage"}
           </Link>
-          <div className="flex items-center gap-3">
-            {user ? (
-              <Link href="/dashboard" className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold rounded-lg transition border border-white/10">Your Account</Link>
-            ) : (
-              <>
-                <Link href="/login" className="text-white/70 hover:text-white text-sm font-medium transition">Login</Link>
-                <Link href="/signup" className="px-4 py-2 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition shadow-lg shadow-accent/20">Sign Up Free</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="mb-8">
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
-            Maritime Jobs
-          </h1>
-          <p className="text-white/60 text-lg">
-            {jobList.length} open position{jobList.length === 1 ? "" : "s"} from verified companies.
+          <h1>Maritime <span style={{ color: "var(--gold)" }}>Jobs</span></h1>
+          <p className="sub">
+            {jobList.length} open position{jobList.length === 1 ? "" : "s"} from verified companies — apply directly, zero commission.
           </p>
         </div>
-
-        {/* Filters */}
-        <form method="get" className="bg-primary-dark border border-white/10 rounded-2xl p-5 mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Rank</label>
-              <select name="rank" defaultValue={fRank} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All ranks</option>
-                {Object.entries(SHIP_RANKS).map(([group, ranks]) => (
-                  <optgroup key={group} label={group}>
-                    {(ranks as string[]).map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-white/60 text-xs font-bold uppercase tracking-wider mb-2">Country</label>
-              <select name="country" defaultValue={fCountry} style={inputStyle}
-                className="w-full px-3 py-2.5 bg-primary border border-white/15 rounded-lg text-white text-sm focus:border-accent focus:outline-none appearance-none">
-                <option value="">All</option>
-                {countries.map((c) => (
-                  <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 mt-4">
-            <button type="submit" className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-primary font-bold text-sm rounded-lg transition">
-              Apply Filters
-            </button>
-            {hasFilter && (
-              <Link href="/jobs" className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white/70 font-bold text-sm rounded-lg transition border border-white/10">
-                Clear
-              </Link>
-            )}
-          </div>
-        </form>
-
-        {/* Job Alert */}
-        {fRank && (
-          <JobAlertBox
-            rank={fRank}
-            isActive={alertActive}
-            isLoggedIn={!!user}
-            isCompany={isCompany}
-            redirectTo={alertRedirectTo}
-          />
-        )}
-
-        {jobList.length === 0 ? (
-          <div className="bg-primary-dark border border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-white/60">No open jobs match your filters. Try adjusting them.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {jobList.map((job) => (
-              <Link
-                key={job.id}
-                href={`/jobs/${job.id}`}
-                className="group block bg-primary-dark border border-white/10 hover:border-accent/40 rounded-2xl p-6 transition"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-1 bg-accent/15 border border-accent/30 rounded-full text-accent text-[10px] font-bold uppercase tracking-wider">
-                        {job.position}
-                      </span>
-                      {salaryOf(job) && (
-                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-300 text-[10px] font-bold tracking-wider">
-                          {salaryOf(job)}
-                        </span>
-                      )}
-                      {job.contract_duration && (
-                        <span className="hidden sm:inline px-2.5 py-1 bg-white/5 border border-white/10 rounded-full text-white/60 text-[10px] font-bold tracking-wider">
-                          {job.contract_duration}
-                        </span>
-                      )}
-                    </div>
-                    <h2 className="font-display text-xl font-bold text-white group-hover:text-accent transition truncate">
-                      {job.title}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-white/50 text-sm">
-                      <span className="text-accent/80 font-semibold">{companyNames[job.company_id] || "Verified Company"}</span>
-                      {countryName(job.location_country) && (
-                        <><span>·</span><span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span></>
-                      )}
-                      <span>·</span>
-                      <span>{fmtDate(job.created_at)}</span>
-                    </div>
-                  </div>
-                  <svg className="w-5 h-5 text-white/30 group-hover:text-accent transition flex-shrink-0 mt-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" />
-                  </svg>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
-    </main>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          {/* Filters */}
+          <form method="get" className="fcard">
+            <div className="frow">
+              <div>
+                <label>Rank</label>
+                <select name="rank" defaultValue={fRank}>
+                  <option value="">All ranks</option>
+                  {Object.entries(SHIP_RANKS).map(([group, ranks]) => (
+                    <optgroup key={group} label={group}>
+                      {(ranks as string[]).map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Country</label>
+                <select name="country" defaultValue={fCountry}>
+                  <option value="">All countries</option>
+                  {countries.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+              <button type="submit" className="btn btn-gold">Apply Filters</button>
+              {hasFilter ? (
+                <Link href="/jobs" className="btn btn-ghost">Clear</Link>
+              ) : null}
+            </div>
+          </form>
+
+          {/* Job Alert */}
+          {fRank ? (
+            <div style={{ marginBottom: 20 }}>
+              <JobAlertBox
+                rank={fRank}
+                isActive={alertActive}
+                isLoggedIn={!!user}
+                isCompany={isCompany}
+                redirectTo={alertRedirectTo}
+              />
+            </div>
+          ) : null}
+
+          {/* Salary Index CTA */}
+          <div className="salarycta">
+            <div>
+              <b>💰 Know your market rate.</b> Monthly wages for 15 ranks across bulk, tanker, container and LNG.
+            </div>
+            <Link href="/salary">Open Salary Index →</Link>
+          </div>
+
+          {/* Job list */}
+          {jobList.length === 0 ? (
+            <div className="empty">
+              No open jobs match your filters. Try adjusting them — or set a job alert to get notified the moment a matching position is posted.
+            </div>
+          ) : (
+            <div className="jlist">
+              {jobList.map((job) => (
+                <Link key={job.id} href={`/jobs/${job.id}`} className="jcard">
+                  <div className="jtags">
+                    <span className="jtag rank">{job.position}</span>
+                    {salaryOf(job) ? <span className="jtag sal">{salaryOf(job)}</span> : null}
+                    {job.contract_duration ? <span className="jtag dur">{job.contract_duration}</span> : null}
+                  </div>
+                  <div className="jtitle">{job.title}</div>
+                  <div className="jmeta">
+                    <span className="co">{companyNames[job.company_id] || "Verified Company"}</span>
+                    {countryName(job.location_country) ? (
+                      <span>{countryName(job.location_country)}{job.location_city ? `, ${job.location_city}` : ""}</span>
+                    ) : null}
+                    <span>{fmtDate(job.created_at)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <footer>
+        <div className="wrap">
+          © 2026 ShipCrewFinder · <Link href="/salary">Salary Index</Link> ·{" "}
+          <Link href="/blog">Blog</Link> · <Link href="/">Home</Link>
+        </div>
+      </footer>
+    </>
   );
 }
