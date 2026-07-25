@@ -17,6 +17,7 @@ export async function addSeaContract(formData: FormData): Promise<void> {
   const vesselType = (formData.get("vesselType") as string) || "";
   const dwtRaw = (formData.get("dwt") as string) || "";
   const mainEngine = ((formData.get("mainEngine") as string) || "").trim();
+  const companyName = ((formData.get("companyName") as string) || "").trim().slice(0, 90);
   const rank = (formData.get("rank") as string) || "";
   const signOn = (formData.get("signOn") as string) || "";
   const signOff = (formData.get("signOff") as string) || "";
@@ -37,6 +38,7 @@ export async function addSeaContract(formData: FormData): Promise<void> {
     vessel_type: vesselType,
     dwt: dwt,
     main_engine: mainEngine || null,
+    company_name: companyName || null,
     rank: rank,
     sign_on: signOn,
     sign_off: signOff,
