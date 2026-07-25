@@ -12,7 +12,9 @@ export default async function DeckRail() {
       <style>{`
   .dksec{padding:6px 0 34px}
   .dkhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
-  .dkhead h2{font-family:var(--disp);font-size:clamp(1.15rem,2.6vw,1.5rem);font-weight:800;letter-spacing:-.01em}
+  .dkhead h2{font-family:var(--disp);font-size:clamp(1.15rem,2.6vw,1.5rem);font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  .dklive{width:10px;height:10px;border-radius:50%;background:var(--grn);flex-shrink:0;box-shadow:0 0 0 0 rgba(52,211,153,.55);animation:dkpulse 1.6s infinite}
+  @keyframes dkpulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
   .dkhead p{font-size:12px;color:var(--tx3);margin-top:3px}
   .dkall{font-size:12.5px;font-weight:700;color:var(--gold);text-decoration:none;white-space:nowrap}
   .dkall:hover{text-decoration:underline}
@@ -61,8 +63,8 @@ export default async function DeckRail() {
       <div className="wrap">
         <div className="dkhead">
           <div>
-            <h2>⚓ Crew <span style={{ color: "var(--gold)" }}>Board</span></h2>
-            <p>Available crew · hiring companies — live</p>
+            <h2><span className="dklive"></span>Crew Board <span style={{ color: "var(--tx3)", fontWeight: 600 }}>&amp;</span> <span style={{ color: "var(--gold)" }}>Company Board</span></h2>
+            <p>Available crew · hiring companies — live right now</p>
           </div>
           <Link href="/deck" className="dkall">View all →</Link>
         </div>
