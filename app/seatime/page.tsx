@@ -338,6 +338,10 @@ export default async function SeaTimePage({
                 <input id="mainEngine" name="mainEngine" type="text" maxLength={80} placeholder="e.g. MAN B&W 6S60MC · 12,240 kW" />
                 <p className="hint">Valuable for engine department CVs — leave empty for deck ranks.</p>
 
+                <label htmlFor="companyName">Company (optional)</label>
+                <input id="companyName" name="companyName" type="text" maxLength={90} placeholder="e.g. OceanStar Shipping" />
+                <p className="hint">Owner / manager you served under — builds the vessel &amp; company pages.</p>
+
                 <div className="frow">
                   <div>
                     <label htmlFor="signOn">Sign-on</label>
