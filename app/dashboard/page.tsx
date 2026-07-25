@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 import SiteHeader from "@/app/components/site-header";
 import InviteCard from "@/app/components/invite-card";
+import CountdownCard from "@/app/components/countdown-card";
 import Link from "next/link";
 
 export const metadata = {
@@ -131,6 +132,10 @@ export default async function DashboardPage() {
 
   const rankLabel =
     (detailsData?.rank as string) || (detailsData?.position as string) || null;
+
+  // ── Crew: kontrat tarihleri (Sign-off Countdown kutusu için) ──
+  const contractEnd = isCrew ? ((detailsData?.contract_end_date as string) || null) : null;
+  const contractStart = isCrew ? ((detailsData?.contract_start_date as string) || null) : null;
 
   const availabilityLabel = (() => {
     const a = detailsData?.availability as string | undefined | null;
@@ -311,7 +316,15 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <section style={{ paddingTop: 0 }}>
+      {isCrew ? (
+        <section style={{ paddingTop: 0, paddingBottom: 4 }}>
+          <div className="wrap">
+            <CountdownCard endDate={contractEnd} startDate={contractStart} rankLabel={rankLabel} />
+          </div>
+        </section>
+      ) : null}
+
+      <section style={{ paddingTop: isCrew ? 14 : 0 }}>
         <div className="wrap">
           <div className="stitle">Quick actions</div>
           <div className="qgrid">
@@ -465,6 +478,18 @@ export default async function DashboardPage() {
                     <div className="row">
                       <span>Availability</span>
                       <b>{availabilityLabel || "—"}</b>
+                    </div>
+                    <div className="row">
+                      <span>Sign-off date</span>
+                      <b>
+                        {contractEnd ? (
+                          new Date(contractEnd + "T00:00:00").toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+                        ) : (
+                          <Link href="/onboarding/crew/step-5" style={{ color: "var(--gold)", textDecoration: "none" }}>
+                            Set dates →
+                          </Link>
+                        )}
+                      </b>
                     </div>
                     <div className="row">
                       <span>Nationality</span>
