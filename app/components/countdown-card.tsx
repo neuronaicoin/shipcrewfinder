@@ -31,6 +31,20 @@ export default function CountdownCard({
     padding: "20px 22px",
   };
 
+  const goldBtn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 7,
+    background: "linear-gradient(135deg,var(--gold),var(--gold2))",
+    color: "#0b0e13",
+    borderRadius: 11,
+    padding: "10px 17px",
+    fontWeight: 700,
+    fontSize: 13,
+    textDecoration: "none",
+    whiteSpace: "nowrap",
+  };
+
   // ── DURUM 3: tarih yok veya kontrat bitti ──
   if (!end || (daysLeft !== null && daysLeft < 0)) {
     return (
@@ -56,12 +70,7 @@ export default function CountdownCard({
               : "Set your contract dates and count down every day to sign-off."}
           </p>
         </div>
-        
-          href="/onboarding/crew/step-5"
-          style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "linear-gradient(135deg,var(--gold),var(--gold2))", color: "#0b0e13", borderRadius: 11, padding: "10px 17px", fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}
-        >
-          {end ? "Update availability →" : "Set dates →"}
-        </a>
+        <a href="/onboarding/crew/step-5" style={goldBtn}>{end ? "Update availability →" : "Set dates →"}</a>
       </div>
     );
   }
