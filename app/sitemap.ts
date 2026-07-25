@@ -3,7 +3,9 @@ import { blogIndex } from "@/app/data/blog";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { SALARY_DATA } from "@/lib/data/salary";
 import { NATIONALITIES } from "@/lib/data/nationalities";
-export default function sitemap(): MetadataRoute.Sitemap {
+import { createClient } from "@/lib/supabase/server";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://shipcrewfinder.com";
   const lastModified = new Date();
   // Statik sayfalar (sadece gerçekten var olanlar)
@@ -43,6 +45,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "daily",
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/deck`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/vessels`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/companies`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/blog`,
@@ -128,5 +148,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     })),
   ];
-  return [...staticPages, ...rankPages, ...salaryPages, ...blogPages];
+  // Gemi + şirket sayfaları (dinamik — sea_contracts'tan; hata olursa boş, sitemap kırılmaz)
+  let vesselPages: MetadataRoute.Sitemap = [];
+  let companyPages: MetadataRoute.Sitemap = [];
+  try {
+    const supabase = await createClient();
+    const [{ data: vData }, { data: cData }] = await Promise.all([
+      supabase.rpc("get_vessel_index"),
+      supabase.rpc("get_worked_company_index"),
+    ]);
+    const vessels = (Array.isArray(vData) ? vData : []) as { slug: string }[];
+    const companies = (Array.isArray(cData) ? cData : []) as { slug: string }[];
+    vesselPages = vessels.map((v) => ({
+      url: `${baseUrl}/vessel/${v.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+    companyPages = companies.map((c) => ({
+      url: `${baseUrl}/company/${c.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // Supabase erişilemezse dinamik kısımlar atlanır
+  }
+  return [...staticPages, ...rankPages, ...salaryPages, ...blogPages, ...vesselPages, ...companyPages];
 }
