@@ -30,7 +30,8 @@ export async function postMyCv(formData: FormData): Promise<void> {
   }
 
   const note = ((formData.get("note") as string) || "").trim().slice(0, 120);
-  const showContact = (formData.get("showContact") as string) !== "0";
+  // Checkbox: işaretliyse "1" gelir → true; işaretsizse alan hiç gelmez → false
+  const showContact = (formData.get("showContact") as string) === "1";
 
   // Eski crew kartını sil (tek aktif kart kuralı)
   await supabase.from("deck_posts").delete().eq("user_id", user.id).eq("post_type", "crew");
