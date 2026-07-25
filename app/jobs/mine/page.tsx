@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { closeJob, reopenJob } from "@/lib/actions/jobs";
+import { postJobToDeck, removeJobFromDeck, boostDeckPost } from "@/lib/actions/deck";
 import DeleteJobButton from "@/app/components/delete-job-button";
 import { getSortedCountries } from "@/lib/constants/countries";
 import SiteHeader from "@/app/components/site-header";
@@ -9,6 +10,8 @@ import SiteHeader from "@/app/components/site-header";
 export const metadata = {
   title: "My Job Posts — ShipCrewFinder",
 };
+
+const DAY_MS = 24 * 3600 * 1000;
 
 export default async function MyJobsPage({
   searchParams,
@@ -19,6 +22,7 @@ export default async function MyJobsPage({
   const created = sp.created;
   const updated = sp.updated;
   const deleted = sp.deleted;
+  const deck = sp.deck;
 
   const supabase = await createClient();
 
@@ -29,7 +33,7 @@ export default async function MyJobsPage({
   const user = session?.user ?? null;
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { count: unreadCount }, { data: jobs }] = await Promise.all([
+  const [{ data: profile }, { count: unreadCount }, { data: jobs }, { data: deckPosts }] = await Promise.all([
     supabase.from("profiles").select("user_type").eq("id", user.id).single(),
     supabase
       .from("notifications")
@@ -41,11 +45,29 @@ export default async function MyJobsPage({
       .select("id, title, position, job_type, location_country, location_city, status, created_at")
       .eq("company_id", user.id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("deck_posts")
+      .select("id, job_id, expires_at, boosted_at")
+      .eq("user_id", user.id)
+      .eq("post_type", "company"),
   ]);
 
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
 
   const jobList = jobs || [];
+
+  // İlan → aktif board kartı eşlemesi
+  const now = Date.now();
+  const deckMap: Record<string, { id: string; expires_at: string; boosted_at: string }> = {};
+  (deckPosts || []).forEach((p) => {
+    if (p.job_id && new Date(p.expires_at as string).getTime() > now) {
+      deckMap[p.job_id as string] = {
+        id: p.id as string,
+        expires_at: p.expires_at as string,
+        boosted_at: p.boosted_at as string,
+      };
+    }
+  });
 
   // Her ilana gelen başvuru sayısı
   const jobIds = jobList.map((j) => j.id as string);
@@ -109,6 +131,7 @@ export default async function MyJobsPage({
   .jtag.rank{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
   .jtag.on{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
   .jtag.off{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .jtag.board{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
   .jtitle{font-family:var(--disp);font-size:17px;font-weight:700;text-decoration:none;color:var(--tx);display:block;margin-bottom:6px}
   .jtitle:hover{color:var(--gold)}
   .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3);margin-bottom:14px}
@@ -119,6 +142,9 @@ export default async function MyJobsPage({
   .act.plain{color:var(--tx2);border-color:var(--line2)}
   .act.plain:hover{color:var(--tx);border-color:var(--tx3)}
   .act.grn{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .act.blue{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
+  .act.blue:hover{background:rgba(96,165,250,.16)}
+  .act.dis{color:var(--tx3);border-color:var(--line2);cursor:default}
   .empty{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:40px;text-align:center;font-size:14px;color:var(--tx2)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
@@ -138,7 +164,7 @@ export default async function MyJobsPage({
           <div className="hrow">
             <div>
               <h1>My Job <span style={{ color: "var(--gold)" }}>Posts</span></h1>
-              <p className="sub">{jobList.length} job{jobList.length === 1 ? "" : "s"} total</p>
+              <p className="sub">{jobList.length} job{jobList.length === 1 ? "" : "s"} total · post any active job to the main page board</p>
             </div>
             <Link href="/jobs/new" className="btn btn-gold">+ Post Job</Link>
           </div>
@@ -150,6 +176,12 @@ export default async function MyJobsPage({
           {created === "1" ? <div className="banner ok">Your job has been published.</div> : null}
           {updated === "1" ? <div className="banner ok">Your job has been updated.</div> : null}
           {deleted === "1" ? <div className="banner info">The job has been deleted.</div> : null}
+          {deck === "posted" ? <div className="banner ok">📋 Your job is now on the main page board — live for 30 days.</div> : null}
+          {deck === "boosted" ? <div className="banner ok">⬆️ Boosted to the top — 30 days renewed.</div> : null}
+          {deck === "removed" ? <div className="banner info">The job has been removed from the board.</div> : null}
+          {deck === "toosoon" ? <div className="banner info">You can boost each post once a day — try again tomorrow.</div> : null}
+          {deck === "invalid" ? <div className="banner info">Only your own active jobs can go on the board.</div> : null}
+          {deck === "failed" ? <div className="banner info">Something went wrong — please try again.</div> : null}
 
           {jobList.length === 0 ? (
             <div className="empty">
@@ -160,6 +192,9 @@ export default async function MyJobsPage({
             <div className="jlist">
               {jobList.map((job) => {
                 const appCount = appCountMap[job.id as string] || 0;
+                const boardPost = deckMap[job.id as string];
+                const boardDays = boardPost ? Math.max(0, Math.ceil((new Date(boardPost.expires_at).getTime() - now) / DAY_MS)) : 0;
+                const canBoost = boardPost ? now - new Date(boardPost.boosted_at).getTime() >= DAY_MS : false;
                 return (
                   <div key={job.id} className="jcard">
                     <div className="jtags">
@@ -167,6 +202,7 @@ export default async function MyJobsPage({
                       <span className={`jtag ${job.status === "active" ? "on" : "off"}`}>
                         {job.status === "active" ? "Active" : "Closed"}
                       </span>
+                      {boardPost ? <span className="jtag board">● On main page · {boardDays}d</span> : null}
                     </div>
                     <Link href={`/jobs/${job.id}`} className="jtitle">{job.title}</Link>
                     <div className="jmeta">
@@ -180,6 +216,28 @@ export default async function MyJobsPage({
                       <Link href={`/jobs/${job.id}/applications`} className="act gold">
                         Applications{appCount > 0 ? ` (${appCount})` : ""}
                       </Link>
+                      {job.status === "active" && !boardPost ? (
+                        <form action={postJobToDeck} style={{ display: "inline" }}>
+                          <input type="hidden" name="jobId" value={job.id} />
+                          <button type="submit" className="act blue">📋 Post this job on main page</button>
+                        </form>
+                      ) : null}
+                      {boardPost && canBoost ? (
+                        <form action={boostDeckPost} style={{ display: "inline" }}>
+                          <input type="hidden" name="postId" value={boardPost.id} />
+                          <input type="hidden" name="backTo" value="/jobs/mine" />
+                          <button type="submit" className="act blue">⬆️ Boost</button>
+                        </form>
+                      ) : null}
+                      {boardPost && !canBoost ? (
+                        <span className="act dis">⬆️ Boosted today</span>
+                      ) : null}
+                      {boardPost ? (
+                        <form action={removeJobFromDeck} style={{ display: "inline" }}>
+                          <input type="hidden" name="jobId" value={job.id} />
+                          <button type="submit" className="act plain">Remove from board</button>
+                        </form>
+                      ) : null}
                       <Link href={`/jobs/${job.id}/edit`} className="act plain">Edit</Link>
                       {job.status === "active" ? (
                         <form action={closeJob} style={{ display: "inline" }}>
