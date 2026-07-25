@@ -5,6 +5,7 @@ import SiteHeader from "@/app/components/site-header";
 import InviteCard from "@/app/components/invite-card";
 import CountdownCard from "@/app/components/countdown-card";
 import CareersLinkCard from "@/app/components/careers-link-card";
+import PostCvCard from "@/app/components/post-cv-card";
 import Link from "next/link";
 
 export const metadata = {
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
     { count: unreadCount },
     { data: notifications },
     { data: vaultDocs },
+    { data: myDeckPosts },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
@@ -51,6 +53,10 @@ export default async function DashboardPage() {
     supabase
       .from("crew_documents")
       .select("expiry_date")
+      .eq("user_id", user.id),
+    supabase
+      .from("deck_posts")
+      .select("id, post_type, expires_at, boosted_at")
       .eq("user_id", user.id),
   ]);
 
@@ -112,6 +118,12 @@ export default async function DashboardPage() {
     profile?.user_type === "seafarer" || profile?.user_type === "yacht";
 
   const isCompany = profile?.user_type === "company";
+
+  // ── Crew Board: kullanıcının aktif CV kartı ──
+  const now = Date.now();
+  const activeCvPost = (myDeckPosts || []).find(
+    (p) => p.post_type === "crew" && new Date(p.expires_at as string).getTime() > now
+  ) as { id: string; expires_at: string; boosted_at: string } | undefined;
 
   // ── Company: başvuru özeti (Applications kartı için) ──
   let appTotal = 0;
@@ -328,6 +340,14 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
+      {isCrew ? (
+        <section style={{ paddingTop: 10, paddingBottom: 4 }}>
+          <div className="wrap">
+            <PostCvCard activePost={activeCvPost || null} />
+          </div>
+        </section>
+      ) : null}
+
       <section style={{ paddingTop: isCrew ? 14 : 0 }}>
         <div className="wrap">
           <div className="stitle">Quick actions</div>
@@ -362,7 +382,7 @@ export default async function DashboardPage() {
                 <Link href="/jobs/mine" className="qcard">
                   <div className="qi">🗂️</div>
                   <b>My Job Posts</b>
-                  <p>Manage listings — each post links to its applications.</p>
+                  <p>Manage listings — post any of them to the main page board.</p>
                 </Link>
                 <Link href="/salary" className="qcard">
                   <div className="qi">💰</div>
@@ -500,6 +520,18 @@ export default async function DashboardPage() {
                           <Link href="/onboarding/crew/step-5" style={{ color: "var(--gold)", textDecoration: "none" }}>
                             Set dates →
                           </Link>
+                        )}
+                      </b>
+                    </div>
+                    <div className="row">
+                      <span>Crew Board</span>
+                      <b>
+                        {activeCvPost ? (
+                          <Link href="/deck" style={{ color: "var(--grn)", textDecoration: "none" }}>
+                            ● Live on main page
+                          </Link>
+                        ) : (
+                          <span style={{ color: "var(--tx3)" }}>Not posted</span>
                         )}
                       </b>
                     </div>
