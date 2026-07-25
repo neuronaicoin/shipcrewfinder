@@ -3,9 +3,9 @@ import Link from "next/link";
 import DeckCard, { type DeckPost } from "@/app/components/deck-card";
 
 export const metadata = {
-  title: "Crew Board — Available Crew & Hiring Companies | ShipCrewFinder",
+  title: "Crew Board & Company Board — Available Crew & Hiring Companies | ShipCrewFinder",
   description:
-    "Live maritime crew board: verified seafarers available for duty and shipping companies hiring right now. Updated live, worldwide.",
+    "Live maritime board: verified seafarers available for duty and shipping companies hiring right now. Updated live, worldwide.",
 };
 
 export default async function DeckPage() {
@@ -52,7 +52,9 @@ export default async function DeckPage() {
   .topcta:hover{border-color:var(--gold);color:var(--gold)}
   .bhero{position:relative;padding:26px 0 18px;overflow:hidden}
   .aur{position:absolute;width:460px;height:460px;top:-260px;left:50%;transform:translateX(-50%);border-radius:50%;filter:blur(90px);opacity:.4;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
-  h1{font-family:var(--disp);font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  h1{font-family:var(--disp);font-size:clamp(1.5rem,3.8vw,2.3rem);font-weight:800;letter-spacing:-.02em;line-height:1.15;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .dklive{width:11px;height:11px;border-radius:50%;background:var(--grn);flex-shrink:0;box-shadow:0 0 0 0 rgba(52,211,153,.55);animation:dkpulse 1.6s infinite}
+  @keyframes dkpulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
   .bsub{font-size:13.5px;color:var(--tx2);margin-top:8px}
   .bsub b{color:var(--gold)}
   .bstats{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
@@ -125,8 +127,8 @@ export default async function DeckPage() {
       <div className="bhero">
         <div className="aur"></div>
         <div className="wrap" style={{ position: "relative" }}>
-          <h1>⚓ Crew <span style={{ color: "var(--gold)" }}>Board</span></h1>
-          <p className="bsub">Available crew · hiring companies — <b>live</b>. Every post stays up for 30 days.</p>
+          <h1><span className="dklive"></span>Crew Board <span style={{ color: "var(--tx3)", fontWeight: 600 }}>&amp;</span> <span style={{ color: "var(--gold)" }}>Company Board</span></h1>
+          <p className="bsub">Available crew · hiring companies — <b>live right now</b>. Every post stays up for 30 days.</p>
           <div className="bstats">
             <span className="bstat g">⚓ {crewCount} crew available</span>
             <span className="bstat b">🏢 {coCount} companies hiring</span>
@@ -139,7 +141,7 @@ export default async function DeckPage() {
           {posts.length === 0 ? (
             <div className="empty">
               <b>The board is warming up ⚓</b>
-              <p>Be the first on the Crew Board — post your CV or your open position and it stays on the main page for 30 days, seen by every visitor.</p>
+              <p>Be the first on the board — post your CV or your open position and it stays on the main page for 30 days, seen by every visitor.</p>
               <div className="ebtns">
                 <Link href={user ? "/dashboard" : "/signup/crew"} className="ebtn">⚓ Post my CV</Link>
                 <Link href={user ? "/jobs/mine" : "/signup/company"} className="ebtn ghost">📋 Post a job</Link>
