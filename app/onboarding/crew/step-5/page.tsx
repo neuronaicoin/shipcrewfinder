@@ -23,7 +23,7 @@ export default async function CrewStep5Page() {
   const detailsTable = isShip ? "seafarer_details" : "yacht_details";
   const { data: details } = await supabase
     .from(detailsTable)
-    .select("availability, contract_end_date")
+    .select("availability, contract_end_date, contract_start_date")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -36,6 +36,7 @@ export default async function CrewStep5Page() {
   const savedRadio = availToRadio[savedAvailability] || "";
   const savedPhone = (profile?.phone as string) || "";
   const savedContract = (details?.contract_end_date as string) || "";
+  const savedStart = (details?.contract_start_date as string) || "";
   const isEditing = !!savedRadio;
 
   const availabilityOptions = [
@@ -153,22 +154,41 @@ export default async function CrewStep5Page() {
           </div>
         </div>
 
-        {/* Contract end date — Rotation Radar */}
+        {/* Contract dates — Rotation Radar + Sign-off Countdown */}
         <div className="bg-primary-dark border border-white/10 rounded-2xl p-6">
-          <label htmlFor="contractEndDate" className="block text-white font-bold mb-2">
-            Current Contract Ends{" "}
+          <label className="block text-white font-bold mb-2">
+            Current Contract Dates{" "}
             <span className="text-white/40 text-sm font-normal">(optional)</span>
           </label>
           <p className="text-white/50 text-sm mb-4">
-            If you&apos;re on board now, add your sign-off date. Companies hiring your rank get notified as your availability approaches — you get contacted before you even start looking.
+            If you&apos;re on board now, add your dates. You get a live <strong className="text-white">sign-off countdown</strong> on your dashboard — and companies hiring your rank get notified as your availability approaches.
           </p>
-          <input
-            id="contractEndDate"
-            name="contractEndDate"
-            type="date"
-            defaultValue={savedContract}
-            className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="contractStartDate" className="block text-white/70 text-xs font-bold uppercase tracking-wider mb-2">
+                Sign-on (start)
+              </label>
+              <input
+                id="contractStartDate"
+                name="contractStartDate"
+                type="date"
+                defaultValue={savedStart}
+                className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
+              />
+            </div>
+            <div>
+              <label htmlFor="contractEndDate" className="block text-white/70 text-xs font-bold uppercase tracking-wider mb-2">
+                Sign-off (end)
+              </label>
+              <input
+                id="contractEndDate"
+                name="contractEndDate"
+                type="date"
+                defaultValue={savedContract}
+                className="w-full px-4 py-3 bg-primary border border-white/10 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Contact Info */}
