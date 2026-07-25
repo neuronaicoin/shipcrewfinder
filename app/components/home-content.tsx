@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import SearchWizard from "./search-wizard";
 
-export default function HomeContent() {
+export default function HomeContent({ deckSlot }: { deckSlot?: React.ReactNode }) {
   useEffect(() => {
 const __T=[];
 const _si=window.setInterval.bind(window), _st=window.setTimeout.bind(window);
@@ -478,7 +478,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   }
   @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
-<header className="top">
+      <header className="top">
   <div className="wrap top-in">
     <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
     <nav>
@@ -569,6 +569,8 @@ if(iosTip && isIOS && !standalone && !iosDis){
     </div>
   </div>
 </section>
+
+{deckSlot}
 
 <section id="try" style={{padding:"36px 0 8px"}}>
   <div className="wrap">
