@@ -223,6 +223,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
   const availability = formData.get("availability") as string;
   const phone = formData.get("phone") as string;
   const contractEndDate = formData.get("contractEndDate") as string;
+  const contractStartDate = formData.get("contractStartDate") as string;
 
   if (!availability) {
     redirect("/onboarding/crew/step-5?error=required");
@@ -257,6 +258,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       .update({
         availability: availabilityValue,
         contract_end_date: contractEndDate || null,
+        contract_start_date: contractStartDate || null,
       })
       .eq("id", user.id);
   } else if (profile.user_type === "yacht") {
@@ -265,6 +267,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       .update({
         availability: availabilityValue,
         contract_end_date: contractEndDate || null,
+        contract_start_date: contractStartDate || null,
       })
       .eq("id", user.id);
   }
