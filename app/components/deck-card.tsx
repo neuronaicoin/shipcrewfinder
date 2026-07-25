@@ -30,6 +30,23 @@ export type DeckPost = {
 
 const DAY_MS = 24 * 3600 * 1000;
 
+const rankInitials = (rank: string | null) => {
+  if (!rank) return "⚓";
+  const r = rank.toUpperCase();
+  if (r.includes("CHIEF ENGINEER")) return "CE";
+  if (r.includes("2ND ENGINEER") || r.includes("SECOND ENGINEER")) return "2E";
+  if (r.includes("3RD ENGINEER") || r.includes("THIRD ENGINEER")) return "3E";
+  if (r.includes("CHIEF OFFICER") || r.includes("CHIEF MATE")) return "CO";
+  if (r.includes("2ND OFFICER") || r.includes("SECOND OFFICER")) return "2O";
+  if (r.includes("3RD OFFICER") || r.includes("THIRD OFFICER")) return "3O";
+  if (r.includes("MASTER") || r.includes("CAPTAIN")) return "MK";
+  if (r.includes("ETO") || r.includes("ELECTRO")) return "ET";
+  if (r.includes("BOSUN")) return "BS";
+  if (r.includes("COOK")) return "CK";
+  const parts = r.split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : "")).slice(0, 2);
+};
+
 export default function DeckCard({
   post,
   isOwner,
@@ -65,21 +82,22 @@ export default function DeckCard({
       ? (post.salary_currency || "USD") + " " + (post.salary_min || "?") + (post.salary_max ? "–" + post.salary_max : "") + "/mo"
       : null;
 
-  const maskEmail = (e: string | null) => e || null;
-
   return (
     <div className={"dkcard " + (isCrew ? "dk-crew" : "dk-co")}>
-      <div className="dk-top">
-        <span className={"dk-pill " + (isCrew ? "dk-pill-av" : "dk-pill-hi")}>
-          {isCrew ? "AVAILABLE" : "HIRING"}
-        </span>
+      <div className={"dk-strip " + (isCrew ? "dk-strip-crew" : "dk-strip-co")}>
+        <span>{isCrew ? "⚓ AVAILABLE CREW" : "🏢 COMPANY — HIRING"}</span>
         <span className="dk-days">⏳ {daysLeft}d left</span>
       </div>
 
       {isCrew ? (
         <>
-          <div className="dk-name">{post.full_name || "Verified crew"} <span className="dk-vf">✓</span></div>
-          <div className="dk-role">{(post.rank || "SEAFARER").toUpperCase()}</div>
+          <div className="dk-head">
+            <div className="dk-ava dk-ava-crew">{rankInitials(post.rank)}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="dk-name">{post.full_name || "Verified crew"} <span className="dk-vf">✓</span></div>
+              <div className="dk-role">{(post.rank || "SEAFARER").toUpperCase()}</div>
+            </div>
+          </div>
           <div className="dk-meta">
             {expLabel ? expLabel + " at sea" : null}
             {expLabel && availLabel ? " · " : null}
@@ -90,7 +108,7 @@ export default function DeckCard({
             {post.show_contact && (post.phone || post.email) ? (
               <>
                 {post.phone ? <span>📱 {post.phone}</span> : null}
-                {post.email ? <span>✉ {maskEmail(post.email)}</span> : null}
+                {post.email ? <span>✉ {post.email}</span> : null}
               </>
             ) : (
               <span className="dk-hiddenc">Contact via ShipCrewFinder</span>
@@ -104,8 +122,13 @@ export default function DeckCard({
         </>
       ) : (
         <>
-          <div className="dk-name">{post.company_name || "Verified company"}</div>
-          <div className="dk-role">NEEDS: {(post.job_position || "CREW").toUpperCase()}</div>
+          <div className="dk-head">
+            <div className="dk-ava dk-ava-co">🏢</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="dk-name">{post.company_name || "Verified company"}</div>
+              <div className="dk-role dk-role-co">NEEDS: {(post.job_position || "CREW").toUpperCase()}</div>
+            </div>
+          </div>
           <div className="dk-meta">
             {post.job_title}
             {post.job_country ? " · " + post.job_country : null}
@@ -123,7 +146,7 @@ export default function DeckCard({
           </div>
           <div className="dk-btns">
             {post.job_id ? (
-              <Link href={"/jobs/" + post.job_id} className="dk-btn dk-btn-gold">Apply →</Link>
+              <Link href={"/jobs/" + post.job_id} className="dk-btn dk-btn-blue">Apply →</Link>
             ) : null}
           </div>
         </>
