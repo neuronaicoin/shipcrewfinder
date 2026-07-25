@@ -16,6 +16,20 @@ export default function CareersLinkCard({ slug }: { slug: string }) {
     }
   };
 
+  const ghostBtn: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    color: "var(--tx)",
+    border: "1px solid var(--line2)",
+    borderRadius: 11,
+    padding: "10px 16px",
+    fontWeight: 700,
+    fontSize: 13,
+    textDecoration: "none",
+    whiteSpace: "nowrap",
+  };
+
   return (
     <div
       style={{
@@ -80,14 +94,7 @@ export default function CareersLinkCard({ slug }: { slug: string }) {
         >
           {copied ? "✓ Copied" : "Copy link"}
         </button>
-        
-          href={"/careers/" + slug}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--tx)", border: "1px solid var(--line2)", borderRadius: 11, padding: "10px 16px", fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}
-        >
-          Preview →
-        </a>
+        <a href={"/careers/" + slug} target="_blank" rel="noopener noreferrer" style={ghostBtn}>Preview →</a>
       </div>
     </div>
   );
