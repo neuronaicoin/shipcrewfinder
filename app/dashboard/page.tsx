@@ -4,6 +4,7 @@ import { logout } from "@/lib/actions/auth";
 import SiteHeader from "@/app/components/site-header";
 import InviteCard from "@/app/components/invite-card";
 import CountdownCard from "@/app/components/countdown-card";
+import CareersLinkCard from "@/app/components/careers-link-card";
 import Link from "next/link";
 
 export const metadata = {
@@ -129,6 +130,9 @@ export default async function DashboardPage() {
       appLink = "/jobs/" + (list[0].job_id as string) + "/applications";
     }
   }
+
+  // ── Company: kariyer sayfası slug'ı ──
+  const careersSlug = isCompany ? ((detailsData?.careers_slug as string) || "") : "";
 
   const rankLabel =
     (detailsData?.rank as string) || (detailsData?.position as string) || null;
@@ -414,6 +418,14 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      {isCompany && careersSlug ? (
+        <section style={{ paddingTop: 6 }}>
+          <div className="wrap">
+            <CareersLinkCard slug={careersSlug} />
+          </div>
+        </section>
+      ) : null}
+
       {isCrew && refCode ? (
         <section style={{ paddingTop: 6 }}>
           <div className="wrap">
@@ -530,6 +542,16 @@ export default async function DashboardPage() {
                           </Link>
                         ) : (
                           "0"
+                        )}
+                      </b>
+                    </div>
+                    <div className="row">
+                      <span>Careers page</span>
+                      <b>
+                        {careersSlug ? (
+                          <a href={"/careers/" + careersSlug} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gold)", textDecoration: "none" }}>View →</a>
+                        ) : (
+                          "—"
                         )}
                       </b>
                     </div>
