@@ -19,18 +19,22 @@ export default async function DeckRail() {
   .dkrail{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:2px 2px 10px;scrollbar-width:thin}
   .dkrail::-webkit-scrollbar{height:5px}
   .dkrail::-webkit-scrollbar-thumb{background:rgba(251,191,36,.25);border-radius:99px}
-  .dkcard{flex:0 0 252px;scroll-snap-align:start;border-radius:15px;padding:14px 15px;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);display:flex;flex-direction:column}
+  .dkcard{flex:0 0 252px;scroll-snap-align:start;border-radius:15px;padding:0 15px 14px;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);display:flex;flex-direction:column;overflow:hidden}
   @media(min-width:900px){.dkcard{flex-basis:268px}}
-  .dk-crew{border-color:rgba(251,191,36,.35)}
-  .dk-co{border-color:rgba(255,255,255,.14)}
-  .dk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .dk-pill{font-size:9px;font-weight:800;letter-spacing:.08em;border-radius:999px;padding:3px 9px;border:1px solid}
-  .dk-pill-av{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.09)}
-  .dk-pill-hi{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
-  .dk-days{font-size:9.5px;color:var(--tx3);font-weight:700}
-  .dk-name{font-family:var(--disp);font-weight:800;font-size:14.5px;line-height:1.2}
+  .dk-crew{border-color:rgba(251,191,36,.4)}
+  .dk-co{border-color:rgba(96,165,250,.4)}
+  .dk-strip{margin:0 -15px 11px;padding:8px 13px;font-size:9.5px;font-weight:800;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center}
+  .dk-strip-crew{background:linear-gradient(90deg,rgba(251,191,36,.28),rgba(251,191,36,.07));color:var(--gold);border-bottom:1px solid rgba(251,191,36,.3)}
+  .dk-strip-co{background:linear-gradient(90deg,rgba(96,165,250,.28),rgba(96,165,250,.06));color:#60a5fa;border-bottom:1px solid rgba(96,165,250,.3)}
+  .dk-days{opacity:.85;font-weight:700}
+  .dk-head{display:flex;gap:10px;align-items:center;margin-bottom:7px}
+  .dk-ava{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:15px;flex-shrink:0}
+  .dk-ava-crew{background:rgba(251,191,36,.14);color:var(--gold);border:1px solid rgba(251,191,36,.35)}
+  .dk-ava-co{background:rgba(96,165,250,.13);color:#60a5fa;border:1px solid rgba(96,165,250,.35);font-size:17px}
+  .dk-name{font-family:var(--disp);font-weight:800;font-size:14.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .dk-vf{color:var(--grn);font-size:11px}
-  .dk-role{font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--gold);margin:2px 0 6px}
+  .dk-role{font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--gold);margin-top:2px}
+  .dk-role-co{color:#60a5fa}
   .dk-meta{font-size:11px;color:var(--tx2);line-height:1.5;margin-bottom:4px}
   .dk-av{color:var(--grn);font-weight:700}
   .dk-sal{font-size:11.5px;color:var(--grn);font-weight:800;margin-bottom:4px}
@@ -41,6 +45,8 @@ export default async function DeckRail() {
   .dk-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border-radius:9px;font-weight:800;font-size:11.5px;text-decoration:none;padding:8px 10px;transition:.15s}
   .dk-btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .dk-btn-gold:hover{transform:translateY(-1px)}
+  .dk-btn-blue{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#071022}
+  .dk-btn-blue:hover{transform:translateY(-1px)}
   .dk-owner{margin-top:9px;border-top:1px dashed var(--line2);padding-top:8px}
   .dk-boost{width:100%;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);color:var(--gold);border-radius:9px;padding:7px 0;font-weight:800;font-size:11.5px;cursor:pointer;font-family:var(--body)}
   .dk-boost:hover{background:rgba(251,191,36,.18)}
@@ -55,8 +61,8 @@ export default async function DeckRail() {
       <div className="wrap">
         <div className="dkhead">
           <div>
-            <h2>⚓ Live on <span style={{ color: "var(--gold)" }}>Deck</span></h2>
-            <p>Crew available now · companies hiring now — updated live</p>
+            <h2>⚓ Crew <span style={{ color: "var(--gold)" }}>Board</span></h2>
+            <p>Available crew · hiring companies — live</p>
           </div>
           <Link href="/deck" className="dkall">View all →</Link>
         </div>
@@ -69,23 +75,27 @@ export default async function DeckRail() {
           {posts.length === 0 ? (
             <>
               <div className="dkcard dk-crew">
+                <div className="dk-strip dk-strip-crew"><span>⚓ AVAILABLE CREW</span><span className="dk-days">⏳ 30d left</span></div>
                 <span className="dk-ex">EXAMPLE</span>
-                <div className="dk-top"><span className="dk-pill dk-pill-av">AVAILABLE</span><span className="dk-days">⏳ 30d left</span></div>
-                <div className="dk-name">Chief Engineer <span className="dk-vf">✓</span></div>
-                <div className="dk-role">C/E — UNLIMITED</div>
+                <div className="dk-head">
+                  <div className="dk-ava dk-ava-crew">CE</div>
+                  <div><div className="dk-name">Chief Engineer <span className="dk-vf">✓</span></div><div className="dk-role">C/E — UNLIMITED</div></div>
+                </div>
                 <div className="dk-meta">3+ yrs at sea · <span className="dk-av">Available now</span></div>
                 <div className="dk-contact"><span className="dk-hiddenc">Contact via ShipCrewFinder</span></div>
                 <div className="dk-btns"><Link href="/signup/crew" className="dk-btn dk-btn-gold">Post yours →</Link></div>
               </div>
               <div className="dkcard dk-co">
+                <div className="dk-strip dk-strip-co"><span>🏢 COMPANY — HIRING</span><span className="dk-days">⏳ 30d left</span></div>
                 <span className="dk-ex">EXAMPLE</span>
-                <div className="dk-top"><span className="dk-pill dk-pill-hi">HIRING</span><span className="dk-days">⏳ 30d left</span></div>
-                <div className="dk-name">Shipping Company</div>
-                <div className="dk-role">NEEDS: 2ND ENGINEER</div>
+                <div className="dk-head">
+                  <div className="dk-ava dk-ava-co">🏢</div>
+                  <div><div className="dk-name">Shipping Company</div><div className="dk-role dk-role-co">NEEDS: 2ND ENGINEER</div></div>
+                </div>
                 <div className="dk-meta">Bulk carrier · Worldwide</div>
                 <div className="dk-sal">USD 7,000–8,500/mo</div>
                 <div className="dk-contact"><span className="dk-hiddenc">Apply via ShipCrewFinder</span></div>
-                <div className="dk-btns"><Link href="/signup/company" className="dk-btn dk-btn-gold">Post a job →</Link></div>
+                <div className="dk-btns"><Link href="/signup/company" className="dk-btn dk-btn-blue">Post a job →</Link></div>
               </div>
             </>
           ) : null}
