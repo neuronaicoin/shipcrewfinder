@@ -79,16 +79,18 @@ if(tbtn) tbtn.onclick=()=>{
   applyTheme(scfTheme);
 };
 
-// dönen hero sloganları
+// dönen hero sloganları — platform özellikleri (crew + company)
 const HERO_LINES=[
   'No agency. No cut.',
-  'Create your profile. Get found.',
-  'Find your employer. Directly.',
-  'Hire verified crew, faster.',
-  'Crew & companies, worldwide.',
-  'Zero commission. Ever.',
-  'One platform. Every rank.',
-  'Your career. Your terms.'
+  'Post your CV on the main page.',
+  'Your maritime CV, built in minutes.',
+  'Sea time & licence renewal, tracked.',
+  'Certificates with expiry alerts.',
+  'Hire verified crew — directly.',
+  'Post a job. Crew get alerted.',
+  'Talk live in The Mess Room.',
+  'Know your salary. 15 ranks.',
+  'Zero commission. Ever.'
 ];
 let hIdx=0;
 const hRot=document.getElementById('hero-rot');
@@ -100,7 +102,7 @@ if(hRot){
       hRot.textContent=HERO_LINES[hIdx];
       hRot.classList.remove('out');
     },350);
-  },3400);
+  },4600);
 }
 
 // ── PWA kurulum ──
@@ -657,8 +659,8 @@ if(iosTip && isIOS && !standalone && !iosDis){
     <div className="price rv">
       <div className="plabel">CREW MEMBERSHIP</div>
       <div className="free-strip">🎁 FIRST MONTH COMPLETELY FREE</div>
-      <div className="pnum">$2.99 <small>/ 3 months</small></div>
-      <div className="pper">after your free month · that's less than a coffee — for a quarter</div>
+      <div className="pnum">$4.99 <small>for 3 FULL months</small></div>
+      <div className="pper">after your free month · that&apos;s ~$1.66/month — less than one coffee</div>
       <div className="pwhy">Why not fully free? The symbolic fee keeps bots, fake profiles and time-wasters out — so companies take every profile here seriously. Your visibility is worth more on a clean platform.</div>
       <ul className="plist">
         <li>Verified profile badge</li>
@@ -748,7 +750,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
     <p className="sec-sub rv">No fine print surprises. Here's how it actually works.</p>
     <div className="faq">
       <details className="rv"><summary>Is the first month really free?</summary><p>Yes — both crew and companies get a full month with all features unlocked, no charge. Cancel any time during the free month and you pay nothing at all.</p></details>
-      <details className="rv"><summary>Why does crew membership cost $2.99 when other job boards are free?</summary><p>Free platforms fill up with bots, duplicate accounts and abandoned profiles — and companies stop trusting them. A symbolic $2.99 per 3 months keeps the pool clean and serious, which means the companies contacting you are serious too. It's less than one coffee, once a quarter.</p></details>
+      <details className="rv"><summary>Why does crew membership cost $4.99 when other job boards are free?</summary><p>Free platforms fill up with bots, duplicate accounts and abandoned profiles — and companies stop trusting them. A symbolic $4.99 for 3 full months (about $1.66 a month) keeps the pool clean and serious, which means the companies contacting you are serious too. It's less than one coffee a month.</p></details>
       <details className="rv"><summary>How does profile verification work?</summary><p>After you upload your CV and certificates (STCW, COC, medical), our team manually reviews the documents before your profile goes live. Verified profiles carry a visible badge that companies can trust.</p></details>
       <details className="rv"><summary>Can my current employer see that I'm looking?</summary><p>Not if you don't want them to. Stealth Mode hides your profile from specific companies you choose — including your current employer. You stay invisible to them while staying visible to everyone else.</p></details>
       <details className="rv"><summary>Do you take any commission from my salary or the placement?</summary><p>Never. Zero commission, from either side, ever. Companies pay a flat subscription; crew pay a symbolic membership. Your salary is between you and your employer — as it should be.</p></details>
