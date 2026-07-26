@@ -179,6 +179,9 @@ if(iosTip && isIOS && !standalone && !iosDis){
   body.light .step{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .path{background:#ffffff;border-color:rgba(224,160,16,.55)}
   body.light .path:hover{box-shadow:0 14px 30px rgba(224,160,16,.22)}
+  body.light .path.co{border-color:rgba(59,130,246,.55)}
+  body.light .path.co:hover{box-shadow:0 14px 30px rgba(59,130,246,.22)}
+  body.light .trybox{background:#ffffff}
   body.light .psteps li{color:#2e3c5e}
   body.light .cplan{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .cplan.hot{border-color:var(--gold)}
@@ -255,17 +258,22 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .hero-rot{display:inline-block;transition:opacity .35s ease, transform .35s ease}
   .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
-  /* ── path kartları: ALTIN ÇERÇEVE ── */
+  /* ── path kartları: ALTIN (crew) + MAVİ (hiring) ── */
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
   .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));
     border:1.5px solid rgba(251,191,36,.45);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);
-    transition:.2s;position:relative;overflow:hidden;box-shadow:0 0 0 rgba(251,191,36,0)}
+    transition:.2s;position:relative;overflow:hidden;box-shadow:0 0 18px rgba(251,191,36,.14)}
   .path::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
   .path:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 34px rgba(251,191,36,.22)}
   .path .pi{font-size:24px;margin-bottom:8px}
   .path b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:5px}
   .path span{font-size:12.5px;color:var(--tx3);line-height:1.5;display:block}
   .path .go{color:var(--gold);font-weight:700;font-size:13px;margin-top:10px;display:inline-block}
+  .path.co{border-color:rgba(96,165,250,.5);box-shadow:0 0 18px rgba(96,165,250,.15)}
+  .path.co::before{background:linear-gradient(90deg,#60a5fa,transparent)}
+  .path.co:hover{border-color:#60a5fa;box-shadow:0 10px 34px rgba(96,165,250,.25)}
+  .path.co .go{color:#60a5fa}
+  .path.co .psteps li::before{background:rgba(96,165,250,.16);color:#60a5fa}
   .psteps{list-style:none;counter-reset:ps;margin:4px 0 2px;display:flex;flex-direction:column;gap:6px}
   .psteps li{counter-increment:ps;font-size:12.5px;color:var(--tx2);display:flex;gap:9px;align-items:center}
   .psteps li::before{content:counter(ps);width:19px;height:19px;border-radius:6px;flex-shrink:0;
@@ -322,6 +330,10 @@ if(iosTip && isIOS && !standalone && !iosDis){
     display:inline-flex;align-items:center;gap:8px}
   .marq-in span::before{content:'⚓';font-size:11px;opacity:.55}
   @keyframes scroll{to{transform:translateX(-50%)}}
+
+  /* ── search box ── */
+  .trybox{border:1.5px solid var(--line);border-radius:20px;padding:26px 24px;background:linear-gradient(160deg,rgba(251,191,36,.07),var(--ink));box-shadow:0 0 22px rgba(251,191,36,.12)}
+  .try-sub{font-size:13px;color:var(--tx2);margin-bottom:20px}
 
   /* ── salary teaser strip ── */
   .salstrip{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
@@ -475,6 +487,8 @@ if(iosTip && isIOS && !standalone && !iosDis){
     .psteps em{display:none}
     .path .go{font-size:11px;margin-top:7px}
     .hero-note{font-size:11px;margin-top:14px}
+    .hero-vis{display:none}
+    .trybox{padding:18px 14px}
   }
   @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
@@ -527,7 +541,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
           </ol>
           <span className="go">Start free month →</span>
         </a>
-        <a className="path" href="/signup/company">
+        <a className="path co" href="/signup/company">
           <div className="pi">🏢</div>
           <b>I'm Hiring — find crew</b>
           <ol className="psteps">
@@ -574,9 +588,12 @@ if(iosTip && isIOS && !standalone && !iosDis){
 
 <section id="try" style={{padding:"36px 0 8px"}}>
   <div className="wrap">
-    <div className="sec-tag rv">Search now</div>
-    <h2 className="rv" style={{marginBottom:"26px"}}>Find crew — or find your next job</h2>
-<SearchWizard />
+    <div className="trybox rv">
+      <div className="sec-tag">🔍 Search now</div>
+      <h2 style={{marginBottom:"6px"}}>Find crew — or find your next job</h2>
+      <p className="try-sub">Search 15 ranks and open positions worldwide — two taps.</p>
+      <SearchWizard />
+    </div>
   </div>
 </section>
 
