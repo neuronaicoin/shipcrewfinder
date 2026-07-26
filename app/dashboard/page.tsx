@@ -34,6 +34,7 @@ export default async function DashboardPage() {
     { data: notifications },
     { data: vaultDocs },
     { data: myDeckPosts },
+    { data: myConvs },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
@@ -58,7 +59,26 @@ export default async function DashboardPage() {
       .from("deck_posts")
       .select("id, post_type, expires_at, boosted_at")
       .eq("user_id", user.id),
+    supabase
+      .from("conversations")
+      .select("id, last_message_at, last_message_preview")
+      .or("p1.eq." + user.id + ",p2.eq." + user.id)
+      .order("last_message_at", { ascending: false })
+      .limit(3),
   ]);
+
+  // ── Mesajlar: okunmamış sayısı ──
+  const convIds = (myConvs || []).map((c) => c.id as string);
+  let msgUnread = 0;
+  if (convIds.length > 0) {
+    const { data: unreadRows } = await supabase
+      .from("messages")
+      .select("id, sender_id")
+      .in("conversation_id", convIds)
+      .is("read_at", null);
+    msgUnread = (unreadRows || []).filter((m) => m.sender_id !== user.id).length;
+  }
+  const lastConvPreview = ((myConvs || [])[0]?.last_message_preview as string) || null;
 
   let detailsData: Record<string, unknown> | null = null;
 
@@ -272,6 +292,13 @@ export default async function DashboardPage() {
   .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+  .msgbox{display:flex;align-items:center;gap:14px;background:linear-gradient(160deg,rgba(52,211,153,.09),var(--ink));border:1.5px solid rgba(52,211,153,.35);border-radius:18px;padding:16px 20px;text-decoration:none;color:var(--tx);transition:.18s}
+  .msgbox:hover{transform:translateY(-2px);border-color:var(--grn)}
+  .msgbox .mi{width:44px;height:44px;border-radius:12px;background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.35);display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .msgbox b{font-family:var(--disp);font-size:14.5px;display:block}
+  .msgbox p{font-size:12px;color:var(--tx2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msgbox .mb{min-width:24px;height:24px;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;font-size:11.5px;font-weight:800;display:grid;place-items:center;padding:0 7px;margin-left:auto;flex-shrink:0}
+  .msgbox .go{margin-left:auto;color:var(--grn);font-weight:800;font-size:13px;flex-shrink:0}
   .foot{padding:30px 0 44px;text-align:center}
   .foot form{display:inline}
   .foot button{background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;font-family:var(--body);text-decoration:underline;text-underline-offset:3px}
@@ -332,8 +359,21 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      <section style={{ paddingTop: 0, paddingBottom: 4 }}>
+        <div className="wrap">
+          <Link href="/messages" className="msgbox">
+            <span className="mi">💬</span>
+            <span style={{ minWidth: 0 }}>
+              <b>Messages</b>
+              <p>{msgUnread > 0 ? "You have unread messages — they vanish in 24h!" : (lastConvPreview ? lastConvPreview : "Direct line to crew & companies · auto-delete after 24h")}</p>
+            </span>
+            {msgUnread > 0 ? <span className="mb">{msgUnread}</span> : <span className="go">Open →</span>}
+          </Link>
+        </div>
+      </section>
+
       {isCrew ? (
-        <section style={{ paddingTop: 0, paddingBottom: 4 }}>
+        <section style={{ paddingTop: 10, paddingBottom: 4 }}>
           <div className="wrap">
             <CountdownCard endDate={contractEnd} startDate={contractStart} rankLabel={rankLabel} />
           </div>
@@ -348,7 +388,7 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
-      <section style={{ paddingTop: isCrew ? 14 : 0 }}>
+      <section style={{ paddingTop: 14 }}>
         <div className="wrap">
           <div className="stitle">Quick actions</div>
           <div className="qgrid">
@@ -479,7 +519,7 @@ export default async function DashboardPage() {
                       className={`nrow ${n.read ? "" : "unread"}`}
                     >
                       <span className="ni">
-                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📥" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : n.type === "rotation_radar" ? "📡" : n.type === "hired" ? "🎉" : "🔔"}
+                        {n.type === "job_alert" ? "⚓" : n.type === "job_application" ? "📥" : n.type === "doc_expiry" ? "📁" : n.type === "referral" ? "🎁" : n.type === "rotation_radar" ? "📡" : n.type === "hired" ? "🎉" : n.type === "message" ? "💬" : "🔔"}
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <b>{n.title as string}</b>
