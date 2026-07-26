@@ -91,6 +91,8 @@ export default async function DeckPage() {
   .dk-btn-gold:hover{transform:translateY(-1px)}
   .dk-btn-blue{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#071022}
   .dk-btn-blue:hover{transform:translateY(-1px)}
+  .dk-btn-msg{background:rgba(52,211,153,.12);color:var(--grn);border:1px solid rgba(52,211,153,.4);cursor:pointer;font-family:var(--body);width:100%}
+  .dk-btn-msg:hover{background:rgba(52,211,153,.2)}
   .dk-owner{margin-top:9px;border-top:1px dashed var(--line2);padding-top:8px}
   .dk-boost{width:100%;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);color:var(--gold);border-radius:9px;padding:7px 0;font-weight:800;font-size:11.5px;cursor:pointer;font-family:var(--body)}
   .dk-boost:hover{background:rgba(251,191,36,.18)}
