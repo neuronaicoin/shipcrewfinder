@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { boostDeckPost } from "@/lib/actions/deck";
+import { startConversation } from "@/lib/actions/messages";
 
 export type DeckPost = {
   id: string;
+  user_id: string;
   post_type: "crew" | "company";
   note: string | null;
   show_contact: boolean;
@@ -118,6 +120,12 @@ export default function DeckCard({
             {post.cv_share_code ? (
               <a href={"/cv/share/" + post.cv_share_code} target="_blank" rel="noopener noreferrer" className="dk-btn dk-btn-gold">View CV →</a>
             ) : null}
+            {!isOwner ? (
+              <form action={startConversation} style={{ flex: 1, display: "flex" }}>
+                <input type="hidden" name="toUserId" value={post.user_id} />
+                <button type="submit" className="dk-btn dk-btn-msg">💬 Message</button>
+              </form>
+            ) : null}
           </div>
         </>
       ) : (
@@ -147,6 +155,12 @@ export default function DeckCard({
           <div className="dk-btns">
             {post.job_id ? (
               <Link href={"/jobs/" + post.job_id} className="dk-btn dk-btn-blue">Apply →</Link>
+            ) : null}
+            {!isOwner ? (
+              <form action={startConversation} style={{ flex: 1, display: "flex" }}>
+                <input type="hidden" name="toUserId" value={post.user_id} />
+                <button type="submit" className="dk-btn dk-btn-msg">💬</button>
+              </form>
             ) : null}
           </div>
         </>
