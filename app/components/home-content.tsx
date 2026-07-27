@@ -139,6 +139,28 @@ if(iosTip && isIOS && !standalone && !iosDis){
   };
 }
 
+// ── Ana sayfa "Install" kutusu ──
+const a2hsBtn=document.getElementById('a2hs-btn');
+const a2hsHint=document.getElementById('a2hs-hint');
+const a2hsWrap=document.getElementById('a2hs');
+if(a2hsWrap && standalone){ a2hsWrap.style.display='none'; }
+if(a2hsBtn){
+  a2hsBtn.onclick=async()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt=null;
+      return;
+    }
+    if(isIOS){
+      if(iosTip) iosTip.style.display='flex';
+      if(a2hsHint){ a2hsHint.textContent='iPhone: tap the Share button below, then "Add to Home Screen".'; a2hsHint.style.display='block'; }
+      return;
+    }
+    if(a2hsHint){ a2hsHint.textContent='Open your browser menu (⋮) and choose "Add to Home screen" / "Install app".'; a2hsHint.style.display='block'; }
+  };
+}
+
     return () => {
       __T.forEach(x => x.t === 'i' ? clearInterval(x.h) : clearTimeout(x.h));
       if (typeof io !== 'undefined' && io.disconnect) io.disconnect();
@@ -184,6 +206,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   body.light .path.co{border-color:rgba(59,130,246,.55)}
   body.light .path.co:hover{box-shadow:0 14px 30px rgba(59,130,246,.22)}
   body.light .trybox{background:#ffffff}
+  body.light .a2hs{background:#ffffff}
   body.light .psteps li{color:#2e3c5e}
   body.light .cplan{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .cplan.hot{border-color:var(--gold)}
@@ -260,7 +283,7 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .hero-rot{display:inline-block;transition:opacity .35s ease, transform .35s ease}
   .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
-  /* ── path kartları: ALTIN (crew) + MAVİ (hiring) ── */
+  /* ── path kartları: ALTIN ÇERÇEVE ── */
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
   .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));
     border:1.5px solid rgba(251,191,36,.45);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);
@@ -450,6 +473,17 @@ if(iosTip && isIOS && !standalone && !iosDis){
   .pwa-chip .px{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
   #pwa-install{cursor:pointer}
 
+  /* ── add-to-home-screen kutusu ── */
+  .a2hs{margin:22px 0 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:1.5px solid var(--line);border-radius:16px;padding:14px 18px;background:linear-gradient(160deg,rgba(251,191,36,.08),var(--ink));box-shadow:0 0 18px rgba(251,191,36,.12);max-width:560px}
+  .a2hs .ai{display:flex;gap:12px;align-items:center;min-width:0;flex:1}
+  .a2hs .aic{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,var(--gold),var(--gold2));display:grid;place-items:center;font-size:19px;flex-shrink:0}
+  .a2hs b{font-family:var(--disp);font-size:14px;display:block}
+  .a2hs p{font-size:11.5px;color:var(--tx2);margin-top:2px;line-height:1.4}
+  .a2hs-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;border:none;border-radius:11px;padding:11px 20px;font-weight:800;font-size:13px;cursor:pointer;font-family:var(--body);white-space:nowrap}
+  .a2hs-btn:hover{transform:translateY(-1px)}
+  .a2hs-hint{display:none;width:100%;font-size:11px;color:var(--gold);background:rgba(251,191,36,.07);border:1px dashed rgba(251,191,36,.35);border-radius:9px;padding:8px 11px;line-height:1.5}
+  body.light .a2hs{background:#ffffff}
+
   /* reveal */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
   .rv.in{opacity:1;transform:none}
@@ -489,6 +523,9 @@ if(iosTip && isIOS && !standalone && !iosDis){
     .psteps em{display:none}
     .path .go{font-size:11px;margin-top:7px}
     .hero-note{font-size:11px;margin-top:14px}
+    .a2hs{padding:12px 13px;gap:10px}
+    .a2hs b{font-size:13px}
+    .a2hs-btn{padding:10px 16px;font-size:12.5px}
     .hero-vis{display:none}
     .trybox{padding:18px 14px}
   }
@@ -555,6 +592,17 @@ if(iosTip && isIOS && !standalone && !iosDis){
         </a>
       </div>
       <div className="hero-note"><b>✓</b> Cancel anytime  ·  <b>✓</b> 0% commission — ever  ·  <b>✓</b> Verified profiles only</div>
+      <div className="a2hs" id="a2hs">
+        <div className="ai">
+          <span className="aic">📲</span>
+          <span style={{minWidth:0}}>
+            <b>Use ShipCrewFinder like an app</b>
+            <p>Add it to your home screen — one tap, full screen, works at sea.</p>
+          </span>
+        </div>
+        <button type="button" className="a2hs-btn" id="a2hs-btn">Install ⚓</button>
+        <span className="a2hs-hint" id="a2hs-hint"></span>
+      </div>
     </div>
     <div className="hero-vis">
       <div className="pcard">
