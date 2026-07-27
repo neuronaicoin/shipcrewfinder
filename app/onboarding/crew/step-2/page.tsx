@@ -22,35 +22,83 @@ export default async function CrewStep2Page() {
 
   const isShip = profile.user_type === "seafarer";
 
+  // Kayıtlı deneyimi yükle — form dolu gelsin
+  let savedYears = 0;
+  if (isShip) {
+    const { data: sd } = await supabase
+      .from("seafarer_details")
+      .select("years_experience")
+      .eq("id", user.id)
+      .maybeSingle();
+    savedYears = (sd?.years_experience as number) || 0;
+  } else {
+    const { data: yd } = await supabase
+      .from("yacht_details")
+      .select("years_experience")
+      .eq("id", user.id)
+      .maybeSingle();
+    savedYears = (yd?.years_experience as number) || 0;
+  }
+
+  // years → seçenek değeri (eski kayıtlarla uyumlu)
+  const yearsToValue = (y: number): string => {
+    if (y >= 22) return "20+";
+    if (y >= 12) return "10+";
+    if (y >= 7) return "5+";
+    if (y >= 5) return "3+";
+    if (y >= 3) return "1-3";
+    if (y >= 1) return "0-1";
+    return "";
+  };
+  const savedValue = yearsToValue(savedYears);
+
   const experienceOptions = [
     {
       value: "0-1",
       title: "Just Starting",
-      subtitle: "0-1 year",
-      description: isShip
-        ? "New to maritime industry or first contract"
-        : "New to yachting or first season",
+      subtitle: "0–1 year",
+      description: isShip ? "New to the maritime industry or first contract" : "New to yachting or first season",
     },
     {
       value: "1-3",
       title: "Building Experience",
-      subtitle: "1-3 years",
-      description: isShip
-        ? "Few contracts completed, gaining sea time"
-        : "Multiple seasons, growing your skills",
+      subtitle: "1–3 years",
+      description: isShip ? "A few contracts completed, gaining sea time" : "Multiple seasons, growing your skills",
     },
     {
       value: "3+",
       title: "Experienced",
-      subtitle: "3+ years",
-      description: isShip
-        ? "Seasoned professional with extensive sea time"
-        : "Veteran with extensive yachting experience",
+      subtitle: "3–5 years",
+      description: isShip ? "Established professional with solid sea time" : "Established crew with solid experience",
+    },
+    {
+      value: "5+",
+      title: "Senior",
+      subtitle: "5–10 years",
+      description: isShip ? "Senior professional, ready for higher responsibility" : "Senior crew, ready for lead roles",
+    },
+    {
+      value: "10+",
+      title: "Veteran",
+      subtitle: "10–20 years",
+      description: isShip ? "Long career across multiple vessels and trades" : "Long career across multiple yachts and seasons",
+    },
+    {
+      value: "20+",
+      title: "Master of the Trade",
+      subtitle: "20+ years",
+      description: isShip ? "A full career at sea — decades of experience" : "A full career on yachts — decades of experience",
     },
   ];
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      {/* Tik görünürlüğü: input:checked → daire yeşil + tik açık (saf CSS, her tarayıcıda çalışır) */}
+      <style>{`
+        .expcard input:checked ~ div .tickc{background:#22c55e;border-color:#22c55e}
+        .expcard input:checked ~ div .tickm{opacity:1}
+      `}</style>
+
       {/* Progress Bar */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-3">
@@ -70,6 +118,11 @@ export default async function CrewStep2Page() {
         <p className="text-white/60 text-lg">
           This helps companies find the right candidates for their positions.
         </p>
+        {savedValue ? (
+          <p className="text-emerald-300/80 text-sm mt-2">
+            ✓ Your saved answer is loaded — just tap Continue to keep it.
+          </p>
+        ) : null}
       </div>
 
       {/* Form */}
@@ -78,20 +131,21 @@ export default async function CrewStep2Page() {
           {experienceOptions.map((option) => (
             <label
               key={option.value}
-              className="block cursor-pointer group"
+              className="expcard block cursor-pointer group"
             >
               <input
                 type="radio"
                 name="experience"
                 value={option.value}
                 required
+                defaultChecked={savedValue === option.value}
                 className="peer sr-only"
               />
-              <div className="bg-primary-dark border-2 border-white/10 hover:border-white/20 peer-checked:border-accent peer-checked:bg-accent/5 rounded-2xl p-6 transition-all">
+              <div className="bg-primary-dark border-2 border-white/10 hover:border-white/20 peer-checked:border-accent peer-checked:bg-accent/5 rounded-2xl p-5 transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-baseline gap-3 mb-1">
-                      <h3 className="font-display text-xl font-bold text-white">
+                    <div className="flex items-baseline gap-3 mb-1 flex-wrap">
+                      <h3 className="font-display text-lg font-bold text-white">
                         {option.title}
                       </h3>
                       <span className="text-accent font-bold text-sm">
@@ -102,9 +156,9 @@ export default async function CrewStep2Page() {
                       {option.description}
                     </p>
                   </div>
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-white/30 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center mt-1 group-hover:border-white/50 transition">
+                  <div className="tickc flex-shrink-0 w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center mt-1 group-hover:border-white/50 transition">
                     <svg
-                      className="w-3 h-3 text-primary opacity-0 peer-checked:opacity-100"
+                      className="tickm w-3.5 h-3.5 text-white opacity-0 transition"
                       viewBox="0 0 12 12"
                       fill="currentColor"
                     >
