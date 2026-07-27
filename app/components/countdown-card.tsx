@@ -18,12 +18,25 @@ export default function CountdownCard({
 
   const daysLeft = end ? Math.round((end.getTime() - today.getTime()) / dayMs) : null;
 
-  const shareText = (d: number) =>
-    "\u2693 " + d + " days to sign-off! \u23F3 \u2014 counting down at shipcrewfinder.com";
+  // İlerleme (start varsa) — paylaşım kartında da kullanılır
+  let pct: number | null = null;
+  let dayNum: number | null = null;
+  let totalDays: number | null = null;
+  if (start && end && end > start) {
+    totalDays = Math.round((end.getTime() - start.getTime()) / dayMs);
+    dayNum = Math.min(totalDays, Math.max(0, Math.round((today.getTime() - start.getTime()) / dayMs)));
+    pct = Math.min(100, Math.max(0, Math.round((dayNum / totalDays) * 100)));
+  }
 
   const shareWhatsApp = () => {
     if (daysLeft === null || daysLeft < 0) return;
-    window.open("https://wa.me/?text=" + encodeURIComponent(shareText(daysLeft)), "_blank");
+    const params = new URLSearchParams();
+    params.set("d", String(daysLeft));
+    if (rankLabel) params.set("r", rankLabel.toUpperCase());
+    if (pct !== null) params.set("p", String(pct));
+    const url = "https://shipcrewfinder.com/s/countdown?" + params.toString();
+    const text = "\u2693 " + daysLeft + " days to sign-off! \u23F3\n" + url;
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
   };
 
   const cardBase: React.CSSProperties = {
@@ -77,16 +90,6 @@ export default function CountdownCard({
 
   const isFinal = daysLeft !== null && daysLeft <= 7;
 
-  // İlerleme (start varsa)
-  let pct: number | null = null;
-  let dayNum: number | null = null;
-  let totalDays: number | null = null;
-  if (start && end && end > start) {
-    totalDays = Math.round((end.getTime() - start.getTime()) / dayMs);
-    dayNum = Math.min(totalDays, Math.max(0, Math.round((today.getTime() - start.getTime()) / dayMs)));
-    pct = Math.min(100, Math.max(0, Math.round((dayNum / totalDays) * 100)));
-  }
-
   const endLabel = end.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 
   return (
@@ -108,7 +111,7 @@ export default function CountdownCard({
           onClick={shareWhatsApp}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(37,211,102,.13)", color: "#25d366", border: "1px solid rgba(37,211,102,.4)", borderRadius: 10, padding: "7px 13px", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "var(--body)" }}
         >
-          📱 Share
+          📱 Share card
         </button>
       </div>
 
