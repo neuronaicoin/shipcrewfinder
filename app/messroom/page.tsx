@@ -62,11 +62,13 @@ export default async function MessRoomPage({
   // Günlük tohum mesajı (günde 1 kez üretir; atılmışsa anında döner)
   await supabase.rpc("post_daily_brief");
 
-  const [{ data: { user } }, { data: feedData }, { data: countData }] = await Promise.all([
-    supabase.auth.getUser(),
+  const [{ data: { session } }, { data: feedData }, { data: countData }] = await Promise.all([
+    supabase.auth.getSession(),
     supabase.rpc("get_mess_feed", { lim: 40 }),
     supabase.rpc("get_mess_count_today"),
   ]);
+
+  const user = session?.user ?? null;
 
   const msgs = (Array.isArray(feedData) ? feedData : []) as MessMsg[];
   const todayCount = (countData as number) || 0;
