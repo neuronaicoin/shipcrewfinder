@@ -663,6 +663,8 @@ if(a2hsBtn){
   </div>
 </section>
 
+{deckSlot}
+
 <section className="wis">
   <div className="wrap">
     <div className="sec-tag rv">What is ShipCrewFinder?</div>
@@ -687,8 +689,6 @@ if(a2hsBtn){
     </div>
   </div>
 </section>
-
-{deckSlot}
 
 <div className="marq" style={{marginTop:"44px"}}>
   <div className="marq-in">
