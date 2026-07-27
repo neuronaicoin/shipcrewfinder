@@ -14,15 +14,14 @@ const ALL_RANKS: { rank: string; slug: string; dept: string }[] = Object.entries
   ([dept, ranks]) => (ranks as string[]).map((rank) => ({ rank, slug: slugify(rank), dept }))
 );
 
-const VESSEL_META: Record
-  VesselKey,
-  {
-    name: string;
-    plural: string;
-    certs: Record<string, string>;
-    life: Record<string, string>;
-  }
-> = {
+type VesselInfo = {
+  name: string;
+  plural: string;
+  certs: Record<string, string>;
+  life: Record<string, string>;
+};
+
+const VESSEL_META: Record<VesselKey, VesselInfo> = {
   bulk: {
     name: "Bulk Carrier",
     plural: "Bulk Carriers",
