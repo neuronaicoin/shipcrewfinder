@@ -5,7 +5,8 @@ type MessMsg = {
   id: string;
   body: string;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
+  is_system: boolean;
   display_name: string;
   handle: string | null;
   user_type: string;
@@ -14,6 +15,7 @@ type MessMsg = {
 
 const rankShort = (r: string) => {
   const u = (r || "").toUpperCase();
+  if (u === "SCF") return "SCF";
   if (u === "CO") return "🏢";
   if (u.includes("CHIEF ENGINEER")) return "C/E";
   if (u.includes("2ND ENGINEER") || u.includes("SECOND ENGINEER")) return "2/E";
@@ -31,6 +33,7 @@ const rankShort = (r: string) => {
 
 const rankClass = (r: string) => {
   const u = (r || "").toUpperCase();
+  if (u === "SCF") return "mr-sys";
   if (u === "CO") return "mr-co";
   if (u.includes("CHIEF ENGINEER") || u.includes("MASTER") || u.includes("CAPTAIN")) return "mr-top";
   if (u.includes("ENGINEER") || u.includes("OFFICER") || u.includes("MATE") || u.includes("ETO")) return "mr-off";
@@ -39,6 +42,9 @@ const rankClass = (r: string) => {
 
 export default async function MessRoomBox() {
   const supabase = await createClient();
+
+  // Günlük tohum mesajı (günde 1 kez üretir; atılmışsa anında döner)
+  await supabase.rpc("post_daily_brief");
 
   const [{ data: feedData }, { data: countData }] = await Promise.all([
     supabase.rpc("get_mess_feed", { lim: 6 }),
@@ -60,13 +66,16 @@ export default async function MessRoomBox() {
   .mrsub{font-size:11px;color:var(--tx3);margin-top:2px}
   .mrfire{font-size:11px;font-weight:800;color:var(--gold);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:999px;padding:5px 12px;white-space:nowrap}
   .mrfeed{padding:12px 18px;display:flex;flex-direction:column;gap:9px;min-height:120px}
-  .mrrow{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5}
+  .mrrow{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.5}
+  .mrrow.sys{background:rgba(255,255,255,.03);border:1px dashed var(--line2);border-radius:10px;padding:7px 9px}
   .mrbadge{flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.04em;border-radius:6px;padding:3px 7px;border:1px solid;margin-top:1px;min-width:34px;text-align:center}
   .mr-top{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.09)}
   .mr-off{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
   .mr-rat{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.04)}
   .mr-co{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
+  .mr-sys{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.05)}
   .mrname{font-weight:800;font-family:var(--disp)}
+  .mrname.sysn{color:var(--tx3);font-size:12px}
   .mrvf{color:var(--grn);font-size:10px}
   .mrtext{color:var(--tx2)}
   .mrempty{margin:auto;text-align:center;font-size:12.5px;color:var(--tx3);line-height:1.7;padding:14px 0}
@@ -97,10 +106,16 @@ export default async function MessRoomBox() {
               </div>
             ) : (
               msgs.map((m) => (
-                <div key={m.id} className="mrrow">
+                <div key={m.id} className={"mrrow " + (m.is_system ? "sys" : "")}>
                   <span className={"mrbadge " + rankClass(m.rank_label)}>{rankShort(m.rank_label)}</span>
                   <p style={{ margin: 0, minWidth: 0 }}>
-                    <span className="mrname">{m.display_name}</span> <span className="mrvf">✓</span>{" "}
+                    {m.is_system ? (
+                      <span className="mrname sysn">{m.display_name}</span>
+                    ) : (
+                      <>
+                        <span className="mrname">{m.display_name}</span> <span className="mrvf">✓</span>
+                      </>
+                    )}{" "}
                     <span className="mrtext">— {m.body}</span>
                   </p>
                 </div>
