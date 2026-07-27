@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
-export const FACTS = [
+const FACTS = [
   {
     tag: "MOST SEAFARERS DON'T KNOW THIS",
     text: "Unpaid for 2 months? Your ship legally counts as ABANDONED — and the ship's insurance must pay up to 4 months of your wages.",
