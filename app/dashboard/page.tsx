@@ -6,6 +6,7 @@ import InviteCard from "@/app/components/invite-card";
 import CountdownCard from "@/app/components/countdown-card";
 import CareersLinkCard from "@/app/components/careers-link-card";
 import PostCvCard from "@/app/components/post-cv-card";
+import SeaCardShare from "@/app/components/sea-card-share";
 import Link from "next/link";
 
 export const metadata = {
@@ -35,6 +36,7 @@ export default async function DashboardPage() {
     { data: vaultDocs },
     { data: myDeckPosts },
     { data: myConvs },
+    { data: seaContracts },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase.from("seafarer_details").select("*").eq("id", user.id).maybeSingle(),
@@ -65,6 +67,10 @@ export default async function DashboardPage() {
       .or("p1.eq." + user.id + ",p2.eq." + user.id)
       .order("last_message_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("sea_contracts")
+      .select("start_date, end_date, dwt")
+      .eq("user_id", user.id),
   ]);
 
   // ── Mesajlar: okunmamış sayısı ──
@@ -96,7 +102,6 @@ export default async function DashboardPage() {
     if (detailsData?.rank || detailsData?.position) completion += 15;
     if (detailsData?.years_experience !== undefined && detailsData?.years_experience !== null) completion += 15;
     if (detailsData?.nationality || profile?.country) completion += 15;
-    if (detailsData?.cv_url) completion += 15;
     if (detailsData?.availability) completion += 10;
     if (profile?.phone) completion += 10;
   } else if (profile?.user_type === "company") {
@@ -173,6 +178,28 @@ export default async function DashboardPage() {
   const contractEnd = isCrew ? ((detailsData?.contract_end_date as string) || null) : null;
   const contractStart = isCrew ? ((detailsData?.contract_start_date as string) || null) : null;
 
+  // ── Sea Service Card istatistikleri (sea_contracts'tan) ──
+  let seaYears = "0";
+  let seaVessels = 0;
+  let seaMaxDwt: string | null = null;
+  if (isCrew && seaContracts && seaContracts.length > 0) {
+    seaVessels = seaContracts.length;
+    let totalDaysAtSea = 0;
+    let maxDwtNum = 0;
+    seaContracts.forEach((sc) => {
+      if (sc.start_date) {
+        const s = new Date((sc.start_date as string) + "T00:00:00").getTime();
+        const e = sc.end_date ? new Date((sc.end_date as string) + "T00:00:00").getTime() : Date.now();
+        if (e > s) totalDaysAtSea += Math.round((e - s) / dayMs);
+      }
+      const dw = Number(sc.dwt) || 0;
+      if (dw > maxDwtNum) maxDwtNum = dw;
+    });
+    const yrs = totalDaysAtSea / 365;
+    seaYears = yrs >= 10 ? String(Math.round(yrs)) : (Math.round(yrs * 10) / 10).toString();
+    if (maxDwtNum > 0) seaMaxDwt = maxDwtNum.toLocaleString("en-US");
+  }
+
   const availabilityLabel = (() => {
     const a = detailsData?.availability as string | undefined | null;
     if (!a) return null;
@@ -191,7 +218,6 @@ export default async function DashboardPage() {
   const ringR = 42;
   const ringC = 2 * Math.PI * ringR;
   const ringOff = ringC - (completion / 100) * ringC;
-
   // Davet kartı verileri (sadece crew)
   let refCode = "";
   let refJoined = 0;
@@ -384,6 +410,14 @@ export default async function DashboardPage() {
         <section style={{ paddingTop: 10, paddingBottom: 4 }}>
           <div className="wrap">
             <PostCvCard activePost={activeCvPost || null} />
+          </div>
+        </section>
+      ) : null}
+
+      {isCrew && seaVessels > 0 ? (
+        <section style={{ paddingTop: 10, paddingBottom: 4 }}>
+          <div className="wrap">
+            <SeaCardShare years={seaYears} vessels={seaVessels} rank={rankLabel} maxDwt={seaMaxDwt} />
           </div>
         </section>
       ) : null}
