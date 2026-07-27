@@ -8,6 +8,16 @@ export const metadata = {
     "Live maritime board: verified seafarers available for duty and shipping companies hiring right now. Updated live, worldwide.",
 };
 
+// Girişsiz ziyaretçi için kişisel veriyi SUNUCUDA sil — tarayıcıya hiç inmesin
+const maskPost = (p: DeckPost): DeckPost => ({
+  ...p,
+  full_name: null,
+  email: null,
+  phone: null,
+  cv_share_code: null,
+  show_contact: false,
+});
+
 export default async function DeckPage() {
   const supabase = await createClient();
 
@@ -16,7 +26,8 @@ export default async function DeckPage() {
     supabase.auth.getUser(),
   ]);
 
-  const posts = (Array.isArray(data) ? data : []) as DeckPost[];
+  let posts = (Array.isArray(data) ? data : []) as DeckPost[];
+  if (!user) posts = posts.map(maskPost);
 
   // Girişli kullanıcının kendi kart id'leri (Boost göstermek için)
   let myPostIds: string[] = [];
@@ -152,7 +163,7 @@ export default async function DeckPage() {
           ) : (
             <div className="dkgrid">
               {posts.map((p) => (
-                <DeckCard key={p.id} post={p} isOwner={myPostIds.includes(p.id)} backTo="/deck" />
+                <DeckCard key={p.id} post={p} isOwner={myPostIds.includes(p.id)} backTo="/deck" locked={!user} />
               ))}
             </div>
           )}
