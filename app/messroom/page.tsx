@@ -14,7 +14,8 @@ type MessMsg = {
   id: string;
   body: string;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
+  is_system: boolean;
   display_name: string;
   handle: string | null;
   user_type: string;
@@ -23,6 +24,7 @@ type MessMsg = {
 
 const rankShort = (r: string) => {
   const u = (r || "").toUpperCase();
+  if (u === "SCF") return "SCF";
   if (u === "CO") return "🏢";
   if (u.includes("CHIEF ENGINEER")) return "C/E";
   if (u.includes("2ND ENGINEER") || u.includes("SECOND ENGINEER")) return "2/E";
@@ -40,6 +42,7 @@ const rankShort = (r: string) => {
 
 const rankClass = (r: string) => {
   const u = (r || "").toUpperCase();
+  if (u === "SCF") return "mr-sys";
   if (u === "CO") return "mr-co";
   if (u.includes("CHIEF ENGINEER") || u.includes("MASTER") || u.includes("CAPTAIN")) return "mr-top";
   if (u.includes("ENGINEER") || u.includes("OFFICER") || u.includes("MATE") || u.includes("ETO")) return "mr-off";
@@ -56,6 +59,9 @@ export default async function MessRoomPage({
 
   const supabase = await createClient();
 
+  // Günlük tohum mesajı (günde 1 kez üretir; atılmışsa anında döner)
+  await supabase.rpc("post_daily_brief");
+
   const [{ data: { user } }, { data: feedData }, { data: countData }] = await Promise.all([
     supabase.auth.getUser(),
     supabase.rpc("get_mess_feed", { lim: 40 }),
@@ -65,7 +71,7 @@ export default async function MessRoomPage({
   const msgs = (Array.isArray(feedData) ? feedData : []) as MessMsg[];
   const todayCount = (countData as number) || 0;
 
-  // Girişli kullanıcının kendi handle'ı (kendi ismine tıklamasın diye değil, gösterim için)
+  // Girişli kullanıcının kendi handle'ı
   let myHandle: string | null = null;
   if (user) {
     const { data: me } = await supabase.from("profiles").select("handle").eq("id", user.id).maybeSingle();
@@ -103,10 +109,13 @@ export default async function MessRoomPage({
   .mr-off{color:var(--blu);border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
   .mr-rat{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.04)}
   .mr-co{color:var(--blu);border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.09)}
+  .mr-sys{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.05)}
+  .msys-row{background:rgba(255,255,255,.03);border:1px dashed var(--line2);border-radius:12px;padding:9px 11px}
   .mmain{min-width:0;flex:1}
   .mtop{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
   .mname{font-weight:800;font-family:var(--disp);background:none;border:none;color:var(--tx);cursor:pointer;font-size:13px;padding:0;text-decoration:underline dotted;text-underline-offset:3px}
   .mname:hover{color:var(--gold)}
+  .mname-sys{font-weight:800;font-family:var(--disp);font-size:12.5px;color:var(--tx3)}
   .mvf{color:var(--grn);font-size:10px}
   .mtime{font-size:9.5px;color:var(--tx3)}
   .mdm{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:var(--grn);border-radius:7px;font-size:10px;font-weight:800;padding:2px 8px;cursor:pointer;font-family:var(--body)}
@@ -152,18 +161,20 @@ export default async function MessRoomPage({
             </div>
           ) : (
             msgs.map((m) => (
-              <div key={m.id} className="mrow">
+              <div key={m.id} className={"mrow " + (m.is_system ? "msys-row" : "")}>
                 <span className={"mbadge " + rankClass(m.rank_label)}>{rankShort(m.rank_label)}</span>
                 <div className="mmain">
                   <div className="mtop">
-                    {user && m.handle ? (
+                    {m.is_system ? (
+                      <span className="mname-sys">{m.display_name}</span>
+                    ) : user && m.handle ? (
                       <button type="button" className="mname" data-handle={m.handle}>{m.display_name}</button>
                     ) : (
                       <span className="mname" style={{ textDecoration: "none", cursor: "default" }}>{m.display_name}</span>
                     )}
-                    <span className="mvf">✓</span>
+                    {m.is_system ? null : <span className="mvf">✓</span>}
                     <span className="mtime">{fmtT(m.created_at)}</span>
-                    {user && m.user_id !== user.id ? (
+                    {!m.is_system && user && m.user_id && m.user_id !== user.id ? (
                       <form action={startConversation} style={{ display: "inline" }}>
                         <input type="hidden" name="toUserId" value={m.user_id} />
                         <button type="submit" className="mdm">💬 DM</button>
