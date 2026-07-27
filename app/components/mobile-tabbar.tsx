@@ -24,15 +24,15 @@ export default function MobileTabBar() {
     ? [
         { href: "/dashboard", icon: "🏠", label: "Home" },
         { href: "/jobs", icon: "💼", label: "Jobs" },
+        { href: "/messroom", icon: "🍽️", label: "Mess Room" },
         { href: "/vault", icon: "📁", label: "Docs" },
-        { href: "/salary", icon: "💰", label: "Salary" },
         { href: "/profile/me", icon: "👤", label: "Profile" },
       ]
     : [
         { href: "/", icon: "🏠", label: "Main" },
         { href: "/signup/crew", icon: "⚓", label: "Join" },
+        { href: "/messroom", icon: "🍽️", label: "Mess Room" },
         { href: "/signup/company", icon: "🏢", label: "Hire" },
-        { href: "/#try", icon: "🔍", label: "Find" },
         { href: "/jobs", icon: "💼", label: "Jobs" },
       ];
 
@@ -66,6 +66,13 @@ export default function MobileTabBar() {
   @media(display-mode: standalone){
     header{padding-top:env(safe-area-inset-top)}
   }
+  /* web: sabit Mess Room butonu (tab bar gizliyken) */
+  .messfab{position:fixed;right:18px;bottom:18px;z-index:79;display:none;align-items:center;gap:8px;
+    background:linear-gradient(135deg,#fbbf24,#e0a010);color:#0b0e13;border-radius:999px;padding:12px 18px;
+    font-weight:800;font-size:13px;text-decoration:none;font-family:var(--font-jakarta),sans-serif;
+    box-shadow:0 10px 30px rgba(251,191,36,.35);transition:.18s}
+  .messfab:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(251,191,36,.45)}
+  @media(min-width:641px){ .messfab{display:inline-flex} }
 `}</style>
       <div className="gtabs">
         <div className="gtabs-in">
@@ -81,6 +88,7 @@ export default function MobileTabBar() {
           ))}
         </div>
       </div>
+      <Link href="/messroom" className="messfab">🍽️ The Mess Room</Link>
     </>
   );
 }
