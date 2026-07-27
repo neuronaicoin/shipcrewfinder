@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import whatDoesTheItfActuallyDo from "./what-does-the-itf-actually-do-for-seafarers";
 import seafarerWagesNotPaidAbandonment from "./seafarer-wages-not-paid-ship-abandonment-guide";
 import blackSeaAttacksSeafarerRights from "./black-sea-attacks-seafarer-rights-compensation";
 import whySeafarerApplicationsGetRejected from "./why-seafarer-applications-get-rejected";
@@ -17,6 +18,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  whatDoesTheItfActuallyDo,
   seafarerWagesNotPaidAbandonment,
   blackSeaAttacksSeafarerRights,
   whySeafarerApplicationsGetRejected,
