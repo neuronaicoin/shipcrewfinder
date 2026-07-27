@@ -25,9 +25,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://shipcrewfinder.com"),
   title: "ShipCrewFinder — Global Maritime Career Platform",
   description:
-    "The professional platform for seafarers and yacht crew worldwide. Find jobs, build verified profiles, and connect with maritime companies directly.",
+    "Verified seafarers and shipping companies, connected directly. Jobs, CV builder, sea time tracker, live crew chat — 0% commission, ever.",
   keywords: [
     "seafarer jobs",
     "yacht crew jobs",
@@ -49,15 +50,25 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ShipCrewFinder — Global Maritime Career Platform",
     description:
-      "The professional platform for seafarers and yacht crew worldwide.",
+      "Verified seafarers and shipping companies, connected directly. Jobs, CV builder, sea time tracker, live crew chat — 0% commission, ever.",
+    url: "/",
     type: "website",
     locale: "en_US",
     siteName: "ShipCrewFinder",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "ShipCrewFinder — Global Maritime Career Platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ShipCrewFinder",
-    description: "Global maritime career platform for seafarers and yacht crew.",
+    title: "ShipCrewFinder — Global Maritime Career Platform",
+    description: "Verified seafarers and shipping companies, connected directly. 0% commission, ever.",
+    images: ["/opengraph-image"],
   },
 };
 
