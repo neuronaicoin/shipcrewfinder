@@ -64,6 +64,9 @@ export async function updateCrewExperience(formData: FormData): Promise<void> {
     "0-1": 1,
     "1-3": 3,
     "3+": 5,
+    "5+": 7,
+    "10+": 12,
+    "20+": 22,
   };
   const years = expMap[experience] || 0;
 
@@ -90,7 +93,6 @@ export async function updateCrewExperience(formData: FormData): Promise<void> {
   revalidatePath("/onboarding/crew");
   redirect("/onboarding/crew/step-3");
 }
-
 // ============================================
 // CREW: Step 3 - Nationality + Languages
 // ============================================
@@ -271,7 +273,6 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       })
       .eq("id", user.id);
   }
-
   // ── Davet ödülü: profil TAMAMLANINCA, bir kez ──
   if (profile.referred_by && !profile.referral_rewarded) {
     try {
