@@ -76,7 +76,12 @@ export async function signupCrew(formData: FormData) {
     console.error("Profile insert error:", profileError);
   }
 
-  // Auto sign-in after signup (since email confirmation is off)
+  // E-posta doğrulama AÇIK: session yoksa kullanıcı maildeki linki onaylamalı
+  if (!data.session) {
+    redirect("/login?verify=1");
+  }
+
+  // (Doğrulama kapalıysa) otomatik giriş
   await supabase.auth.signInWithPassword({ email, password });
 
   revalidatePath("/", "layout");
@@ -145,7 +150,12 @@ export async function signupCompany(formData: FormData) {
     console.error("Company details insert error:", companyError);
   }
 
-  // Auto sign-in after signup
+  // E-posta doğrulama AÇIK: session yoksa kullanıcı maildeki linki onaylamalı
+  if (!data.session) {
+    redirect("/login?verify=1");
+  }
+
+  // (Doğrulama kapalıysa) otomatik giriş
   await supabase.auth.signInWithPassword({ email, password });
 
   revalidatePath("/", "layout");
@@ -161,6 +171,10 @@ export async function login(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
+  // Güvenli dönüş hedefi: sadece site içi yollar (/... ; // yasak)
+  const nextRaw = ((formData.get("next") as string) || "").trim();
+  const nextUrl = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+
   if (!email || !password) {
     return { error: "Email and password are required" };
   }
@@ -175,7 +189,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(nextUrl);
 }
 
 // ============================================
