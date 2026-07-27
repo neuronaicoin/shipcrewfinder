@@ -11,28 +11,39 @@ export async function register() {
 
     const { blogIndex } = await import("@/app/data/blog");
     const { SHIP_RANKS } = await import("@/lib/constants/ranks");
-    const { SALARY_DATA } = await import("@/lib/data/salary");
+    const { SALARY_DATA, VESSELS } = await import("@/lib/data/salary");
     const { NATIONALITIES } = await import("@/lib/data/nationalities");
 
     const slugify = (s: string) =>
       s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
     const urls = new Set<string>();
 
     // Statik ana sayfalar
     [
-      "", "/jobs", "/salary", "/salary/tools", "/blog", "/deck", "/messroom",
+      "", "/jobs", "/salary", "/salary/tools", "/blog", "/blog/rss.xml", "/deck", "/messroom",
       "/vessels", "/companies", "/signup", "/signup/crew", "/signup/company",
-      "/about", "/contact",
+      "/about", "/contact", "/llms-full.txt",
     ].forEach((p) => urls.add(base + p));
 
     // Blog yazıları
     blogIndex.forEach((p) => urls.add(base + "/blog/" + p.slug));
 
     // Rank SEO sayfaları (/crew/[slug])
-    Object.values(SHIP_RANKS).flat().forEach((r) => {
-      urls.add(base + "/crew/" + slugify(String(r)));
+    const allRanks = Object.values(SHIP_RANKS).flat() as string[];
+    allRanks.forEach((r) => {
+      urls.add(base + "/crew/" + slugify(r));
     });
+
+    // Rank × gemi tipi kombo sayfaları
+    allRanks
+      .filter((r) => SALARY_DATA.some((s) => norm(s.rank) === norm(r)))
+      .forEach((r) => {
+        VESSELS.forEach((v) => {
+          urls.add(base + "/crew/" + slugify(r) + "/" + v.key);
+        });
+      });
 
     // Salary rank + milliyet sayfaları
     SALARY_DATA.forEach((r) => urls.add(base + "/salary/" + r.slug));
