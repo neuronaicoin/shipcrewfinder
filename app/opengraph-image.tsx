@@ -16,24 +16,66 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0a2540 0%, #0d2d4d 50%, #081d33 100%)",
+          background: "linear-gradient(135deg, #0d1030 0%, #141845 55%, #050716 100%)",
           position: "relative",
         }}
       >
-        {/* Wave logo */}
-        <svg width="160" height="160" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 14 Q10 6, 20 14 T38 14" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
-          <path d="M2 20 Q10 12, 20 20 T38 20" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
-          <path d="M2 26 Q10 18, 20 26 T38 26" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
+        {/* Altın parıltı */}
+        <div
+          style={{
+            position: "absolute",
+            top: -220,
+            right: -120,
+            width: 620,
+            height: 620,
+            borderRadius: 620,
+            background: "radial-gradient(circle, rgba(251,191,36,0.22), transparent 65%)",
+            display: "flex",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -260,
+            left: -140,
+            width: 560,
+            height: 560,
+            borderRadius: 560,
+            background: "radial-gradient(circle, rgba(37,99,235,0.25), transparent 65%)",
+            display: "flex",
+          }}
+        />
 
-        {/* Brand name */}
+        {/* Altın kutuda çapa logo */}
+        <div
+          style={{
+            width: 150,
+            height: 150,
+            borderRadius: 36,
+            background: "linear-gradient(145deg, #fbbf24, #e0a010)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 24px 60px rgba(251,191,36,0.35)",
+          }}
+        >
+          <svg width="92" height="92" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="5" r="2.4" />
+            <line x1="12" y1="7.4" x2="12" y2="20.5" />
+            <line x1="7.5" y1="10.4" x2="16.5" y2="10.4" />
+            <path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7" />
+            <path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4" />
+            <path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4" />
+          </svg>
+        </div>
+
+        {/* Marka adı */}
         <div
           style={{
             display: "flex",
-            fontSize: 72,
+            fontSize: 76,
             fontWeight: 800,
-            marginTop: 40,
+            marginTop: 38,
             letterSpacing: "-0.03em",
           }}
         >
@@ -45,26 +87,68 @@ export default async function Image() {
         {/* Tagline */}
         <div
           style={{
-            color: "rgba(255,255,255,0.7)",
+            color: "rgba(238,244,250,0.8)",
             fontSize: 30,
-            marginTop: 20,
+            marginTop: 18,
             textAlign: "center",
-            maxWidth: 800,
+            maxWidth: 860,
+            display: "flex",
           }}
         >
           The Global Maritime Career Platform
         </div>
 
-        {/* Accent line */}
+        {/* Alt şerit: değer önerileri */}
         <div
           style={{
-            width: 120,
-            height: 5,
-            background: "#fbbf24",
-            borderRadius: 3,
-            marginTop: 36,
+            display: "flex",
+            gap: 16,
+            marginTop: 42,
           }}
-        />
+        >
+          <div
+            style={{
+              display: "flex",
+              color: "#fbbf24",
+              fontSize: 22,
+              fontWeight: 700,
+              border: "2px solid rgba(251,191,36,0.5)",
+              borderRadius: 999,
+              padding: "10px 26px",
+              background: "rgba(251,191,36,0.08)",
+            }}
+          >
+            0% commission — ever
+          </div>
+          <div
+            style={{
+              display: "flex",
+              color: "#34d399",
+              fontSize: 22,
+              fontWeight: 700,
+              border: "2px solid rgba(52,211,153,0.5)",
+              borderRadius: 999,
+              padding: "10px 26px",
+              background: "rgba(52,211,153,0.08)",
+            }}
+          >
+            ✓ Verified profiles
+          </div>
+          <div
+            style={{
+              display: "flex",
+              color: "#60a5fa",
+              fontSize: 22,
+              fontWeight: 700,
+              border: "2px solid rgba(96,165,250,0.5)",
+              borderRadius: 999,
+              padding: "10px 26px",
+              background: "rgba(96,165,250,0.08)",
+            }}
+          >
+            Direct contact
+          </div>
+        </div>
       </div>
     ),
     { ...size }
