@@ -25,6 +25,24 @@ export default async function CrewStep1Page() {
   const isShip = profile.user_type === "seafarer";
   const ranks = isShip ? SHIP_RANKS : YACHT_POSITIONS;
 
+  // Kayıtlı rank'i yükle — form dolu gelsin (edit modunda sıfırdan başlamasın)
+  let savedRank = "";
+  if (isShip) {
+    const { data: sd } = await supabase
+      .from("seafarer_details")
+      .select("rank")
+      .eq("id", user.id)
+      .maybeSingle();
+    savedRank = (sd?.rank as string) || "";
+  } else {
+    const { data: yd } = await supabase
+      .from("yacht_details")
+      .select("position")
+      .eq("id", user.id)
+      .maybeSingle();
+    savedRank = (yd?.position as string) || "";
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
       {/* Progress Bar */}
@@ -51,6 +69,11 @@ export default async function CrewStep1Page() {
         <p className="text-white/60 text-lg">
           Hi {profile.full_name}! Select your current or most recent {isShip ? "rank" : "position"}.
         </p>
+        {savedRank ? (
+          <p className="text-emerald-300/80 text-sm mt-2">
+            ✓ Your saved answers are loaded — just tap Continue to keep them.
+          </p>
+        ) : null}
       </div>
 
       {/* Form */}
@@ -63,7 +86,7 @@ export default async function CrewStep1Page() {
             id="rank"
             name="rank"
             required
-            defaultValue=""
+            defaultValue={savedRank}
             className="w-full px-4 py-3 bg-primary border border-white/15 rounded-lg text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition appearance-none"
             style={{
               backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E")`,
