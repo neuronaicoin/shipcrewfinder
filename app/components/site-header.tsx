@@ -28,12 +28,12 @@ export default function SiteHeader({
   active = null,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
-    let saved: "dark" | "light" = "dark";
+    let saved: "dark" | "light" = "light";
     try {
-      saved = (localStorage.getItem("scf_theme") as "dark" | "light") || "dark";
+      saved = (localStorage.getItem("scf_theme") as "dark" | "light") || "light";
     } catch {}
     setTheme(saved);
     document.body.classList.toggle("light", saved === "light");
@@ -110,7 +110,7 @@ export default function SiteHeader({
           <div className="scf-cta">
             {isLoggedIn ? (
               <>
-                <Link href="/dashboard" className="scf-btn scf-btn-ghost scf-bell" aria-label="Notifications">
+                <Link href="/dashboard#notifications" className="scf-btn scf-btn-ghost scf-bell" aria-label="Notifications">
                   🔔
                   {unreadCount > 0 && <span className="dot">{unreadCount > 99 ? "99+" : unreadCount}</span>}
                 </Link>
