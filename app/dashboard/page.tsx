@@ -537,7 +537,7 @@ export default async function DashboardPage() {
       <section style={{ paddingTop: 6 }}>
         <div className="wrap">
           <div className="grid2">
-            <div className="card">
+            <div className="card" id="notifications" style={{ scrollMarginTop: 80 }}>
               <div className="stitle" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>Notifications</span>
                 {(unreadCount || 0) > 0 && (
