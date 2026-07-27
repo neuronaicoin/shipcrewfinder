@@ -7,6 +7,7 @@ import CountdownCard from "@/app/components/countdown-card";
 import CareersLinkCard from "@/app/components/careers-link-card";
 import PostCvCard from "@/app/components/post-cv-card";
 import SeaCardShare from "@/app/components/sea-card-share";
+import MyApplications from "@/app/components/my-applications";
 import Link from "next/link";
 
 export const metadata = {
@@ -102,6 +103,7 @@ export default async function DashboardPage() {
     if (detailsData?.rank || detailsData?.position) completion += 15;
     if (detailsData?.years_experience !== undefined && detailsData?.years_experience !== null) completion += 15;
     if (detailsData?.nationality || profile?.country) completion += 15;
+    if (detailsData?.cv_url) completion += 15;
     if (detailsData?.availability) completion += 10;
     if (profile?.phone) completion += 10;
   } else if (profile?.user_type === "company") {
@@ -418,6 +420,14 @@ export default async function DashboardPage() {
         <section style={{ paddingTop: 10, paddingBottom: 4 }}>
           <div className="wrap">
             <SeaCardShare years={seaYears} vessels={seaVessels} rank={rankLabel} maxDwt={seaMaxDwt} />
+          </div>
+        </section>
+      ) : null}
+
+      {isCrew ? (
+        <section style={{ paddingTop: 10, paddingBottom: 4 }}>
+          <div className="wrap">
+            <MyApplications userId={user.id} />
           </div>
         </section>
       ) : null}
