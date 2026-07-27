@@ -36,7 +36,8 @@ function salaryLine(job: AlertJob): string | null {
 export function buildJobAlertEmail(
   job: AlertJob,
   companyName: string,
-  token: string
+  token: string,
+  companyUrl?: string | null
 ): { subject: string; html: string; text: string } {
   const rank = job.rank_required || job.position || "";
   const jobUrl = `${SITE}/jobs/${job.id}`;
@@ -62,6 +63,10 @@ export function buildJobAlertEmail(
     ? `New ${rank} position${location ? ` — ${location}` : ""}`
     : `New position: ${job.title}`;
 
+  const companyLine = companyUrl
+    ? `<a href="${companyUrl}" style="color:#fbbf24;font-size:14px;font-weight:600;text-decoration:none;">${esc(companyName)} <span style="color:#8f97bd;font-weight:400;">· view company page →</span></a>`
+    : `<span style="color:#fbbf24;font-size:14px;font-weight:600;">${esc(companyName)}</span>`;
+
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -83,17 +88,22 @@ export function buildJobAlertEmail(
         <tr>
           <td style="padding:14px 28px 0;">
             <h1 style="margin:0;color:#ffffff;font-size:22px;line-height:1.35;font-weight:700;">${esc(job.title)}</h1>
-            <div style="color:#fbbf24;font-size:14px;margin-top:8px;font-weight:600;">${esc(companyName)}</div>
+            <div style="margin-top:8px;">${companyLine}</div>
             ${pay ? `<div style="color:#6ee7a8;font-size:15px;margin-top:12px;font-weight:700;">${esc(pay)}</div>` : ""}
             ${chips ? `<div style="margin-top:16px;">${chips}</div>` : ""}
             ${snippet ? `<p style="color:#a8afd0;font-size:14px;line-height:1.65;margin:16px 0 0;">${esc(snippet)}</p>` : ""}
           </td>
         </tr>
         <tr>
-          <td style="padding:26px 28px 26px;">
+          <td style="padding:26px 28px 10px;">
             <a href="${jobUrl}" style="display:block;background:#fbbf24;color:#0d1030;text-decoration:none;text-align:center;padding:15px 20px;border-radius:10px;font-weight:700;font-size:15px;">View Position &amp; Apply</a>
           </td>
         </tr>
+        ${companyUrl ? `<tr>
+          <td style="padding:0 28px 26px;">
+            <a href="${companyUrl}" style="display:block;background:transparent;border:1px solid #3a4370;color:#c9cde4;text-decoration:none;text-align:center;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;">About ${esc(companyName)} →</a>
+          </td>
+        </tr>` : `<tr><td style="padding:0 0 16px;"></td></tr>`}
         <tr>
           <td style="padding:20px 28px 26px;border-top:1px solid #232a55;">
             <p style="color:#6b7299;font-size:12px;line-height:1.7;margin:0;">
@@ -116,6 +126,7 @@ export function buildJobAlertEmail(
     "",
     job.title,
     companyName,
+    companyUrl ? `Company page: ${companyUrl}` : "",
     pay || "",
     location || "",
     job.contract_duration || "",
