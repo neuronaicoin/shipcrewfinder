@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SALARY_DATA, VESSELS, fmtK, LAST_UPDATED, type VesselKey } from "@/lib/data/salary";
 import { NATIONALITIES } from "@/lib/data/nationalities";
 import SalarySubmitForm from "@/app/components/salary-submit-form";
+import SalaryShare from "@/app/components/salary-share";
 
 export const metadata = {
   title: "Seafarer Salary Index 2026 — Monthly Wages by Rank & Vessel Type | ShipCrewFinder",
@@ -67,13 +68,15 @@ export default async function SalaryPage({
   h1{font-family:var(--disp);font-size:clamp(2rem,4.8vw,3.2rem);font-weight:800;line-height:1.08;letter-spacing:-.02em;margin-bottom:14px}
   h1 .g{color:var(--gold)}
   .sub{font-size:15.5px;color:var(--tx2);line-height:1.65;max-width:62ch;margin-bottom:26px}
-  .hcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:620px;margin-bottom:20px}
+  .hcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:620px;margin-bottom:14px}
   @media(max-width:560px){.hcards{grid-template-columns:1fr}}
   .hcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);display:block;transition:.2s}
   .hcard:hover{transform:translateY(-3px);border-color:var(--gold)}
   .hcard .hl{font-size:12px;color:var(--tx3);margin-bottom:6px}
   .hcard .hr{font-family:var(--disp);font-weight:800;font-size:26px;color:var(--gold)}
   .hcard .hn{font-family:var(--disp);font-weight:700;font-size:16px;margin-bottom:2px}
+  .sharerow{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .sharerow p{font-size:12px;color:var(--tx3)}
   .toolstrip{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);border-radius:16px;padding:16px 20px;max-width:620px}
   .toolstrip b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:3px}
   .toolstrip p{font-size:12.5px;color:var(--tx2)}
@@ -162,6 +165,10 @@ export default async function SalaryPage({
               <div className="hn">Chief Engineer</div>
               <div className="hr">$8.5k – 21k<span style={{ fontSize: 13, color: "var(--tx3)", fontWeight: 600 }}> /mo</span></div>
             </Link>
+          </div>
+          <div className="sharerow">
+            <SalaryShare rank="CHIEF ENGINEER" salary="$8,500 – $21,000" vessel="per month · bulk to LNG" />
+            <p>Drop it in your crew group — let your shipmates know their worth ⚓</p>
           </div>
           <div className="toolstrip">
             <div>
