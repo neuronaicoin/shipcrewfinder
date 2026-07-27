@@ -19,10 +19,20 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [savedEmail, setSavedEmail] = useState("");
+  const [nextUrl, setNextUrl] = useState("");
+  const [verifyNotice, setVerifyNotice] = useState(false);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // URL parametreleri: ?next=/hedef ve ?verify=1
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const n = sp.get("next") || "";
+      if (n.startsWith("/") && !n.startsWith("//")) setNextUrl(n);
+      if (sp.get("verify") === "1") setVerifyNotice(true);
+    } catch {}
+
     let remembered = "";
     try {
       remembered = localStorage.getItem("scf_login_email") || "";
@@ -102,12 +112,30 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Doğrulama bildirimi */}
+        {verifyNotice && (
+          <div
+            className="rounded-xl p-4 mb-5 text-sm leading-relaxed"
+            style={{
+              background: "rgba(52,211,153,.08)",
+              border: "1px solid rgba(52,211,153,.35)",
+              color: "#a7f3d0",
+            }}
+          >
+            📬 <b>Almost aboard!</b> We sent a confirmation link to your email.
+            Tap it, then log in below. (Check spam if you don&apos;t see it.)
+          </div>
+        )}
+
         {/* Form Card */}
         <div
           className="border border-white/10 rounded-2xl p-6 md:p-8"
           style={{ background: "linear-gradient(165deg,#141845,#050716)" }}
         >
           <form action={handleSubmit} className="space-y-4">
+            {/* Giriş sonrası dönüş hedefi */}
+            <input type="hidden" name="next" value={nextUrl} />
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-white/70 text-xs font-bold uppercase tracking-wider mb-2">
