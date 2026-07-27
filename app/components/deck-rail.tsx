@@ -2,10 +2,25 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import DeckCard, { type DeckPost } from "@/app/components/deck-card";
 
+// Girişsiz ziyaretçi için kişisel veriyi SUNUCUDA sil — tarayıcıya hiç inmesin
+const maskPost = (p: DeckPost): DeckPost => ({
+  ...p,
+  full_name: null,
+  email: null,
+  phone: null,
+  cv_share_code: null,
+  show_contact: false,
+});
+
 export default async function DeckRail() {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("get_deck_feed", { lim: 12 });
-  const posts = (Array.isArray(data) ? data : []) as DeckPost[];
+  const [{ data }, { data: { session } }] = await Promise.all([
+    supabase.rpc("get_deck_feed", { lim: 12 }),
+    supabase.auth.getSession(),
+  ]);
+  const isLoggedIn = !!session?.user;
+  let posts = (Array.isArray(data) ? data : []) as DeckPost[];
+  if (!isLoggedIn) posts = posts.map(maskPost);
 
   return (
     <section className="dksec">
@@ -81,7 +96,7 @@ export default async function DeckRail() {
         <div className="dkwrapx">
           <div className="dkrail">
             {posts.map((p) => (
-              <DeckCard key={p.id} post={p} isOwner={false} backTo="/" />
+              <DeckCard key={p.id} post={p} isOwner={false} backTo="/" locked={!isLoggedIn} />
             ))}
 
             {posts.length === 0 ? (
