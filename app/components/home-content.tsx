@@ -64,14 +64,14 @@ const io=new IntersectionObserver(es=>{
 },{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-// tema (gece varsayılan)
+// tema (GÜNDÜZ varsayılan — 🌙 ile geceye geçilir)
 const tbtn=document.getElementById('theme-btn');
 const applyTheme=t=>{
   document.body.classList.toggle('light', t==='light');
   if(tbtn) tbtn.textContent = t==='light' ? '☀️' : '🌙';
 };
-let scfTheme='dark';
-try{ scfTheme=localStorage.getItem('scf_theme')||'dark'; }catch(e){}
+let scfTheme='light';
+try{ scfTheme=localStorage.getItem('scf_theme')||'light'; }catch(e){}
 applyTheme(scfTheme);
 if(tbtn) tbtn.onclick=()=>{
   scfTheme = scfTheme==='light' ? 'dark' : 'light';
@@ -166,7 +166,6 @@ if(a2hsBtn){
       if (typeof io !== 'undefined' && io.disconnect) io.disconnect();
     };
   }, []);
-
   return (
     <>
       <style>{`
@@ -206,7 +205,6 @@ if(a2hsBtn){
   body.light .path.co{border-color:rgba(59,130,246,.55)}
   body.light .path.co:hover{box-shadow:0 14px 30px rgba(59,130,246,.22)}
   body.light .trybox{background:#ffffff}
-  body.light .a2hs{background:#ffffff}
   body.light .psteps li{color:#2e3c5e}
   body.light .cplan{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .cplan.hot{border-color:var(--gold)}
@@ -218,6 +216,15 @@ if(a2hsBtn){
   body.light .avatar{background:linear-gradient(145deg,#dfe7f6,#c9d6ee);color:#8a6a1e}
   body.light .pcard{background:linear-gradient(165deg,#ffffff,#f2f5fc)}
   body.light .salstrip{background:#ffffff;border-color:rgba(15,25,60,.14)}
+  body.light{--tx2:#25334f;--tx3:#4a5b7d}
+  body.light .hero p.sub{color:#25334f}
+  body.light .path{background:linear-gradient(165deg,#fffdf4,#ffffff);box-shadow:0 12px 30px rgba(224,160,16,.2)}
+  body.light .path.co{background:linear-gradient(165deg,#f3f8ff,#ffffff);box-shadow:0 12px 30px rgba(59,130,246,.18)}
+  body.light .path b{color:#0e1730}
+  body.light .path span{color:#3d4c6b}
+  body.light .psteps li{color:#33425f}
+  body.light .wis-card{background:#ffffff;border-color:rgba(15,25,60,.13)}
+  body.light .wis-card p{color:#33425f}
   /* gündüz: SearchWizard (Tailwind adası) kontrast düzeltmeleri */
   body.light #try [class*="bg-primary"]{background:#ffffff !important}
   body.light #try [class*="text-white"]{color:#1c2a4d !important}
@@ -255,7 +262,7 @@ if(a2hsBtn){
   .btn-lg{padding:15px 28px;font-size:15.5px;border-radius:13px}
   .ham{display:none;place-items:center;width:42px;height:42px;border:1px solid var(--line2);border-radius:10px;
     background:rgba(255,255,255,.03);cursor:pointer;color:var(--tx);font-size:19px}
-  @media(max-width:860px){ nav{display:none} .top-cta .btn-ghost:not(#theme-btn){display:none} .ham{display:grid} }
+  @media(max-width:860px){ nav{display:none} .ham{display:grid} .top-cta .btn-ghost{padding:9px 13px;font-size:13px} }
   .mnav{display:none;flex-direction:column;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line2);
     background:rgba(7,26,48,.97)}
   .mnav.open{display:flex}
@@ -286,18 +293,18 @@ if(a2hsBtn){
   /* ── path kartları: ALTIN ÇERÇEVE ── */
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
   .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));
-    border:1.5px solid rgba(251,191,36,.45);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);
-    transition:.2s;position:relative;overflow:hidden;box-shadow:0 0 18px rgba(251,191,36,.14)}
-  .path::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
+    border:2px solid rgba(251,191,36,.55);border-radius:17px;padding:22px 20px;text-decoration:none;color:var(--tx);
+    transition:.2s;position:relative;overflow:hidden;box-shadow:0 0 22px rgba(251,191,36,.18)}
+  .path::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),transparent)}
   .path:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 10px 34px rgba(251,191,36,.22)}
-  .path .pi{font-size:24px;margin-bottom:8px}
-  .path b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;margin-bottom:5px}
+  .path .pi{font-size:28px;margin-bottom:9px}
+  .path b{display:block;font-family:var(--disp);font-size:18px;font-weight:800;margin-bottom:6px}
   .path span{font-size:12.5px;color:var(--tx3);line-height:1.5;display:block}
-  .path .go{color:var(--gold);font-weight:700;font-size:13px;margin-top:10px;display:inline-block}
-  .path.co{border-color:rgba(96,165,250,.5);box-shadow:0 0 18px rgba(96,165,250,.15)}
+  .path .go{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;border-radius:10px;padding:9px 15px;font-weight:800;font-size:12.5px;margin-top:12px}
+  .path.co{border-color:rgba(96,165,250,.6);box-shadow:0 0 22px rgba(96,165,250,.2)}
   .path.co::before{background:linear-gradient(90deg,#60a5fa,transparent)}
   .path.co:hover{border-color:#60a5fa;box-shadow:0 10px 34px rgba(96,165,250,.25)}
-  .path.co .go{color:#60a5fa}
+  .path.co .go{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#071022}
   .path.co .psteps li::before{background:rgba(96,165,250,.16);color:#60a5fa}
   .psteps{list-style:none;counter-reset:ps;margin:4px 0 2px;display:flex;flex-direction:column;gap:6px}
   .psteps li{counter-increment:ps;font-size:12.5px;color:var(--tx2);display:flex;gap:9px;align-items:center}
@@ -473,6 +480,17 @@ if(a2hsBtn){
   .pwa-chip .px{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
   #pwa-install{cursor:pointer}
 
+  /* ── what is scf ── */
+  .wis{padding:38px 0 4px}
+  .wis h2{margin-bottom:8px}
+  .wis .sec-sub{margin-bottom:22px}
+  .wisg{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+  @media(max-width:820px){.wisg{grid-template-columns:1fr}}
+  .wis-card{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:16px;padding:20px}
+  .wis-card .wi{font-size:24px;margin-bottom:9px}
+  .wis-card b{display:block;font-family:var(--disp);font-size:15px;font-weight:800;margin-bottom:6px}
+  .wis-card p{font-size:13px;color:var(--tx2);line-height:1.6}
+
   /* ── add-to-home-screen kutusu ── */
   .a2hs{margin:22px 0 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:1.5px solid var(--line);border-radius:16px;padding:14px 18px;background:linear-gradient(160deg,rgba(251,191,36,.08),var(--ink));box-shadow:0 0 18px rgba(251,191,36,.12);max-width:560px}
   .a2hs .ai{display:flex;gap:12px;align-items:center;min-width:0;flex:1}
@@ -521,7 +539,7 @@ if(a2hsBtn){
     .psteps li{font-size:10.5px;gap:6px}
     .psteps li::before{width:15px;height:15px;font-size:9px;border-radius:5px}
     .psteps em{display:none}
-    .path .go{font-size:11px;margin-top:7px}
+    .path .go{font-size:11px;margin-top:7px;padding:8px 11px}
     .hero-note{font-size:11px;margin-top:14px}
     .a2hs{padding:12px 13px;gap:10px}
     .a2hs b{font-size:13px}
@@ -543,7 +561,7 @@ if(a2hsBtn){
       <a href="/blog">Blog</a>
     </nav>
     <div className="top-cta">
-      <a className="btn btn-ghost" href="/login">Login</a>
+      <a className="btn btn-ghost" href="/login" style={{borderColor:"var(--gold)",color:"var(--gold)",fontWeight:800}}>Login</a>
       <a className="btn btn-gold" href="/signup">Sign Up Free</a>
       <button className="btn btn-ghost" id="theme-btn" aria-label="Theme" style={{padding:"10px 13px",fontSize:"16px",lineHeight:"1"}}>🌙</button>
       <button className="ham" id="ham" aria-label="Menu">☰</button>
@@ -634,9 +652,7 @@ if(a2hsBtn){
   </div>
 </section>
 
-{deckSlot}
-
-<section id="try" style={{padding:"36px 0 8px"}}>
+<section id="try" style={{padding:"30px 0 6px"}}>
   <div className="wrap">
     <div className="trybox rv">
       <div className="sec-tag">🔍 Search now</div>
@@ -646,6 +662,33 @@ if(a2hsBtn){
     </div>
   </div>
 </section>
+
+<section className="wis">
+  <div className="wrap">
+    <div className="sec-tag rv">What is ShipCrewFinder?</div>
+    <h2 className="rv">The direct line between seafarers and shipping companies</h2>
+    <p className="sec-sub rv">A verified maritime career platform — no crewing agency in the middle, no commission taken from anyone. Here&apos;s how it works for each side:</p>
+    <div className="wisg">
+      <div className="wis-card rv">
+        <div className="wi">⚓</div>
+        <b>Seafarers get found</b>
+        <p>Create a verified profile, build your CV, track sea time and certificates — companies contact you directly. First month free.</p>
+      </div>
+      <div className="wis-card rv">
+        <div className="wi">🏢</div>
+        <b>Companies hire directly</b>
+        <p>Search verified crew by rank, availability and vessel experience. Message candidates and manage applications — no agency fees.</p>
+      </div>
+      <div className="wis-card rv">
+        <div className="wi">🚫</div>
+        <b>0% commission — ever</b>
+        <p>Flat, transparent subscriptions. Nobody takes a cut of your salary or your placement. Your contract is between you and the employer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{deckSlot}
 
 <div className="marq" style={{marginTop:"44px"}}>
   <div className="marq-in">
