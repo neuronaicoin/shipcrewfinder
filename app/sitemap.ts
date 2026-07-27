@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { blogIndex } from "@/app/data/blog";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
-import { SALARY_DATA } from "@/lib/data/salary";
+import { SALARY_DATA, VESSELS } from "@/lib/data/salary";
 import { NATIONALITIES } from "@/lib/data/nationalities";
 import { createClient } from "@/lib/supabase/server";
 
@@ -51,6 +51,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified,
       changeFrequency: "daily",
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/messroom`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/vessels`,
@@ -122,6 +128,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
   // Rank sayfaları (programatik SEO)
   const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
   const rankPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/crew`, lastModified, changeFrequency: "weekly", priority: 0.8 },
     ...Object.values(SHIP_RANKS).flat().map((r) => ({
@@ -131,6 +138,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     })),
   ];
+  // Rank × gemi tipi kombo sayfaları (programatik SEO — sadece maaş verisi olan ranklar)
+  const comboPages: MetadataRoute.Sitemap = Object.values(SHIP_RANKS)
+    .flat()
+    .filter((r) => SALARY_DATA.some((s) => norm(s.rank) === norm(r as string)))
+    .flatMap((r) =>
+      VESSELS.map((v) => ({
+        url: `${baseUrl}/crew/${slugify(r as string)}/${v.key}`,
+        lastModified,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      }))
+    );
   // Salary Index sayfaları (programatik SEO)
   const salaryPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/salary`, lastModified, changeFrequency: "monthly", priority: 0.8 },
@@ -174,5 +193,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     // Supabase erişilemezse dinamik kısımlar atlanır
   }
-  return [...staticPages, ...rankPages, ...salaryPages, ...blogPages, ...vesselPages, ...companyPages];
+  return [...staticPages, ...rankPages, ...comboPages, ...salaryPages, ...blogPages, ...vesselPages, ...companyPages];
 }
