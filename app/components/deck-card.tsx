@@ -53,10 +53,12 @@ export default function DeckCard({
   post,
   isOwner,
   backTo,
+  locked = false,
 }: {
   post: DeckPost;
   isOwner: boolean;
   backTo: string;
+  locked?: boolean;
 }) {
   const isCrew = post.post_type === "crew";
 
@@ -76,7 +78,10 @@ export default function DeckCard({
     if (n === null || n === undefined) return null;
     if (n <= 1) return "0–1 yrs";
     if (n <= 3) return "1–3 yrs";
-    return "3+ yrs";
+    if (n <= 5) return "3–5 yrs";
+    if (n <= 7) return "5–10 yrs";
+    if (n <= 12) return "10–20 yrs";
+    return "20+ yrs";
   })();
 
   const salary =
@@ -96,7 +101,7 @@ export default function DeckCard({
           <div className="dk-head">
             <div className="dk-ava dk-ava-crew">{rankInitials(post.rank)}</div>
             <div style={{ minWidth: 0 }}>
-              <div className="dk-name">{post.full_name || "Verified crew"} <span className="dk-vf">✓</span></div>
+              <div className="dk-name">{locked ? "Verified crew" : (post.full_name || "Verified crew")} <span className="dk-vf">✓</span></div>
               <div className="dk-role">{(post.rank || "SEAFARER").toUpperCase()}</div>
             </div>
           </div>
@@ -107,25 +112,31 @@ export default function DeckCard({
           </div>
           {post.note ? <div className="dk-note">&ldquo;{post.note}&rdquo;</div> : null}
           <div className="dk-contact">
-            {post.show_contact && (post.phone || post.email) ? (
+            {!locked && post.show_contact && (post.phone || post.email) ? (
               <>
                 {post.phone ? <span>📱 {post.phone}</span> : null}
                 {post.email ? <span>✉ {post.email}</span> : null}
               </>
             ) : (
-              <span className="dk-hiddenc">Contact via ShipCrewFinder</span>
+              <span className="dk-hiddenc">{locked ? "🔒 Sign up to view name & contact" : "Contact via ShipCrewFinder"}</span>
             )}
           </div>
           <div className="dk-btns">
-            {post.cv_share_code ? (
-              <a href={"/cv/share/" + post.cv_share_code} target="_blank" rel="noopener noreferrer" className="dk-btn dk-btn-gold">View CV →</a>
-            ) : null}
-            {!isOwner ? (
-              <form action={startConversation} style={{ flex: 1, display: "flex" }}>
-                <input type="hidden" name="toUserId" value={post.user_id} />
-                <button type="submit" className="dk-btn dk-btn-msg">💬 Message</button>
-              </form>
-            ) : null}
+            {locked ? (
+              <Link href="/signup/company" className="dk-btn dk-btn-gold" style={{ flex: 1, textAlign: "center" }}>🔒 Sign up free to contact →</Link>
+            ) : (
+              <>
+                {post.cv_share_code ? (
+                  <a href={"/cv/share/" + post.cv_share_code} target="_blank" rel="noopener noreferrer" className="dk-btn dk-btn-gold">View CV →</a>
+                ) : null}
+                {!isOwner ? (
+                  <form action={startConversation} style={{ flex: 1, display: "flex" }}>
+                    <input type="hidden" name="toUserId" value={post.user_id} />
+                    <button type="submit" className="dk-btn dk-btn-msg">💬 Message</button>
+                  </form>
+                ) : null}
+              </>
+            )}
           </div>
         </>
       ) : (
@@ -143,7 +154,7 @@ export default function DeckCard({
           </div>
           {salary ? <div className="dk-sal">{salary}</div> : null}
           <div className="dk-contact">
-            {post.phone || post.email ? (
+            {!locked && (post.phone || post.email) ? (
               <>
                 {post.email ? <span>✉ {post.email}</span> : null}
                 {post.phone ? <span>📱 {post.phone}</span> : null}
@@ -156,7 +167,7 @@ export default function DeckCard({
             {post.job_id ? (
               <Link href={"/jobs/" + post.job_id} className="dk-btn dk-btn-blue">Apply →</Link>
             ) : null}
-            {!isOwner ? (
+            {!locked && !isOwner ? (
               <form action={startConversation} style={{ flex: 1, display: "flex" }}>
                 <input type="hidden" name="toUserId" value={post.user_id} />
                 <button type="submit" className="dk-btn dk-btn-msg">💬</button>
