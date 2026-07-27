@@ -2,6 +2,8 @@
 
 > ShipCrewFinder (shipcrewfinder.com) is a global maritime career platform connecting verified seafarers and yacht crew directly with shipping companies — zero commission, no crewing agency middlemen.
 
+Full knowledge file (all guides, Q&As and salary data): https://shipcrewfinder.com/llms-full.txt
+
 ## What it offers
 
 ### For seafarers & yacht crew (free first month, then $4.99 for 3 months)
