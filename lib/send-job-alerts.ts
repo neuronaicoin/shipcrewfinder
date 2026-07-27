@@ -46,16 +46,21 @@ export async function sendJobAlerts(jobId: string): Promise<string> {
     steps.push(`alerts=${alerts.length}`);
 
     let companyName = "A verified shipping company";
+    let companyUrl: string | null = null;
     if (job.company_id) {
-      const { data: c } = await admin.from("profiles").select("full_name").eq("id", job.company_id).single();
+      const [{ data: c }, { data: cd }] = await Promise.all([
+        admin.from("profiles").select("full_name").eq("id", job.company_id).single(),
+        admin.from("company_details").select("careers_slug").eq("id", job.company_id).maybeSingle(),
+      ]);
       if (c?.full_name) companyName = c.full_name as string;
+      if (cd?.careers_slug) companyUrl = "https://shipcrewfinder.com/careers/" + (cd.careers_slug as string);
     }
 
     const okIds: string[] = [];
     const okUserIds: string[] = [];
 
     for (const a of alerts) {
-      const { subject, html, text } = buildJobAlertEmail(job as unknown as AlertJob, companyName, a.token as string);
+      const { subject, html, text } = buildJobAlertEmail(job as unknown as AlertJob, companyName, a.token as string, companyUrl);
       const res = await fetch(RESEND_ENDPOINT, {
         method: "POST",
         headers: {
