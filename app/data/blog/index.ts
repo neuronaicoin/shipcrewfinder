@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import howToGetSeafarerJobWithoutAgency from "./how-to-get-seafarer-job-without-agency";
 import seafarerSalaryGuide2026RankVesselType from "./seafarer-salary-guide-2026-rank-vessel-type";
 import crewingDepartmentKpis from "./crewing-department-kpis-metrics-guide";
 import crewRetentionWhySeafarersDontReturn from "./crew-retention-why-seafarers-dont-return";
@@ -24,6 +25,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  howToGetSeafarerJobWithoutAgency,
   seafarerSalaryGuide2026RankVesselType,
   crewingDepartmentKpis,
   crewRetentionWhySeafarersDontReturn,
