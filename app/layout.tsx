@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     siteName: "ShipCrewFinder",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/opengraph-image?v=2",
         width: 1200,
         height: 630,
         alt: "ShipCrewFinder — Global Maritime Career Platform",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ShipCrewFinder — Global Maritime Career Platform",
     description: "Verified seafarers and shipping companies, connected directly. 0% commission, ever.",
-    images: ["/opengraph-image"],
+    images: ["/opengraph-image?v=2"],
   },
 };
 
