@@ -14,13 +14,27 @@ export default async function CrewStep1Page() {
   if (!user) redirect("/login");
 
   // Get user type
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from("profiles")
     .select("user_type, full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (!profile) redirect("/dashboard");
+  // ÇELİK YELEK: profil satırı yoksa (eski kayıt / doğrulama dönemi) burada oluştur — geri tekmeleme YOK
+  if (!profile) {
+    const meta = (user.user_metadata || {}) as Record<string, string>;
+    const userType = meta.user_type === "company" || meta.user_type === "yacht" ? meta.user_type : "seafarer";
+    await supabase.from("profiles").insert({
+      id: user.id,
+      user_type: userType,
+      full_name: meta.full_name || "",
+      email: user.email,
+      visibility: "hidden",
+    });
+    profile = { user_type: userType, full_name: meta.full_name || "" };
+  }
+
+  if (profile.user_type === "company") redirect("/onboarding/company/step-1");
 
   const isShip = profile.user_type === "seafarer";
   const ranks = isShip ? SHIP_RANKS : YACHT_POSITIONS;
@@ -67,7 +81,7 @@ export default async function CrewStep1Page() {
           What's your rank?
         </h1>
         <p className="text-white/60 text-lg">
-          Hi {profile.full_name}! Select your current or most recent {isShip ? "rank" : "position"}.
+          Hi {profile.full_name || "sailor"}! Select your current or most recent {isShip ? "rank" : "position"}.
         </p>
         {savedRank ? (
           <p className="text-emerald-300/80 text-sm mt-2">
