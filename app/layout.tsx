@@ -72,6 +72,51 @@ export const metadata: Metadata = {
   },
 };
 
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://shipcrewfinder.com/#organization",
+  name: "ShipCrewFinder",
+  url: "https://shipcrewfinder.com",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://shipcrewfinder.com/apple-icon.png",
+    width: 180,
+    height: 180,
+  },
+  image: "https://shipcrewfinder.com/opengraph-image?v=2",
+  description:
+    "ShipCrewFinder is a verified global maritime career platform connecting seafarers and shipping companies directly — with zero commission.",
+  slogan: "Your next contract. No agency. No cut.",
+  foundingDate: "2026",
+  knowsAbout: [
+    "maritime recruitment",
+    "seafarer jobs",
+    "ship crew management",
+    "seafarer salaries",
+    "STCW certification",
+  ],
+  sameAs: [],
+};
+
+const siteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://shipcrewfinder.com/#website",
+  name: "ShipCrewFinder",
+  alternateName: "Ship Crew Finder",
+  url: "https://shipcrewfinder.com",
+  publisher: { "@id": "https://shipcrewfinder.com/#organization" },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://shipcrewfinder.com/jobs?rank={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -80,6 +125,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${jakarta.variable} ${bricolage.variable} font-sans`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
+        />
         {children}
         <MobileTabBar />
 
