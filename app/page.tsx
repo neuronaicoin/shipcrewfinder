@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import HomeContent from "@/app/components/home-content";
 import DeckRail from "@/app/components/deck-rail";
 import MessRoomBox from "@/app/components/mess-room-box";
+import PopularSearches from "@/app/components/popular-searches";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -20,6 +21,7 @@ export default async function HomePage() {
         <>
           <DeckRail />
           <MessRoomBox />
+          <PopularSearches />
         </>
       }
     />
