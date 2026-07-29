@@ -6,9 +6,29 @@ import ApplyForm from "@/app/components/apply-form";
 import SiteHeader from "@/app/components/site-header";
 import CompanyRating from "@/app/components/company-rating";
 
-export const metadata = {
-  title: "Job Details — ShipCrewFinder",
-};
+// SEO: sayfa başlığı ilanın gerçek adı olsun (Google Jobs eşleşmesi için önemli)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("title, position, description")
+    .eq("id", id)
+    .maybeSingle();
+  if (!job) return { title: "Job Details — ShipCrewFinder" };
+  const desc = (job.description || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 155);
+  return {
+    title: `${job.title} — ShipCrewFinder`,
+    description: desc || `${job.position || "Maritime"} position on ShipCrewFinder — apply directly, no agency.`,
+  };
+}
 
 export default async function JobDetailPage({
   params,
@@ -131,6 +151,7 @@ export default async function JobDetailPage({
       : {}),
   };
   const isCrew = userType === "seafarer" || userType === "yacht";
+  const isMember = !!user;
 
   const countries = getSortedCountries();
   const countryName = (code: string | null) => {
@@ -146,8 +167,6 @@ export default async function JobDetailPage({
     job.salary_min || job.salary_max
       ? (job.salary_currency || "USD") + " " + (job.salary_min || "?") + (job.salary_max ? " – " + job.salary_max : "") + " / month"
       : null;
-
-  const isMember = !!user;
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jobLd) }} />
@@ -204,10 +223,13 @@ export default async function JobDetailPage({
   .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
   .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
   .center{text-align:center}
-  .lock{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:36px 28px;text-align:center}
-  .lock .lic{width:54px;height:54px;margin:0 auto 18px;border-radius:16px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:22px}
-  .lock h2{font-family:var(--disp);font-size:22px;font-weight:800;margin-bottom:10px}
-  .lock p{font-size:13.5px;color:var(--tx2);line-height:1.65;max-width:46ch;margin:0 auto 20px}
+  .lockrow{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:13px;padding:13px 16px;margin-top:6px}
+  .lockrow .li{width:38px;height:38px;border-radius:11px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+  .lockrow b{font-size:13px;font-family:var(--disp);display:block}
+  .lockrow p{font-size:11.5px;color:var(--tx3);margin-top:2px}
+  .applycta{background:linear-gradient(160deg,rgba(251,191,36,.09),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:28px 26px;text-align:center}
+  .applycta h2{font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:8px}
+  .applycta p{font-size:13.5px;color:var(--tx2);line-height:1.65;max-width:48ch;margin:0 auto 18px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -252,40 +274,48 @@ export default async function JobDetailPage({
             <div className="banner err">Something went wrong. Please try again.</div>
           ) : null}
 
-          {isMember ? (
-            <>
-              <div className="facts">
-                {salary ? (
-                  <div className="fact">
-                    <div className="fl">Salary</div>
-                    <div className="fv" style={{ color: "var(--grn)" }}>{salary}</div>
-                  </div>
-                ) : null}
-                {job.contract_duration ? (
-                  <div className="fact">
-                    <div className="fl">Contract</div>
-                    <div className="fv">{job.contract_duration}</div>
-                  </div>
-                ) : null}
+          {/* HERKESE AÇIK: maaş + kontrat + tam açıklama (Google Jobs şartı) */}
+          <div className="facts">
+            {salary ? (
+              <div className="fact">
+                <div className="fl">Salary</div>
+                <div className="fv" style={{ color: "var(--grn)" }}>{salary}</div>
               </div>
-
-              <div className="card">
-                <h2>Job Description</h2>
-                <p className="desc">{job.description}</p>
+            ) : null}
+            {job.contract_duration ? (
+              <div className="fact">
+                <div className="fl">Contract</div>
+                <div className="fv">{job.contract_duration}</div>
               </div>
+            ) : null}
+            {job.vessel_type ? (
+              <div className="fact">
+                <div className="fl">Vessel type</div>
+                <div className="fv">{job.vessel_type}</div>
+              </div>
+            ) : null}
+          </div>
 
-              <div className="card">
-                <h2 style={{ marginBottom: 4 }}>About the Company</h2>
-                <div className="co-head">
-                  <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
-                  <span className="rscore">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/></svg>
-                    {companyScore.toFixed(1)}
-                  </span>
-                </div>
-                {companyDetails?.description ? (
-                  <p className="desc" style={{ fontSize: 13, marginBottom: 14 }}>{companyDetails.description}</p>
-                ) : null}
+          <div className="card">
+            <h2>Job Description</h2>
+            <p className="desc">{job.description}</p>
+          </div>
+
+          <div className="card">
+            <h2 style={{ marginBottom: 4 }}>About the Company</h2>
+            <div className="co-head">
+              <div className="co">{companyProfile?.full_name || "Verified Company"}</div>
+              <span className="rscore">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/></svg>
+                {companyScore.toFixed(1)}
+              </span>
+            </div>
+            {companyDetails?.description ? (
+              <p className="desc" style={{ fontSize: 13, marginBottom: 14 }}>{companyDetails.description}</p>
+            ) : null}
+
+            {isMember ? (
+              <>
                 <div className="rows">
                   {websiteUrl ? (
                     <div className="row">
@@ -318,44 +348,53 @@ export default async function JobDetailPage({
                     <CompanyRating companyId={job.company_id as string} myRating={myRating} />
                   </div>
                 ) : null}
+              </>
+            ) : (
+              <div className="lockrow">
+                <span className="li">🔒</span>
+                <div>
+                  <b>Company contact details</b>
+                  <p>Members only — sign in free to view website, phone and email.</p>
+                </div>
               </div>
+            )}
+          </div>
 
-              {isOwner ? (
-                <div className="card center">
-                  <p style={{ fontSize: 13.5, color: "var(--tx2)", marginBottom: 16 }}>This is your job posting.</p>
-                  <Link href={"/jobs/" + job.id + "/applications"} className="btn btn-gold">
-                    View Applications
-                  </Link>
+          {isMember ? (
+            isOwner ? (
+              <div className="card center">
+                <p style={{ fontSize: 13.5, color: "var(--tx2)", marginBottom: 16 }}>This is your job posting.</p>
+                <Link href={"/jobs/" + job.id + "/applications"} className="btn btn-gold">
+                  View Applications
+                </Link>
+              </div>
+            ) : alreadyApplied ? (
+              <div className="banner ok center" style={{ padding: "22px" }}>
+                <b>✓ You have applied to this job</b>
+                <div style={{ fontSize: 12, color: "var(--tx3)", marginTop: 5 }}>
+                  The company can see your application and profile.
                 </div>
-              ) : alreadyApplied ? (
-                <div className="banner ok center" style={{ padding: "22px" }}>
-                  <b>✓ You have applied to this job</b>
-                  <div style={{ fontSize: 12, color: "var(--tx3)", marginTop: 5 }}>
-                    The company can see your application and profile.
-                  </div>
-                </div>
-              ) : isCrew ? (
-                <div className="card" style={{ borderColor: "var(--line)" }}>
-                  <h2>Apply for this position</h2>
-                  <ApplyForm jobId={job.id} />
-                </div>
-              ) : (
-                <div className="card center">
-                  <p style={{ fontSize: 13.5, color: "var(--tx2)" }}>Only crew accounts can apply to jobs.</p>
-                </div>
-              )}
-            </>
+              </div>
+            ) : isCrew ? (
+              <div className="card" style={{ borderColor: "var(--line)" }}>
+                <h2>Apply for this position</h2>
+                <ApplyForm jobId={job.id} />
+              </div>
+            ) : (
+              <div className="card center">
+                <p style={{ fontSize: 13.5, color: "var(--tx2)" }}>Only crew accounts can apply to jobs.</p>
+              </div>
+            )
           ) : (
-            <div className="lock">
-              <div className="lic">🔒</div>
-              <h2>Sign in to see the full job</h2>
+            <div className="applycta">
+              <h2>⚓ Apply for this position</h2>
               <p>
-                You can see the job title and basics, but the full description, salary and company
-                details are available to members only. Create a free account to view everything.
+                Applying takes 2 minutes with a free crew account — your profile and CV go straight
+                to the company. No agency, no fees, 0% commission.
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/signup/crew" className="btn btn-gold">⚓ Sign Up Free</Link>
-                <Link href="/login" className="btn btn-ghost">Login</Link>
+                <Link href={"/login?next=/jobs/" + job.id} className="btn btn-gold">Sign in {"&"} apply →</Link>
+                <Link href="/signup/crew" className="btn btn-ghost">Create free account</Link>
               </div>
             </div>
           )}
