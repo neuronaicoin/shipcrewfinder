@@ -66,6 +66,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@shipcrewfinder",
     title: "ShipCrewFinder — Global Maritime Career Platform",
     description: "Verified seafarers and shipping companies, connected directly. 0% commission, ever.",
     images: ["/opengraph-image?v=2"],
@@ -96,7 +97,10 @@ const orgSchema = {
     "seafarer salaries",
     "STCW certification",
   ],
-  sameAs: [],
+  sameAs: [
+    "https://x.com/shipcrewfinder",
+    "https://www.tiktok.com/@shipcrewfinder",
+  ],
 };
 
 const siteSchema = {
