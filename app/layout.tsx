@@ -100,6 +100,7 @@ const orgSchema = {
   sameAs: [
     "https://x.com/shipcrewfinder",
     "https://www.tiktok.com/@shipcrewfinder",
+    "https://www.crunchbase.com/organization/shipcrewfinder",
   ],
 };
 
