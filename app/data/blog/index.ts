@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import howToNegotiateSeafarerSalary from "./how-to-negotiate-seafarer-salary";
 import firstContractCadetGuide from "./first-contract-cadet-guide";
 import warRiskBonusSeafarerPay2026 from "./war-risk-bonus-seafarer-pay-2026";
 import seafarerRecruitmentFeesIllegalMlc2006 from "./seafarer-recruitment-fees-illegal-mlc-2006";
@@ -30,6 +31,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  howToNegotiateSeafarerSalary,
   firstContractCadetGuide,
   warRiskBonusSeafarerPay2026,
   seafarerRecruitmentFeesIllegalMlc2006,
