@@ -82,6 +82,7 @@ if(tbtn) tbtn.onclick=()=>{
 // dönen hero sloganları — platform özellikleri (crew + company)
 const HERO_LINES=[
   'No agency. No cut.',
+  'Build your profile with AI.',
   'Post your CV on the main page.',
   'Your maritime CV, built in minutes.',
   'Sea time & licence renewal, tracked.',
@@ -90,6 +91,7 @@ const HERO_LINES=[
   'Post a job. Crew get alerted.',
   'Talk live in The Mess Room.',
   'Know your salary. 15 ranks.',
+  'Upload documents — AI reads them.',
   'Zero commission. Ever.'
 ];
 let hIdx=0;
