@@ -5,6 +5,7 @@ import DeckRail from "@/app/components/deck-rail";
 import MessRoomBox from "@/app/components/mess-room-box";
 import PopularSearches from "@/app/components/popular-searches";
 import LiveActivityStrip from "@/app/components/live-activity-strip";
+import AiProfilePromo from "@/app/components/ai-profile-promo";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -20,6 +21,7 @@ export default async function HomePage() {
     <HomeContent
       deckSlot={
         <>
+          <AiProfilePromo />
           <LiveActivityStrip />
           <DeckRail />
           <MessRoomBox />
