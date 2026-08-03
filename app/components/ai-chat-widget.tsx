@@ -45,12 +45,17 @@ export default function AiChatWidget() {
   return (
     <>
       <style>{`
-  .aicw-fab{position:fixed;right:18px;bottom:18px;z-index:200;width:58px;height:58px;border-radius:50%;
+  .aicw-fab{position:fixed;right:18px;bottom:86px;z-index:90;display:inline-flex;align-items:center;gap:8px;
     background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));border:none;cursor:pointer;
-    display:grid;place-items:center;font-size:24px;box-shadow:0 8px 26px rgba(251,191,36,.35);
+    border-radius:999px;padding:13px 20px 13px 15px;box-shadow:0 10px 30px rgba(251,191,36,.4);
+    font-weight:800;font-size:13.5px;color:#0b0e13;font-family:var(--font-jakarta),sans-serif;
     animation:aicwpulse 2.4s ease-in-out infinite}
-  @keyframes aicwpulse{0%,100%{box-shadow:0 8px 26px rgba(251,191,36,.35)}50%{box-shadow:0 8px 34px rgba(251,191,36,.55)}}
+  .aicw-fab .ic{font-size:17px;line-height:1}
+  @keyframes aicwpulse{0%,100%{box-shadow:0 10px 30px rgba(251,191,36,.4)}50%{box-shadow:0 10px 38px rgba(251,191,36,.6)}}
   .aicw-fab.hide{display:none}
+  @media(max-width:640px){
+    .aicw-fab{right:14px;bottom:calc(76px + env(safe-area-inset-bottom));padding:12px 17px 12px 13px;font-size:12.5px}
+  }
   .aicw-panel{position:fixed;z-index:201;right:18px;bottom:18px;width:360px;max-width:calc(100vw - 24px);
     height:520px;max-height:calc(100vh - 36px);background:linear-gradient(165deg,var(--navy2,#141845),var(--ink,#050716));
     border:1.5px solid var(--line,rgba(251,191,36,.16));border-radius:18px;display:flex;flex-direction:column;
@@ -88,8 +93,7 @@ export default function AiChatWidget() {
   .aicw-send:disabled{opacity:.5;cursor:not-allowed}
   @media(max-width:640px){
     .aicw-panel{right:0;bottom:0;left:0;width:100%;max-width:100%;height:78vh;max-height:78vh;
-      border-radius:18px 18px 0 0;border-left:none;border-right:none;border-bottom:none}
-    .aicw-fab{right:14px;bottom:14px;width:54px;height:54px}
+      border-radius:18px 18px 0 0;border-left:none;border-right:none;border-bottom:none;z-index:210}
   }
 `}</style>
 
@@ -97,16 +101,17 @@ export default function AiChatWidget() {
         type="button"
         className={"aicw-fab" + (open ? " hide" : "")}
         onClick={() => setOpen(true)}
-        aria-label="Open AI assistant"
+        aria-label="Ask AI assistant"
       >
-        ⚓
+        <span className="ic">✨</span>
+        Ask AI
       </button>
 
       {open ? (
         <div className="aicw-panel">
           <div className="aicw-head">
             <div className="aicw-htitle">
-              <span className="ic">⚓</span>
+              <span className="ic">✨</span>
               <div>
                 <b>Ask ShipCrewFinder</b>
                 <span>● AI assistant — any language</span>
