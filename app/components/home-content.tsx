@@ -279,10 +279,12 @@ if(a2hsBtn){
   .hero::before{content:'';position:absolute;top:-30%;left:50%;transform:translateX(-50%);
     width:1200px;height:800px;background:radial-gradient(ellipse,rgba(251,191,36,.1),transparent 60%);pointer-events:none}
   .hero-in{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
-  .badge{display:inline-flex;align-items:center;gap:9px;background:rgba(251,191,36,.09);
-    border:1px solid var(--line);border-radius:22px;padding:7px 16px;font-size:12.5px;font-weight:600;
-    color:var(--gold);margin-bottom:22px}
-  .badge .d{width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pulse 1.6s infinite}
+  .badge{display:inline-flex;align-items:center;gap:11px;background:var(--gold);
+    border:2px solid var(--gold);border-radius:26px;padding:11px 22px;font-size:15.5px;font-weight:800;
+    letter-spacing:.01em;color:#0b0e13;margin-bottom:24px;box-shadow:0 0 24px rgba(251,191,36,.5);
+    animation:badgeglow 2.2s ease-in-out infinite}
+  @keyframes badgeglow{0%,100%{box-shadow:0 0 24px rgba(251,191,36,.5)}50%{box-shadow:0 0 38px rgba(251,191,36,.75)}}
+  .badge .d{width:9px;height:9px;border-radius:50%;background:#065f46;animation:pulse 1.6s infinite;flex-shrink:0}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
   h1{font-family:var(--disp);font-size:clamp(2.3rem,5.4vw,3.9rem);font-weight:800;line-height:1.06;
     letter-spacing:-.03em;margin-bottom:18px}
