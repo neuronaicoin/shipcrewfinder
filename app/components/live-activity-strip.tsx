@@ -81,8 +81,8 @@ export default async function LiveActivityStrip() {
             <div className="l">seafarers this week</div>
           </div>
           <div className="la-stat">
-            <div className="n">{d.countries_count}</div>
-            <div className="l">countries active</div>
+            <div className="n">🌍</div>
+            <div className="l">Worldwide</div>
           </div>
           <div className="la-stat">
             <div className="n">{d.company_total}</div>
