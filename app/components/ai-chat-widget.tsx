@@ -4,11 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { sendChatMessage, type ChatTurn } from "@/lib/actions/ai-chat";
 
+type ChatMessage = ChatTurn & { action?: "signup" | "login" | "none" };
+
 export default function AiChatWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState
-    (ChatTurn & { action?: "signup" | "login" | "none" })[]
-  >([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
