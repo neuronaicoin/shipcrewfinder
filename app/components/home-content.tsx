@@ -584,7 +584,7 @@ if(a2hsBtn){
   <div className="aur aur2"></div>
   <div className="wrap hero-in">
     <div>
-      <div className="badge"><span className="d"></span>VERIFIED MARITIME PLATFORM · FOUNDING MEMBERS OPEN</div>
+      <div className="badge"><span className="d"></span>NEW — BUILD YOUR PROFILE WITH AI</div>
       <h1>Your next contract.<br/><span className="g hero-rot" id="hero-rot">No agency. No cut.</span></h1>
       <p className="sub">ShipCrewFinder connects verified seafarers with shipping companies — directly. No middlemen taking a slice of your salary. No agencies filtering your messages.</p>
       <div className="paths">
