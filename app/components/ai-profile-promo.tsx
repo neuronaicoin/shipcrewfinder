@@ -63,7 +63,7 @@ export default function AiProfilePromo() {
                 <span className="aip-step"><b>2</b> AI reads and fills</span>
                 <span className="aip-step"><b>3</b> Profile is ready</span>
               </div>
-              <Link href="/signup/crew" className="aip-cta">Try it free ⚓</Link>
+              <Link href="/signup/crew" className="aip-cta">Create profile with AI in a second ⚡</Link>
               <p className="aip-note">Free to join · takes under 2 minutes</p>
             </div>
             <div className="aip-visual">
