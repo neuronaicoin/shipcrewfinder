@@ -592,7 +592,7 @@ if(a2hsBtn){
       <div className="paths">
         <a className="path" href="/signup/crew">
           <div className="pi">⚓</div>
-          <b>I'm Crew — get found</b>
+          <b>I'm Crew — find your next contract</b>
           <ol className="psteps">
             <li>Create profile <em>(2 min)</em></li>
             <li>Upload CV {"&"} certificates</li>
