@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import { addDocument, deleteDocument } from "@/lib/actions/documents";
+import SmartUploadBox from "@/app/components/smart-upload-box";
 import Link from "next/link";
 
 export const metadata = {
@@ -30,6 +31,7 @@ export default async function VaultPage({
   const added = sp.added;
   const deleted = sp.deleted;
   const error = sp.error;
+  const aiAdded = sp.ai_added;
 
   const supabase = await createClient();
 
@@ -203,11 +205,21 @@ export default async function VaultPage({
         <div className="wrap">
           {added === "1" ? <div className="banner ok">Document saved. Expiry reminders are active for it.</div> : null}
           {deleted === "1" ? <div className="banner info">Document removed.</div> : null}
+          {aiAdded ? (
+            <div className="banner ok">
+              ✅ AI read your documents and added {aiAdded} to your vault
+              {Number(aiAdded) > 0 ? " — check details below and edit anything that needs a fix." : "."}
+            </div>
+          ) : null}
           {error === "missing" ? <div className="banner err">Document type and name are required.</div> : null}
           {error === "file_too_large" ? <div className="banner err">File too large — maximum 5 MB.</div> : null}
           {error === "invalid_type" ? <div className="banner err">Only PDF files are accepted.</div> : null}
           {error === "upload_failed" ? <div className="banner err">Upload failed. Please try again.</div> : null}
           {error === "failed" ? <div className="banner err">Something went wrong. Please try again.</div> : null}
+          {error === "ai_limit" ? <div className="banner err">You've used today's AI upload batch — try again tomorrow.</div> : null}
+          {error === "ai_nofiles" ? <div className="banner err">No valid files selected — use PDF, JPG or PNG, up to 8MB each.</div> : null}
+
+          {userType === "seafarer" || userType === "yacht" ? <SmartUploadBox /> : null}
 
           {/* Özet */}
           <div className="sumgrid">
@@ -263,7 +275,7 @@ export default async function VaultPage({
 
             {/* Ekleme formu */}
             <div className="card" style={{ borderColor: "var(--line)" }}>
-              <h2>Add document</h2>
+              <h2>Add document manually</h2>
               <form action={addDocument}>
                 <label htmlFor="docType">Document type</label>
                 <select id="docType" name="docType" required defaultValue="">
