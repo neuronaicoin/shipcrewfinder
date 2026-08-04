@@ -201,6 +201,10 @@ export default async function CompanyStep1Page() {
             Continue →
           </button>
         </div>
+
+        <p className="text-white/30 text-xs text-center mt-4">
+          Your answers save automatically when you tap Continue →
+        </p>
       </form>
     </div>
   );
