@@ -6,6 +6,7 @@ import { postJobToDeck, removeJobFromDeck, boostDeckPost } from "@/lib/actions/d
 import DeleteJobButton from "@/app/components/delete-job-button";
 import { getSortedCountries } from "@/lib/constants/countries";
 import SiteHeader from "@/app/components/site-header";
+import { getPlanAccess } from "@/lib/plan-access";
 
 export const metadata = {
   title: "My Job Posts — ShipCrewFinder",
@@ -34,7 +35,7 @@ export default async function MyJobsPage({
   if (!user) redirect("/login");
 
   const [{ data: profile }, { count: unreadCount }, { data: jobs }, { data: deckPosts }] = await Promise.all([
-    supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+    supabase.from("profiles").select("user_type, plan").eq("id", user.id).single(),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -54,7 +55,11 @@ export default async function MyJobsPage({
 
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
 
+  const myPlan = (profile.plan as string) || "free";
+  const access = getPlanAccess(myPlan as never);
+
   const jobList = jobs || [];
+  const activeCount = jobList.filter((j) => j.status === "active").length;
 
   // İlan → aktif board kartı eşlemesi
   const now = Date.now();
@@ -121,9 +126,12 @@ export default async function MyJobsPage({
   .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid}
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.info{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .banner.plan{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+  .banner.plan.locked{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body);white-space:nowrap}
   .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-gold:hover{transform:translateY(-2px)}
+  .btn-sm{padding:8px 15px;font-size:12.5px}
   .jlist{display:flex;flex-direction:column;gap:12px}
   .jcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px 22px}
   .jtags{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
@@ -166,13 +174,31 @@ export default async function MyJobsPage({
               <h1>My Job <span style={{ color: "var(--gold)" }}>Posts</span></h1>
               <p className="sub">{jobList.length} job{jobList.length === 1 ? "" : "s"} total · post any active job to the main page board</p>
             </div>
-            <Link href="/jobs/new" className="btn btn-gold">+ Post Job</Link>
+            {access.canPostJob ? (
+              <Link href="/jobs/new" className="btn btn-gold">+ Post Job</Link>
+            ) : (
+              <Link href="/upgrade" className="btn btn-gold">🔒 Choose a plan to post</Link>
+            )}
           </div>
         </div>
       </div>
 
       <section style={{ paddingTop: 8 }}>
         <div className="wrap">
+          {!access.canPostJob ? (
+            <div className="banner plan locked">
+              <span>🔒 You&apos;re on the <b>Free</b> plan — you can view your existing listings, but posting new jobs requires Pro or Fleet.</span>
+              <Link href="/upgrade" className="btn btn-gold btn-sm">Choose a plan →</Link>
+            </div>
+          ) : access.jobPostLimit !== null ? (
+            <div className="banner plan">
+              <span>📋 {access.label} plan — {activeCount}/{access.jobPostLimit} active job listings used this month.</span>
+              {activeCount >= access.jobPostLimit ? (
+                <Link href="/upgrade" className="btn btn-gold btn-sm">Upgrade to Fleet →</Link>
+              ) : null}
+            </div>
+          ) : null}
+
           {created === "1" ? <div className="banner ok">Your job has been published.</div> : null}
           {updated === "1" ? <div className="banner ok">Your job has been updated.</div> : null}
           {deleted === "1" ? <div className="banner info">The job has been deleted.</div> : null}
@@ -186,7 +212,11 @@ export default async function MyJobsPage({
           {jobList.length === 0 ? (
             <div className="empty">
               <p style={{ marginBottom: 16 }}>You haven&apos;t posted any jobs yet.</p>
-              <Link href="/jobs/new" className="btn btn-gold">Post Your First Job</Link>
+              {access.canPostJob ? (
+                <Link href="/jobs/new" className="btn btn-gold">Post Your First Job</Link>
+              ) : (
+                <Link href="/upgrade" className="btn btn-gold">Choose a plan to get started</Link>
+              )}
             </div>
           ) : (
             <div className="jlist">
@@ -213,9 +243,15 @@ export default async function MyJobsPage({
                     </div>
 
                     <div className="acts">
-                      <Link href={`/jobs/${job.id}/applications`} className="act gold">
-                        Applications{appCount > 0 ? ` (${appCount})` : ""}
-                      </Link>
+                      {access.canSearchCrew ? (
+                        <Link href={`/jobs/${job.id}/applications`} className="act gold">
+                          Applications{appCount > 0 ? ` (${appCount})` : ""}
+                        </Link>
+                      ) : (
+                        <Link href="/upgrade" className="act gold">
+                          🔒 Applications{appCount > 0 ? ` (${appCount})` : ""}
+                        </Link>
+                      )}
                       {job.status === "active" && !boardPost ? (
                         <form action={postJobToDeck} style={{ display: "inline" }}>
                           <input type="hidden" name="jobId" value={job.id} />
