@@ -55,10 +55,10 @@ export default async function BrowsePage({
 
   const blockedByIds = (blockedRows || []).map((r) => r.user_id as string);
 
-  // Base profile query
+  // Base profile query — full_name ARTIK ÇEKİLMİYOR (isim listede gösterilmez, sadece kredi harcanınca)
   let query = supabase
     .from("profiles")
-    .select("id, user_type, full_name, country, avatar_url, visibility")
+    .select("id, user_type, country, avatar_url, visibility")
     .eq("visibility", "public");
 
   query = query.eq("user_type", "seafarer");
@@ -142,6 +142,22 @@ export default async function BrowsePage({
     return c ? `${c.flag} ${c.name}` : code;
   };
 
+  // Rütbe → kısa rozet metni (isim yerine gösterilecek)
+  const rankBadge = (d: Record<string, unknown>) => {
+    const r = ((d.rank as string) || (d.position as string) || "").toUpperCase();
+    if (r.includes("CHIEF ENGINEER")) return "C/E";
+    if (r.includes("2ND ENGINEER") || r.includes("SECOND ENGINEER")) return "2/E";
+    if (r.includes("3RD ENGINEER") || r.includes("THIRD ENGINEER")) return "3/E";
+    if (r.includes("CHIEF OFFICER") || r.includes("CHIEF MATE")) return "C/O";
+    if (r.includes("2ND OFFICER") || r.includes("SECOND OFFICER")) return "2/O";
+    if (r.includes("3RD OFFICER") || r.includes("THIRD OFFICER")) return "3/O";
+    if (r.includes("MASTER") || r.includes("CAPTAIN")) return "MSTR";
+    if (r.includes("ETO") || r.includes("ELECTRO")) return "ETO";
+    if (r.includes("BOSUN")) return "BSN";
+    if (r.includes("COOK")) return "CK";
+    return "⚓";
+  };
+
   const hasFilter = fRank || fCountry || fExp || fAvail || fLang;
 
   return (
@@ -187,8 +203,9 @@ export default async function BrowsePage({
   .ccard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px;display:flex;flex-direction:column;transition:.2s}
   .ccard:hover{transform:translateY(-2px);border-color:var(--gold)}
   .chead{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
-  .avatar{flex-shrink:0;width:46px;height:46px;border-radius:13px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:18px;color:var(--gold)}
+  .avatar{flex-shrink:0;width:46px;height:46px;border-radius:13px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:14px;color:var(--gold)}
   .cname{font-family:var(--disp);font-weight:700;font-size:15.5px;line-height:1.25}
+  .clocked{color:var(--tx3);font-size:11px;font-weight:600;margin-top:1px}
   .crole{color:var(--gold);font-size:12.5px;font-weight:700;margin-top:2px}
   .crows{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;font-size:12.5px}
   .crow{display:flex;justify-content:space-between;gap:10px}
@@ -212,7 +229,7 @@ export default async function BrowsePage({
           <Link href="/dashboard" className="back">← Back to dashboard</Link>
           <h1>Search for <span style={{ color: "var(--gold)" }}>Crew</span></h1>
           <p className="sub">
-            {profileList.length} verified maritime professional{profileList.length === 1 ? "" : "s"} found — contact directly, zero commission.
+            {profileList.length} verified maritime professional{profileList.length === 1 ? "" : "s"} found — open a profile to view full details.
           </p>
         </div>
       </div>
@@ -299,10 +316,11 @@ export default async function BrowsePage({
                   <div key={p.id} className="ccard">
                     <div className="chead">
                       <div className="avatar">
-                        {(p.full_name || "U").charAt(0).toUpperCase()}
+                        {rankBadge(d)}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div className="cname">{p.full_name || "Unnamed"}</div>
+                        <div className="cname">Verified Crew 🔒</div>
+                        <div className="clocked">Open profile to view name</div>
                         <div className="crole">{roleTitle}</div>
                       </div>
                     </div>
