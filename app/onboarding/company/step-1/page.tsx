@@ -191,7 +191,7 @@ export default async function CompanyStep1Page() {
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
-          <Link href="/dashboard" className="text-white/40 hover:text-white/60 text-sm transition">
+          <Link href="/dashboard" className="text-accent hover:text-accent-light text-sm font-bold transition">
             ← Back to dashboard
           </Link>
           <button
