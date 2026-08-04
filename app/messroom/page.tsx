@@ -25,6 +25,7 @@ type MessMsg = {
 const rankShort = (r: string) => {
   const u = (r || "").toUpperCase();
   if (u === "SCF") return "SCF";
+  if (u === "GUEST") return "👤";
   if (u === "CO") return "🏢";
   if (u.includes("CHIEF ENGINEER")) return "C/E";
   if (u.includes("2ND ENGINEER") || u.includes("SECOND ENGINEER")) return "2/E";
@@ -43,6 +44,7 @@ const rankShort = (r: string) => {
 const rankClass = (r: string) => {
   const u = (r || "").toUpperCase();
   if (u === "SCF") return "mr-sys";
+  if (u === "GUEST") return "mr-rat";
   if (u === "CO") return "mr-co";
   if (u.includes("CHIEF ENGINEER") || u.includes("MASTER") || u.includes("CAPTAIN")) return "mr-top";
   if (u.includes("ENGINEER") || u.includes("OFFICER") || u.includes("MATE") || u.includes("ETO")) return "mr-off";
@@ -59,7 +61,7 @@ export default async function MessRoomPage({
 
   const supabase = await createClient();
 
-  // Günlük tohum mesajı (günde 1 kez üretir; atılmışsa anında döner)
+  // Günlük tohum mesajı (günde 2 kez üretir; atılmışsa anında döner)
   await supabase.rpc("post_daily_brief");
 
   const [{ data: { session } }, { data: feedData }, { data: countData }] = await Promise.all([
@@ -138,6 +140,15 @@ export default async function MessRoomPage({
   .rlock p b{color:var(--tx);font-family:var(--disp)}
   .rjoin{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;border-radius:10px;padding:10px 17px;font-weight:800;font-size:12.5px;text-decoration:none;white-space:nowrap}
   .rnote{flex-shrink:0;text-align:center;font-size:10px;color:var(--tx3);padding:0 0 10px}
+  .glimit{flex-shrink:0;display:flex;flex-direction:column;gap:10px;padding:14px 15px;border-top:1px solid var(--line2);
+    background:rgba(251,191,36,.06);border-radius:13px 13px 0 0;margin-top:6px}
+  .glimit p{font-size:12.5px;color:var(--tx2);line-height:1.5}
+  .glimit p b{color:var(--gold);font-family:var(--disp)}
+  .glimit-row{display:flex;gap:9px;flex-wrap:wrap}
+  .gbtn{flex:1;text-align:center;border-radius:10px;padding:10px 14px;font-weight:800;font-size:12.5px;text-decoration:none;white-space:nowrap}
+  .gbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .gbtn.ghost{border:1px solid var(--line2);color:var(--tx)}
+  .gnote{flex-shrink:0;text-align:center;font-size:10px;color:var(--tx3);padding:8px 0 4px}
 `}</style>
 
       <div className="room">
@@ -151,7 +162,7 @@ export default async function MessRoomPage({
           <span className="rfire">🔥 {todayCount} today</span>
         </div>
 
-        {mess === "link" ? <div className="rerr bad">🚫 Links and email addresses are not allowed in the Chat Room.</div> : null}
+        {mess === "link" ? <div className="rerr bad">🚫 Links, emails and phone numbers are not allowed in the Chat Room.</div> : null}
         {mess === "slow" ? <div className="rerr slow">⏳ Easy sailor — one message every 10 seconds.</div> : null}
         {mess === "failed" ? <div className="rerr bad">Something went wrong — try again.</div> : null}
 
@@ -197,13 +208,25 @@ export default async function MessRoomPage({
               <input className="rinput" id="mess-input" name="body" type="text" maxLength={300} placeholder="Say something to the crew… (tap a name to @mention)" autoComplete="off" required />
               <button type="submit" className="rsend">Send ⚓</button>
             </form>
-            <div className="rnote">💨 Messages vanish after 24h · Links &amp; emails blocked · 1 message / 10s</div>
+            <div className="rnote">💨 Messages vanish after 24h · Links, emails &amp; phone numbers blocked · 1 message / 10s</div>
           </>
-        ) : (
-          <div className="rlock">
-            <p><b>Join free to talk</b> — full names unlock, chat opens, DM any member.</p>
-            <Link href="/signup" className="rjoin">Join free ⚓</Link>
+        ) : mess === "guestlimit" ? (
+          <div className="glimit">
+            <p><b>You've used today's 3 free messages.</b> Join free to keep chatting — unlimited messages, full names unlock, DM any member.</p>
+            <div className="glimit-row">
+              <Link href="/signup" className="gbtn gold">Create free account →</Link>
+              <Link href="/login" className="gbtn ghost">Log in</Link>
+            </div>
           </div>
+        ) : (
+          <>
+            <form action={sendMessRoomMessage} className="rform">
+              <input type="hidden" name="backTo" value="/messroom" />
+              <input className="rinput" id="mess-input" name="body" type="text" maxLength={300} placeholder="Say something as a guest…" autoComplete="off" required />
+              <button type="submit" className="rsend">Send ⚓</button>
+            </form>
+            <div className="gnote">👤 You're chatting as a guest — 3 free messages today · <Link href="/signup" style={{ color: "var(--gold)" }}>Join free</Link> for unlimited access</div>
+          </>
         )}
 
         <MessRoomClient messageCount={msgs.length} />
