@@ -92,7 +92,7 @@ export default async function MessRoomBox() {
         <div className="mrbox">
           <div className="mrhead">
             <div>
-              <h2><span className="mrlive"></span>⚓ The Mess Room</h2>
+              <h2><span className="mrlive"></span>💬 Chat Room</h2>
               <div className="mrsub">live crew chat, open 24/7</div>
             </div>
             <span className="mrfire">🔥 {todayCount} message{todayCount === 1 ? "" : "s"} today</span>
@@ -101,7 +101,7 @@ export default async function MessRoomBox() {
           <div className="mrfeed">
             {msgs.length === 0 ? (
               <div className="mrempty">
-                The mess room is quiet right now ☕<br />
+                The chat room is quiet right now ☕<br />
                 Members are talking rank changes, ports and contracts — join and say hello.
               </div>
             ) : (
