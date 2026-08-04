@@ -2,16 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
+import { getPlanAccess } from "@/lib/plan-access";
 
 export const metadata = {
   title: "Candidate — ShipCrewFinder",
-};
-
-// Plan → aylık tam-CV limiti (null = sınırsız)
-const PLAN_LIMITS: Record<string, number | null> = {
-  founding: 100,
-  pro: 100,
-  fleet: null,
 };
 
 export default async function CandidatePage({
@@ -39,8 +33,54 @@ export default async function CandidatePage({
   ]);
   if (!me || me.user_type !== "company") redirect("/dashboard");
 
-  const myPlan = (me.plan as string) || "founding";
-  const limit = PLAN_LIMITS[myPlan] ?? 100;
+  const myPlan = (me.plan as string) || "free";
+  const access = getPlanAccess(myPlan as never);
+  const limit = access.cvViewLimit;
+
+  // ── Gerçek ücretsiz plan: hiçbir crew detayına erişim yok ──
+  if (!access.canSearchCrew) {
+    return (
+      <>
+        <style>{`
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0d1030;--navy2:#141845;--ink:#050716;
+    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
+    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;
+    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
+  }
+  body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px}
+  section{padding:60px 0}
+  .lock{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:20px;padding:36px 26px;text-align:center}
+  .lock .lic{width:56px;height:56px;margin:0 auto 18px;border-radius:16px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-size:24px}
+  .lock h1{font-family:var(--disp);font-size:22px;font-weight:800;margin-bottom:10px}
+  .lock p{font-size:13.5px;color:var(--tx2);line-height:1.65;max-width:46ch;margin:0 auto 22px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:12px 22px;font-family:var(--body)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .btn-gold:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--tx);border:1px solid var(--line2);background:transparent}
+`}</style>
+        <SiteHeader isLoggedIn={true} userType="company" unreadCount={unreadCount || 0} active={null} />
+        <section>
+          <div className="wrap">
+            <div className="lock">
+              <div className="lic">🔒</div>
+              <h1>Crew profiles require a paid plan</h1>
+              <p>
+                Viewing candidate details is part of the Pro and Fleet plans — both include a
+                free first month. Choose a plan to start viewing verified crew profiles today.
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                <Link href="/upgrade" className="btn btn-gold">Choose a plan →</Link>
+                <Link href="/browse" className="btn btn-ghost">Back to Browse</Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   // Candidate profile
   const { data: profile } = await supabase
@@ -68,7 +108,7 @@ export default async function CandidatePage({
   if (blocked) notFound();
 
   // ── Credit system ─────────────────────────────────────────
-  const monthKey = new Date().toISOString().slice(0, 7); // "2026-07"
+  const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"
 
   // Already viewed this crew this month? (re-opening is free)
   const { data: existingView } = await supabase
@@ -342,7 +382,7 @@ export default async function CandidatePage({
                 Your credits reset at the start of next month — or upgrade to Fleet for unlimited views.
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/contact" className="btn btn-gold">Upgrade to Fleet — Unlimited</Link>
+                <Link href="/upgrade" className="btn btn-gold">Upgrade to Fleet — Unlimited</Link>
                 <Link href="/browse" className="btn btn-ghost">Back to Browse</Link>
               </div>
             </div>
