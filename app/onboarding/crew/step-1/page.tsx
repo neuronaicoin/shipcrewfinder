@@ -129,7 +129,7 @@ export default async function CrewStep1Page() {
 
         {/* Actions */}
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="text-white/40 hover:text-white/60 text-sm transition">
+          <Link href="/dashboard" className="text-accent hover:text-accent-light text-sm font-bold transition">
             ← Skip for now
           </Link>
           <button
