@@ -122,13 +122,9 @@ export default async function CrewStep1Page() {
               </optgroup>
             ))}
           </select>
-          </button>
-        </div>
-
-        <p className="text-white/30 text-xs text-center mt-4">
-          Your answers save automatically when you tap Continue →
-        </p>
-      </form>
+          <p className="text-white/40 text-xs mt-3">
+            Choose the rank you currently hold or held in your most recent contract
+          </p>
         </div>
 
         {/* Actions */}
@@ -143,6 +139,10 @@ export default async function CrewStep1Page() {
             Continue →
           </button>
         </div>
+
+        <p className="text-white/30 text-xs text-center mt-4">
+          Your answers save automatically when you tap Continue →
+        </p>
       </form>
     </div>
   );
