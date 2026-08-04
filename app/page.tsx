@@ -7,7 +7,12 @@ import PopularSearches from "@/app/components/popular-searches";
 import LiveActivityStrip from "@/app/components/live-activity-strip";
 import AiProfilePromo from "@/app/components/ai-profile-promo";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,7 +29,7 @@ export default async function HomePage() {
           <AiProfilePromo />
           <LiveActivityStrip />
           <DeckRail />
-          <MessRoomBox />
+          <MessRoomBox messStatus={sp.mess} />
           <PopularSearches />
         </>
       }
