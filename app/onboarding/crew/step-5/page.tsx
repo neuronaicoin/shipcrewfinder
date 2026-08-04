@@ -275,6 +275,10 @@ export default async function CrewStep5Page() {
             {isEditing ? "Save Changes ✓" : "Complete Profile 🎉"}
           </button>
         </div>
+
+        <p className="text-white/30 text-xs text-center mt-4">
+          Your answers save automatically when you tap Continue →
+        </p>
       </form>
     </div>
   );
