@@ -102,6 +102,8 @@ const orgSchema = {
     "https://x.com/shipcrewfinder",
     "https://www.tiktok.com/@shipcrewfinder",
     "https://www.crunchbase.com/organization/shipcrewfinder",
+    "https://www.instagram.com/shipcrewfinder/",
+    "https://www.facebook.com/profile.php?id=61592830344116",
   ],
 };
 
