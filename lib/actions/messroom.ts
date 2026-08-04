@@ -3,19 +3,21 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 const LINK_RE = /(https?:\/\/|www\.|t\.me|wa\.me|bit\.ly|tinyurl|goo\.gl|discord\.gg|telegram|linktr\.ee)/i;
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
+const PHONE_RE = /(\+?\d[\d\s\-().]{7,}\d)/;
 const MENTION_RE = /@([a-z0-9-]{3,60})/gi;
+const GUEST_DAILY_LIMIT = 3;
 
 // ============================================
-// Mess Room'a mesaj gönder
+// Chat Room'a mesaj gönder (üye veya misafir)
 // ============================================
 export async function sendMessRoomMessage(formData: FormData): Promise<void> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
   const backTo = ((formData.get("backTo") as string) || "/messroom").trim();
   const safeBack = backTo.startsWith("/") ? backTo : "/messroom";
@@ -23,11 +25,47 @@ export async function sendMessRoomMessage(formData: FormData): Promise<void> {
   const body = ((formData.get("body") as string) || "").trim().slice(0, 300);
   if (!body) redirect(safeBack);
 
-  // Link + mail engeli
-  if (LINK_RE.test(body) || EMAIL_RE.test(body)) {
+  // Link + mail + telefon engeli (herkes için)
+  if (LINK_RE.test(body) || EMAIL_RE.test(body) || PHONE_RE.test(body)) {
     redirect(safeBack + "?mess=link");
   }
 
+  // ── Misafir (giriş yapmamış) akışı ──
+  if (!user) {
+    const hdrs = await headers();
+    const ip =
+      hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      hdrs.get("x-real-ip") ||
+      "unknown";
+
+    const { data: countResult } = await supabase.rpc("check_guest_chat_limit", {
+      client_ip: ip,
+      daily_limit: GUEST_DAILY_LIMIT,
+    });
+    const currentCount = (countResult as number) || 0;
+
+    if (currentCount > GUEST_DAILY_LIMIT) {
+      redirect(safeBack + "?mess=guestlimit");
+    }
+
+    const { error } = await supabase.from("mess_messages").insert({
+      user_id: null,
+      body: body,
+      is_system: false,
+      guest_tag: "Guest ⚓",
+    });
+
+    if (error) {
+      redirect(safeBack + "?mess=failed");
+    }
+
+    await supabase.rpc("purge_mess_messages");
+    revalidatePath("/");
+    revalidatePath("/messroom");
+    redirect(safeBack + "?mess=sent");
+  }
+
+  // ── Üye akışı (mevcut, değişmedi) ──
   // 10 saniye hız freni (kişi başına)
   const { data: lastMsg } = await supabase
     .from("mess_messages")
@@ -68,7 +106,7 @@ export async function sendMessRoomMessage(formData: FormData): Promise<void> {
       await supabase.from("notifications").insert({
         user_id: m.id as string,
         type: "mention",
-        title: "⚓ " + senderName + " mentioned you in the Mess Room",
+        title: "⚓ " + senderName + " mentioned you in the Chat Room",
         message: body.slice(0, 90),
         link: "/messroom",
         read: false,
