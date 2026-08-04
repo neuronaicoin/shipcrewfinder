@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { sendMessRoomMessage } from "@/lib/actions/messroom";
 
 type MessMsg = {
   id: string;
@@ -16,6 +17,7 @@ type MessMsg = {
 const rankShort = (r: string) => {
   const u = (r || "").toUpperCase();
   if (u === "SCF") return "SCF";
+  if (u === "GUEST") return "👤";
   if (u === "CO") return "🏢";
   if (u.includes("CHIEF ENGINEER")) return "C/E";
   if (u.includes("2ND ENGINEER") || u.includes("SECOND ENGINEER")) return "2/E";
@@ -34,16 +36,17 @@ const rankShort = (r: string) => {
 const rankClass = (r: string) => {
   const u = (r || "").toUpperCase();
   if (u === "SCF") return "mr-sys";
+  if (u === "GUEST") return "mr-rat";
   if (u === "CO") return "mr-co";
   if (u.includes("CHIEF ENGINEER") || u.includes("MASTER") || u.includes("CAPTAIN")) return "mr-top";
   if (u.includes("ENGINEER") || u.includes("OFFICER") || u.includes("MATE") || u.includes("ETO")) return "mr-off";
   return "mr-rat";
 };
 
-export default async function MessRoomBox() {
+export default async function MessRoomBox({ messStatus }: { messStatus?: string }) {
   const supabase = await createClient();
 
-  // Günlük tohum mesajı (günde 1 kez üretir; atılmışsa anında döner)
+  // Günlük tohum mesajı (günde 2 kez üretir; atılmışsa anında döner)
   await supabase.rpc("post_daily_brief");
 
   const [{ data: feedData }, { data: countData }] = await Promise.all([
@@ -79,10 +82,20 @@ export default async function MessRoomBox() {
   .mrvf{color:var(--grn);font-size:10px}
   .mrtext{color:var(--tx2)}
   .mrempty{margin:auto;text-align:center;font-size:12.5px;color:var(--tx3);line-height:1.7;padding:14px 0}
-  .mrlock{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line2);background:rgba(251,191,36,.04)}
-  .mrlock p{font-size:12px;color:var(--tx2)}
-  .mrlock p b{color:var(--tx);font-family:var(--disp)}
-  .mrjoin{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;border-radius:10px;padding:9px 16px;font-weight:800;font-size:12.5px;text-decoration:none;white-space:nowrap}
+  .mrform{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line2)}
+  .mrinput{flex:1;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 14px;font-family:var(--body);font-size:13.5px;outline:none}
+  .mrinput:focus{border-color:var(--gold)}
+  .mrsend{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;border:none;border-radius:11px;padding:0 18px;font-weight:800;font-size:13px;cursor:pointer;font-family:var(--body);white-space:nowrap}
+  .mrgnote{font-size:10.5px;color:var(--tx3);text-align:center;padding:0 18px 12px}
+  .mrgnote a{color:var(--gold);text-decoration:none;font-weight:700}
+  .mrerr{margin:0 18px 10px;border-radius:10px;padding:8px 12px;font-size:11.5px;border:1px solid;color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .mrlimit{display:flex;flex-direction:column;gap:9px;padding:14px 18px;border-top:1px solid var(--line2);background:rgba(251,191,36,.05)}
+  .mrlimit p{font-size:12px;color:var(--tx2);line-height:1.55}
+  .mrlimit p b{color:var(--gold);font-family:var(--disp)}
+  .mrlimit-row{display:flex;gap:8px;flex-wrap:wrap}
+  .mrlbtn{flex:1;text-align:center;border-radius:9px;padding:9px 12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap}
+  .mrlbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
+  .mrlbtn.ghost{border:1px solid var(--line2);color:var(--tx)}
   .mrstrip{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 18px;background:rgba(255,255,255,.02);border-top:1px solid var(--line2);font-size:10.5px;color:var(--tx3)}
   .mrstrip a{color:var(--gold);font-weight:800;text-decoration:none;white-space:nowrap}
   .mrstrip a:hover{text-decoration:underline}
@@ -102,7 +115,7 @@ export default async function MessRoomBox() {
             {msgs.length === 0 ? (
               <div className="mrempty">
                 The chat room is quiet right now ☕<br />
-                Members are talking rank changes, ports and contracts — join and say hello.
+                Be the first to say hello below.
               </div>
             ) : (
               msgs.map((m) => (
@@ -123,13 +136,44 @@ export default async function MessRoomBox() {
             )}
           </div>
 
-          <div className="mrlock">
-            <p><b>Join free to talk</b> — names unlock, chat opens, companies and crew in one room.</p>
-            <Link href="/signup" className="mrjoin">Join free ⚓</Link>
-          </div>
+          {messStatus === "link" ? (
+            <div className="mrerr">🚫 Links, emails and phone numbers are not allowed.</div>
+          ) : null}
+          {messStatus === "failed" ? (
+            <div className="mrerr">Something went wrong — please try again.</div>
+          ) : null}
+
+          {messStatus === "guestlimit" ? (
+            <div className="mrlimit">
+              <p><b>You've used today's 3 free messages.</b> Join free for unlimited chat.</p>
+              <div className="mrlimit-row">
+                <Link href="/signup" className="mrlbtn gold">Create free account →</Link>
+                <Link href="/login" className="mrlbtn ghost">Log in</Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <form action={sendMessRoomMessage} className="mrform">
+                <input type="hidden" name="backTo" value="/" />
+                <input
+                  className="mrinput"
+                  name="body"
+                  type="text"
+                  maxLength={300}
+                  placeholder="Say something as a guest…"
+                  autoComplete="off"
+                  required
+                />
+                <button type="submit" className="mrsend">Send ⚓</button>
+              </form>
+              <div className="mrgnote">
+                👤 Chatting as a guest — 3 free messages today · <Link href="/signup">Join free</Link> for unlimited access
+              </div>
+            </>
+          )}
 
           <div className="mrstrip">
-            <span>💨 Messages vanish after 24h · Links &amp; emails blocked</span>
+            <span>💨 Messages vanish after 24h · Links &amp; numbers blocked</span>
             <Link href="/messroom">Open full room →</Link>
           </div>
         </div>
