@@ -175,7 +175,7 @@ export default async function CrewStep2Page() {
         <div className="flex items-center justify-between pt-2">
           <Link
             href="/onboarding/crew/step-1"
-            className="text-white/40 hover:text-white/60 text-sm transition"
+            className="text-accent hover:text-accent-light text-sm font-bold transition"
           >
             ← Back
           </Link>
