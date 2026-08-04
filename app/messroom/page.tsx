@@ -5,9 +5,9 @@ import { startConversation } from "@/lib/actions/messages";
 import MessRoomClient from "@/app/components/messroom-client";
 
 export const metadata = {
-  title: "The Mess Room — Live Crew Chat | ShipCrewFinder",
+  title: "Chat Room — Live Crew Chat | ShipCrewFinder",
   description:
-    "The Mess Room: live 24/7 chat for verified seafarers and shipping companies. Messages vanish after 24 hours. No links, no spam — just crew talk.",
+    "The ShipCrewFinder Chat Room: live 24/7 chat for verified seafarers and shipping companies. Messages vanish after 24 hours. No links, no spam — just crew talk.",
 };
 
 type MessMsg = {
@@ -145,20 +145,20 @@ export default async function MessRoomPage({
           <Link href={user ? "/dashboard" : "/"} className="rback">←</Link>
           <span className="rlive"></span>
           <div style={{ minWidth: 0 }}>
-            <div className="rtitle">⚓ The Mess Room</div>
+            <div className="rtitle">💬 Chat Room</div>
             <div className="rsub">live crew chat, open 24/7 {myHandle ? "· you are @" + myHandle : ""}</div>
           </div>
           <span className="rfire">🔥 {todayCount} today</span>
         </div>
 
-        {mess === "link" ? <div className="rerr bad">🚫 Links and email addresses are not allowed in the Mess Room.</div> : null}
+        {mess === "link" ? <div className="rerr bad">🚫 Links and email addresses are not allowed in the Chat Room.</div> : null}
         {mess === "slow" ? <div className="rerr slow">⏳ Easy sailor — one message every 10 seconds.</div> : null}
         {mess === "failed" ? <div className="rerr bad">Something went wrong — try again.</div> : null}
 
         <div className="rbody" id="mess-scroll">
           {msgs.length === 0 ? (
             <div className="rempty">
-              <b>The mess room is quiet ☕</b><br />
+              <b>The chat room is quiet ☕</b><br />
               Grab a seat — rank talk, port gossip, contract news. Be the one who starts it.
             </div>
           ) : (
