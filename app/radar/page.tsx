@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import { getSortedCountries } from "@/lib/constants/countries";
 import Link from "next/link";
+import { getPlanAccess } from "@/lib/plan-access";
 
 export const metadata = {
   title: "Rotation Radar — ShipCrewFinder",
@@ -19,7 +20,7 @@ export default async function RadarPage() {
 
   const [{ data: me }, { data: myCompany }, { count: unreadCount }, { data: blockedRows }] =
     await Promise.all([
-      supabase.from("profiles").select("user_type").eq("id", user.id).single(),
+      supabase.from("profiles").select("user_type, plan").eq("id", user.id).single(),
       supabase
         .from("company_details")
         .select("hiring_for_ranks")
@@ -34,6 +35,9 @@ export default async function RadarPage() {
     ]);
 
   if (!me || me.user_type !== "company") redirect("/dashboard");
+
+  const myPlan = (me.plan as string) || "free";
+  const access = getPlanAccess(myPlan as never);
 
   const hiringRanks: string[] = Array.isArray(myCompany?.hiring_for_ranks)
     ? (myCompany?.hiring_for_ranks as string[])
@@ -141,6 +145,10 @@ export default async function RadarPage() {
   .sub{font-size:14px;color:var(--tx2);line-height:1.6;max-width:62ch}
   .rtag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);border-radius:999px;padding:4px 12px;margin-bottom:12px}
   section{padding:18px 0 44px}
+  .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .banner.locked{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:12.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:8px 15px;font-family:var(--body);white-space:nowrap}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
   .sum{border-radius:14px;padding:14px 16px;border:1px solid var(--line2);background:linear-gradient(165deg,var(--navy2),var(--ink))}
   .sum p{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px}
@@ -192,6 +200,13 @@ export default async function RadarPage() {
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
+          {!access.canSearchCrew ? (
+            <div className="banner locked">
+              <span>🔒 You can see who&apos;s coming available — opening a full profile requires Pro or Fleet.</span>
+              <Link href="/upgrade" className="btn btn-gold">Choose a plan →</Link>
+            </div>
+          ) : null}
+
           {/* Özet */}
           <div className="sumgrid">
             <div className="sum">
