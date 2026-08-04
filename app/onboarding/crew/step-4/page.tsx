@@ -84,7 +84,7 @@ export default async function CrewStep4Page() {
         </p>
 
         <div className="flex items-center justify-between pt-2">
-          <Link href="/onboarding/crew/step-3" className="text-white/40 hover:text-white/60 text-sm transition">
+          <Link href="/onboarding/crew/step-3" className="text-accent hover:text-accent-light text-sm font-bold transition">
             ← Back
           </Link>
           <button
