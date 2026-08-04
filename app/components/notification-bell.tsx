@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function NotificationBell({ count }: { count: number }) {
   return (
     <Link
-      href="/requests"
+      href="/dashboard?read=1#notifications"
       className="relative inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/15 rounded-lg transition border border-white/10"
       aria-label="Notifications"
     >
