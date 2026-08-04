@@ -14,7 +14,12 @@ export const metadata = {
   title: "Your Account — ShipCrewFinder",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
 
   // getSession: çerezden okur — getUser'ın yaptığı ekstra ağ turunu atlar
@@ -25,6 +30,15 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Zil tıklanınca ?read=1 ile gelir — tüm bildirimleri okundu işaretle
+  if (sp.read === "1") {
+    await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
   }
 
   const [
@@ -342,6 +356,28 @@ export default async function DashboardPage() {
       <div className="dash-hero">
         <div className="aur"></div>
         <div className="wrap" style={{ position: "relative" }}>
+          <form action={logout} style={{ position: "absolute", top: 0, right: 0, zIndex: 5 }}>
+            <button
+              type="submit"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "linear-gradient(135deg,#fbbf24,#e0a010)",
+                color: "#0b0e13",
+                border: "none",
+                borderRadius: "10px",
+                padding: "9px 16px",
+                fontWeight: 800,
+                fontSize: "13px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                boxShadow: "0 4px 16px rgba(251,191,36,.3)",
+              }}
+            >
+              ⏻ Log out
+            </button>
+          </form>
           <div className="hero-grid">
             <div>
               <div className="tag">{accountTypeLabel}</div>
@@ -474,7 +510,7 @@ export default async function DashboardPage() {
                   <p>2026 wage benchmarks by rank, vessel type and nationality.</p>
                 </Link>
               </>
-            ) : (
+      ) : (
               <>
                 <Link href="/jobs" className="qcard gold">
                   <div className="qi">⚓</div>
