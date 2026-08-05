@@ -392,13 +392,13 @@ export async function updateCompanyInfo(formData: FormData): Promise<void> {
 
   await supabase
     .from("company_details")
-    .update({
+    .upsert({
+      id: user.id,
       headquarters_country: country,
       company_type: companyType,
       company_size: companySize || null,
       website: website || null,
-    })
-    .eq("id", user.id);
+    });
 
   revalidatePath("/onboarding/company");
   redirect("/onboarding/company/step-2");
@@ -418,11 +418,11 @@ export async function updateCompanyHiring(formData: FormData): Promise<void> {
 
   await supabase
     .from("company_details")
-    .update({
+    .upsert({
+      id: user.id,
       hiring_for_ranks: hiringRanks,
       fleet_types: fleetTypes,
-    })
-    .eq("id", user.id);
+    });
 
   revalidatePath("/onboarding/company");
   redirect("/onboarding/company/step-3");
@@ -450,11 +450,11 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
 
   await supabase
     .from("company_details")
-    .update({
+    .upsert({
+      id: user.id,
       description: description || null,
       contact_phone: contactPhone || null,
-    })
-    .eq("id", user.id);
+    });
 
   revalidatePath("/", "layout");
   redirect("/onboarding/complete");
