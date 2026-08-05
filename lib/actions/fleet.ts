@@ -63,3 +63,46 @@ export async function deleteVessel(formData: FormData): Promise<void> {
   revalidatePath("/fleet");
   redirect("/fleet?deleted=1");
 }
+
+export async function addFleetCrew(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const fullName = ((formData.get("fullName") as string) || "").trim().slice(0, 100);
+  const rank = ((formData.get("rank") as string) || "").trim().slice(0, 60);
+  const nationality = ((formData.get("nationality") as string) || "").trim().slice(0, 60);
+  const joinDate = (formData.get("joinDate") as string) || "";
+
+  if (!vesselId || !fullName) redirect(`/fleet/${vesselId}?error=missing`);
+
+  const { error } = await supabase.from("fleet_crew").insert({
+    vessel_id: vesselId,
+    company_id: userId,
+    full_name: fullName,
+    rank: rank || null,
+    nationality: nationality || null,
+    join_date: joinDate || null,
+  });
+
+  if (error) redirect(`/fleet/${vesselId}?error=failed`);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?added=1`);
+}
+
+export async function deleteFleetCrew(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  await supabase
+    .from("fleet_crew")
+    .delete()
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?deleted=1`);
+}
