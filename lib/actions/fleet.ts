@@ -106,3 +106,49 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}?deleted=1`);
 }
+
+export async function updateFleetCrew(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  const fullName = ((formData.get("fullName") as string) || "").trim().slice(0, 100);
+  const rank = ((formData.get("rank") as string) || "").trim().slice(0, 60);
+  const nationality = ((formData.get("nationality") as string) || "").trim().slice(0, 60);
+  const passportNumber = ((formData.get("passportNumber") as string) || "").trim().slice(0, 40);
+  const passportExpiry = (formData.get("passportExpiry") as string) || "";
+  const healthReportExpiry = (formData.get("healthReportExpiry") as string) || "";
+  const joinDate = (formData.get("joinDate") as string) || "";
+  const departureDate = (formData.get("departureDate") as string) || "";
+  const salaryAmount = (formData.get("salaryAmount") as string) || "";
+  const salaryCurrency = ((formData.get("salaryCurrency") as string) || "USD").trim().slice(0, 10);
+  const notes = ((formData.get("notes") as string) || "").trim().slice(0, 2000);
+
+  if (!fullName) redirect(`/fleet/${vesselId}/${crewId}?error=missing`);
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({
+      full_name: fullName,
+      rank: rank || null,
+      nationality: nationality || null,
+      passport_number: passportNumber || null,
+      passport_expiry: passportExpiry || null,
+      health_report_expiry: healthReportExpiry || null,
+      join_date: joinDate || null,
+      departure_date: departureDate || null,
+      salary_amount: salaryAmount ? Number(salaryAmount) : null,
+      salary_currency: salaryCurrency || "USD",
+      notes: notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
+
+  revalidatePath(`/fleet/${vesselId}/${crewId}`);
+  redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
+}
