@@ -90,6 +90,13 @@ export default function SiteHeader({
     .scf-cta .scf-btn-ghost.hide-m{display:none}
     .scf-ham{display:grid}
   }
+  @media(max-width:480px){
+    .scf-cta{gap:6px}
+    .scf-cta button[aria-label="Theme"]{display:none}
+    .scf-btn{padding:8px 12px;font-size:12.5px}
+    .scf-logo b{font-size:15px}
+    .scf-logo-ic{width:32px;height:32px}
+  }
 `}</style>
 
       <header className="scf-top">
