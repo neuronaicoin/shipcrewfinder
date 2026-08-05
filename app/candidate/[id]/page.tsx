@@ -3,10 +3,69 @@ import { redirect, notFound } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
 import { getPlanAccess } from "@/lib/plan-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = {
   title: "Candidate — ShipCrewFinder",
 };
+
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const FROM = "ShipCrewFinder <jobs@shipcrewfinder.com>";
+
+async function notifyProfileViewed(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  crewId: string,
+  crewEmail: string | null,
+  crewName: string | null,
+  companyLabel: string
+) {
+  try {
+    await supabase.from("notifications").insert({
+      user_id: crewId,
+      type: "profile_view",
+      title: "👀 " + companyLabel + " viewed your profile",
+      message: "A verified company opened your full profile on ShipCrewFinder today.",
+      link: "/dashboard#notifications",
+      read: false,
+    });
+
+    if (!crewEmail) return;
+
+    const admin = createAdminClient();
+    const { data: secret } = await admin
+      .from("app_secrets")
+      .select("value")
+      .eq("key", "resend_api_key")
+      .single();
+    if (!secret?.value) return;
+
+    const firstName = (crewName || "there").split(" ")[0];
+
+    await fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret.value as string}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM,
+        to: [crewEmail],
+        subject: `👀 ${companyLabel} viewed your ShipCrewFinder profile`,
+        html: `
+<div style="font-family:Arial,sans-serif;max-width:560px">
+  <h2 style="color:#0d1030">⚓ Someone found you on ShipCrewFinder</h2>
+  <p>Hi ${firstName},</p>
+  <p><b>${companyLabel}</b> just opened your full verified profile on ShipCrewFinder — including your contact details.</p>
+  <p>If they reach out to you soon by email, phone or WhatsApp, that's how they found you.</p>
+  <p style="color:#888;font-size:12px;margin-top:18px">You're receiving this because a company viewed your public profile on shipcrewfinder.com. No action needed.</p>
+</div>`,
+        text: `${companyLabel} just viewed your ShipCrewFinder profile. If they contact you soon, that's how they found you.`,
+      }),
+    });
+  } catch {
+    // Sessiz geç — bildirim gönderilemese bile profil görüntüleme akışı devam etsin
+  }
+}
 
 export default async function CandidatePage({
   params,
@@ -23,8 +82,9 @@ export default async function CandidatePage({
   if (!user) redirect("/login");
 
   // Only companies
-  const [{ data: me }, { count: unreadCount }] = await Promise.all([
-    supabase.from("profiles").select("user_type, plan").eq("id", user.id).single(),
+  const [{ data: me }, { data: myCompanyDetails }, { count: unreadCount }] = await Promise.all([
+    supabase.from("profiles").select("user_type, plan, full_name").eq("id", user.id).single(),
+    supabase.from("company_details").select("company_name").eq("id", user.id).maybeSingle(),
     supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -32,6 +92,8 @@ export default async function CandidatePage({
       .eq("read", false),
   ]);
   if (!me || me.user_type !== "company") redirect("/dashboard");
+
+  const companyLabel = (myCompanyDetails?.company_name as string) || (me.full_name as string) || "A company";
 
   const myPlan = (me.plan as string) || "free";
   const access = getPlanAccess(myPlan as never);
@@ -110,7 +172,7 @@ export default async function CandidatePage({
   // ── Credit system ─────────────────────────────────────────
   const monthKey = new Date().toISOString().slice(0, 7); // "2026-08"
 
-  // Already viewed this crew this month? (re-opening is free)
+  // Already viewed this crew this month? (re-opening is free, no repeat notification)
   const { data: existingView } = await supabase
     .from("company_profile_views")
     .select("id")
@@ -137,7 +199,17 @@ export default async function CandidatePage({
       crew_id: id,
       month_key: monthKey,
     });
-    if (!insErr) used += 1;
+    if (!insErr) {
+      used += 1;
+      // İlk kez açılan profil — denizciye "seni buldular" bildirimi + mail (sessiz, akışı bloklamaz)
+      notifyProfileViewed(
+        supabase,
+        id,
+        (profile.email as string) || null,
+        (profile.full_name as string) || null,
+        companyLabel
+      );
+    }
     unlocked = true;
   }
   // else: limit reached → locked view (rank + country only)
