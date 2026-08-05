@@ -1,6 +1,7 @@
 // Tek gerçek kaynak: hangi paket neye erişebilir.
 // "founding" = eski/mevcut şirketler, Polar canlıya geçene kadar Pro-eşdeğeri sayılıyor.
-// Polar hazır olduğunda burada TEK satır değişecek: founding'i "free" yap, yeter.
+// Fleet Crew Manager İSTİSNA: founding dahil, sadece GERÇEK "fleet" planı erişebilir —
+// bu yepyeni bir özellik, geriye dönük ücretsiz erişim verilmiyor.
 
 export type CompanyPlan = "pro" | "fleet" | "founding" | "free" | null | undefined;
 
@@ -10,6 +11,7 @@ export type PlanAccess = {
   canPostJob: boolean;
   jobPostLimit: number | null; // null = sınırsız
   canUseRadar: boolean; // Rotation Radar'daki isimleri görebilir mi
+  canUseFleetManager: boolean; // Fleet Crew Manager — sadece gerçek Fleet planı
   label: string;
 };
 
@@ -23,6 +25,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
       canPostJob: true,
       jobPostLimit: null,
       canUseRadar: true,
+      canUseFleetManager: true,
       label: "Fleet",
     };
   }
@@ -34,6 +37,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
       canPostJob: true,
       jobPostLimit: 10,
       canUseRadar: true,
+      canUseFleetManager: false,
       label: p === "founding" ? "Founding" : "Pro",
     };
   }
@@ -45,6 +49,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
     canPostJob: false,
     jobPostLimit: 0,
     canUseRadar: false,
+    canUseFleetManager: false,
     label: "Free",
   };
 }
