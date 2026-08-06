@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { getPlanAccess } from "@/lib/plan-access";
 import { updateFleetCrew } from "@/lib/actions/fleet";
 
 export const metadata = {
@@ -38,9 +37,6 @@ export default async function CrewMemberPage({
   ]);
 
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
-
-  const access = getPlanAccess((profile.plan as string) as never);
-  if (!access.canUseFleetManager) redirect("/fleet");
 
   const { data: vessel } = await supabase
     .from("vessels")
@@ -89,7 +85,7 @@ export default async function CrewMemberPage({
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.err{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
   .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:16px}
-  .card h2{font-family:var(--disp);font-size:15px;font-weight:800;margin-bottom:14px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px}
+  .card h2{font-family:var(--disp);font-weight:800;margin-bottom:14px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:560px){.grid2{grid-template-columns:1fr}}
   label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
@@ -173,7 +169,7 @@ export default async function CrewMemberPage({
                 </div>
                 <div>
                   <label htmlFor="salaryAmount">Salary amount</label>
-                  <input id="salaryAmount" name="salaryAmount" type="number" min="0" defaultValue={(crew.salary_amount as number) ?} />
+                  <input id="salaryAmount" name="salaryAmount" type="number" min="0" defaultValue={(crew.salary_amount as number) ?? ""} />
                 </div>
                 <div>
                   <label htmlFor="salaryCurrency">Currency</label>
