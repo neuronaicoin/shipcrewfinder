@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
 import { getPlanAccess } from "@/lib/plan-access";
-import { addVessel, deleteVessel } from "@/lib/actions/fleet";
+import {
+  addVessel,
+  deleteVessel,
+  addPlannedCrew,
+  activatePlannedCrew,
+  deletePlannedCrew,
+} from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "My Fleet — ShipCrewFinder",
@@ -17,6 +23,7 @@ export default async function FleetPage({
   const sp = await searchParams;
   const added = sp.added;
   const deleted = sp.deleted;
+  const planned = sp.planned;
   const error = sp.error;
 
   const supabase = await createClient();
@@ -46,24 +53,48 @@ export default async function FleetPage({
     .eq("company_id", user.id)
     .order("created_at", { ascending: false });
 
-  const vesselCount = (vessels || []).length;
+  const vesselList = vessels || [];
+  const vesselCount = vesselList.length;
   const atLimit = access.vesselLimit !== null && vesselCount >= access.vesselLimit;
+  const vesselIds = vesselList.map((v) => v.id as string);
 
-  const vesselIds = (vessels || []).map((v) => v.id as string);
   const crewCountMap: Record<string, number> = {};
+  const vesselNameMap: Record<string, string> = {};
+  vesselList.forEach((v) => {
+    vesselNameMap[v.id as string] = v.name as string;
+  });
+
+  let activeCrew: Record<string, unknown>[] = [];
+  let historyCrew: Record<string, unknown>[] = [];
+  let plannedCrew: Record<string, unknown>[] = [];
+
   if (vesselIds.length > 0) {
-    const { data: crewRows } = await supabase
+    const { data: allCrew } = await supabase
       .from("fleet_crew")
-      .select("vessel_id")
+      .select("id, full_name, rank, vessel_id, status, join_date, departure_date, notes, expected_join_date, planning_country, planning_status")
       .in("vessel_id", vesselIds)
-      .eq("status", "active");
-    (crewRows || []).forEach((c) => {
+      .order("created_at", { ascending: false });
+
+    const list = allCrew || [];
+    activeCrew = list.filter((c) => (c.status as string) === "active");
+    historyCrew = list.filter((c) => (c.status as string) === "signed_off").slice(0, 10);
+    plannedCrew = list.filter((c) => (c.status as string) === "planned");
+
+    activeCrew.forEach((c) => {
       const vid = c.vessel_id as string;
       crewCountMap[vid] = (crewCountMap[vid] || 0) + 1;
     });
   }
 
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
+  const fmtDate = (d: string | null) =>
+    d
+      ? new Date(d + "T00:00:00").toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "—";
 
   return (
     <>
@@ -89,6 +120,7 @@ export default async function FleetPage({
   h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.5rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:8px}
   .sub{font-size:14px;color:var(--tx2);line-height:1.6}
   section{padding:20px 0 44px}
+  .stitle{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:28px 0 12px}
   .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.err{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
@@ -101,9 +133,10 @@ export default async function FleetPage({
   .frow{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
   @media(max-width:900px){.frow{grid-template-columns:1fr 1fr}}
   label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
-  input[type=text],input[type=number]{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;outline:none}
-  input:focus{border-color:var(--gold)}
+  input[type=text],input[type=number],input[type=date],select{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;outline:none}
+  input:focus,select:focus{border-color:var(--gold)}
   input:disabled{opacity:.5;cursor:not-allowed}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fbbf24' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0.85rem center;padding-right:2.2rem}
   .btn-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
   .btn-add.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-add.on:hover{transform:translateY(-2px)}
@@ -117,6 +150,21 @@ export default async function FleetPage({
   .vdel button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .vdel button:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
   .empty{text-align:center;padding:30px 12px;font-size:13.5px;color:var(--tx2);line-height:1.7}
+  .plist{display:flex;flex-direction:column;gap:9px}
+  .prow{display:flex;align-items:center;gap:12px;border:1px solid var(--line2);border-radius:13px;padding:12px 14px;background:rgba(255,255,255,.02);flex-wrap:wrap}
+  .pavatar{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.3);display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:13px;color:var(--gold)}
+  .pinfo{flex:1;min-width:160px}
+  .pname{font-family:var(--disp);font-weight:700;font-size:13.5px}
+  .pmeta{font-size:11.5px;color:var(--tx3);margin-top:2px}
+  .ppill{font-size:10px;font-weight:800;border-radius:999px;padding:4px 10px;border:1px solid;white-space:nowrap}
+  .ppill.confirmed{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
+  .ppill.tentative{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+  .ppill.docs{color:#f87171;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+  .pacts{display:flex;gap:6px;flex-shrink:0}
+  .pacts button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  .pacts button.go{color:var(--grn);border-color:rgba(52,211,153,.4)}
+  .pacts button.go:hover{background:rgba(52,211,153,.1)}
+  .pacts button.x:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -137,8 +185,9 @@ export default async function FleetPage({
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
           {added === "1" ? <div className="banner ok">Vessel added.</div> : null}
-          {deleted === "1" ? <div className="banner ok">Vessel removed.</div> : null}
-          {error === "missing" ? <div className="banner err">Vessel name is required.</div> : null}
+          {deleted === "1" ? <div className="banner ok">Removed.</div> : null}
+          {planned === "1" ? <div className="banner ok">Planned crew member added.</div> : null}
+          {error === "missing" ? <div className="banner err">Please fill in the required fields.</div> : null}
           {error === "failed" ? <div className="banner err">Something went wrong — please try again.</div> : null}
           {error === "limit" ? (
             <div className="banner err">
@@ -209,13 +258,13 @@ export default async function FleetPage({
             )}
           </div>
 
-          {!vessels || vessels.length === 0 ? (
+          {vesselList.length === 0 ? (
             <div className="empty">
               No vessels yet — add your first one above to start tracking crew.
             </div>
           ) : (
             <div className="vgrid">
-              {vessels.map((v) => {
+              {vesselList.map((v) => {
                 const dwtLabel = fmtDwt(v.dwt as number | null);
                 const metaParts = [
                   (v.vessel_type as string) || null,
@@ -244,6 +293,102 @@ export default async function FleetPage({
               })}
             </div>
           )}
+
+          {vesselList.length > 0 ? (
+            <>
+              <div className="stitle">📜 Crew history — all vessels</div>
+              <div className="card">
+                {historyCrew.length === 0 ? (
+                  <div className="empty">No sign-offs recorded yet.</div>
+                ) : (
+                  <div className="plist">
+                    {historyCrew.map((c) => (
+                      <div key={c.id as string} className="prow">
+                        <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
+                        <div className="pinfo">
+                          <div className="pname">{c.full_name as string}</div>
+                          <div className="pmeta">
+                            {(c.rank as string) || "Crew"} · {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · signed off {fmtDate(c.departure_date as string | null)}
+                            {c.notes ? " · has notes" : ""}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="stitle">📅 Planned sign-on — all vessels</div>
+              <div className="card">
+                <form action={addPlannedCrew} style={{ marginBottom: 16 }}>
+                  <div className="frow">
+                    <div>
+                      <label htmlFor="pFullName">Full name</label>
+                      <input id="pFullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. Ahmed Yilmaz" />
+                    </div>
+                    <div>
+                      <label htmlFor="pRank">Rank</label>
+                      <input id="pRank" name="rank" type="text" maxLength={60} placeholder="e.g. 2nd Engineer" />
+                    </div>
+                    <div>
+                      <label htmlFor="pVessel">Vessel</label>
+                      <select id="pVessel" name="vesselId" required defaultValue="">
+                        <option value="" disabled>Select vessel</option>
+                        {vesselList.map((v) => (
+                          <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="pDate">Expected join</label>
+                      <input id="pDate" name="expectedJoinDate" type="date" />
+                    </div>
+                    <div>
+                      <label htmlFor="pCountry">Country</label>
+                      <input id="pCountry" name="planningCountry" type="text" maxLength={60} placeholder="e.g. Philippines" />
+                    </div>
+                    <button type="submit" className="btn-add on">+ Plan</button>
+                  </div>
+                </form>
+
+                {plannedCrew.length === 0 ? (
+                  <div className="empty">No planned sign-ons yet — use the form above.</div>
+                ) : (
+                  <div className="plist">
+                    {plannedCrew.map((c) => {
+                      const statusRaw = ((c.planning_status as string) || "Tentative").toLowerCase();
+                      const pillClass =
+                        statusRaw.includes("confirm") ? "confirmed" : statusRaw.includes("doc") ? "docs" : "tentative";
+                      return (
+                        <div key={c.id as string} className="prow">
+                          <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
+                          <div className="pinfo">
+                            <div className="pname">{c.full_name as string}</div>
+                            <div className="pmeta">
+                              {(c.rank as string) || "Crew"} · {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · expected {fmtDate(c.expected_join_date as string | null)}
+                              {c.planning_country ? " · " + (c.planning_country as string) : ""}
+                            </div>
+                          </div>
+                          <span className={`ppill ${pillClass}`}>{(c.planning_status as string) || "Tentative"}</span>
+                          <div className="pacts">
+                            <form action={activatePlannedCrew}>
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <input type="hidden" name="vesselId" value={c.vessel_id as string} />
+                              <button type="submit" className="go">Sign on</button>
+                            </form>
+                            <form action={deletePlannedCrew}>
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <button type="submit" className="x">✕</button>
+                            </form>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
 
