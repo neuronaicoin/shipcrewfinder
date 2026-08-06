@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew } from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -306,6 +306,13 @@ export default async function VesselCrewPage({
                           {(c.rank as string) || "Crew"} · signed off {fmtDate(c.departure_date as string | null)}
                           {c.notes ? " · has notes" : ""}
                         </div>
+                      </div>
+                      <div className="pacts">
+                        <form action={rehireCrew}>
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <input type="hidden" name="vesselId" value={vesselId} />
+                          <button type="submit" className="go">🔄 Rehire</button>
+                        </form>
                       </div>
                     </div>
                   ))}
