@@ -143,7 +143,7 @@ export default async function VesselCrewPage({
 
       <div className="vc-hero">
         <div className="aur"></div>
-        <div className="wrap" style={{position: ""relative" }}>
+        <div className="wrap" style={{ position: "relative" }}>
           <Link href="/fleet" className="back">← My Fleet</Link>
           <h1>🚢 {vessel.name as string}</h1>
           <p className="sub">
@@ -168,15 +168,15 @@ export default async function VesselCrewPage({
               <div className="frow">
                 <div>
                   <label htmlFor="fullName">Full name</label>
-                  <input id="fullName" name="fullName" type="text" required maxLength={100} plac="e.g. John Smith" />
+                  <input id="fullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. John Smith" />
                 </div>
                 <div>
                   <label htmlFor="rank">Rank</label>
-                  <input id="rank" name="rank" type="text" maxLength={60} plac="e.g. Chief Engineer" />
+                  <input id="rank" name="rank" type="text" maxLength={60} placeholder="e.g. Chief Engineer" />
                 </div>
                 <div>
                   <label htmlFor="nationality">Nationality</label>
-                  <input id="nationality" name="nationality" type="text" maxLength={60} plac="e.g. Turkey" />
+                  <input id="nationality" name="nationality" type="text" maxLength={60} placeholder="e.g. Turkey" />
                 </div>
                 <div>
                   <label htmlFor="joinDate">Join date</label>
@@ -204,14 +204,14 @@ export default async function VesselCrewPage({
                     <div className="cinfo">
                       <Link href={`/fleet/${vesselId}/${c.id}`} className="cname">
                         {c.full_name as string}
-                      </>
+                      </Link>
                       <div className="cmeta">
                         {(c.rank as string) || "Rank not set"} · {(c.nationality as string) || "—"} · Joined {fmtDate(c.join_date as string | null)}
                       </div>
                     </div>
                     <div className="cbadges">
                       {passportSt !== "none" ? (
-                        <span className={`cbadge ${passportSt}`}}>
+                        <span className={`cbadge ${passportSt}`}>
                           Passport {passportSt === "expired" ? "expired" : passportSt === "soon" ? "expiring" : "valid"}
                         </span>
                       ) : null}
@@ -230,7 +230,7 @@ export default async function VesselCrewPage({
                     </div>
                   </div>
                 );
-              }))}
+              })}
             </div>
           )}
         </div>
