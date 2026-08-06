@@ -21,13 +21,24 @@ async function requireFleetAccess() {
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
 
   const access = getPlanAccess((profile.plan as string) as never);
-  if (!access.canUseFleetManager) redirect("/fleet");
 
-  return { supabase, userId: user.id };
+  return { supabase, userId: user.id, access };
 }
 
 export async function addVessel(formData: FormData): Promise<void> {
-  const { supabase, userId } = await requireFleetAccess();
+  const { supabase, userId, access } = await requireFleetAccess();
+
+  // Gemi sayısı sınırı kontrolü — free/pro/founding'de 1, fleet'te sınırsız
+  if (access.vesselLimit !== null) {
+    const { count } = await supabase
+      .from("vessels")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", userId);
+
+    if ((count || 0) >= access.vesselLimit) {
+      redirect("/fleet?error=limit");
+    }
+  }
 
   const name = ((formData.get("name") as string) || "").trim().slice(0, 100);
   const imoNumber = ((formData.get("imoNumber") as string) || "").trim().slice(0, 20);
