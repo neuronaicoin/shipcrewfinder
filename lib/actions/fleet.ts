@@ -14,7 +14,7 @@ async function requireFleetAccess() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("user_type, plan")
+    .select("user_type, plan, email")
     .eq("id", user.id)
     .single();
 
@@ -22,13 +22,35 @@ async function requireFleetAccess() {
 
   const access = getPlanAccess((profile.plan as string) as never);
 
-  return { supabase, userId: user.id, access };
+  return { supabase, userId: user.id, access, userEmail: (profile.email as string) || "" };
+}
+
+async function logAudit(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  actorEmail: string,
+  action: string,
+  targetType: string,
+  targetId: string | null,
+  detail: string
+) {
+  try {
+    await supabase.from("fleet_audit_log").insert({
+      company_id: companyId,
+      actor_email: actorEmail,
+      action,
+      target_type: targetType,
+      target_id: targetId,
+      detail,
+    });
+  } catch {
+    // Log hatası ana işlemi asla bozmasın
+  }
 }
 
 export async function addVessel(formData: FormData): Promise<void> {
-  const { supabase, userId, access } = await requireFleetAccess();
+  const { supabase, userId, access, userEmail } = await requireFleetAccess();
 
-  // Gemi sayısı sınırı kontrolü — free/pro/founding'de 1, fleet'te sınırsız
   if (access.vesselLimit !== null) {
     const { count } = await supabase
       .from("vessels")
@@ -43,24 +65,34 @@ export async function addVessel(formData: FormData): Promise<void> {
   const name = ((formData.get("name") as string) || "").trim().slice(0, 100);
   const imoNumber = ((formData.get("imoNumber") as string) || "").trim().slice(0, 20);
   const vesselType = ((formData.get("vesselType") as string) || "").trim().slice(0, 60);
+  const flag = ((formData.get("flag") as string) || "").trim().slice(0, 60);
+  const dwtRaw = (formData.get("dwt") as string) || "";
 
   if (!name) redirect("/fleet?error=missing");
 
-  const { error } = await supabase.from("vessels").insert({
-    company_id: userId,
-    name,
-    imo_number: imoNumber || null,
-    vessel_type: vesselType || null,
-  });
+  const { data: newVessel, error } = await supabase
+    .from("vessels")
+    .insert({
+      company_id: userId,
+      name,
+      imo_number: imoNumber || null,
+      vessel_type: vesselType || null,
+      flag: flag || null,
+      dwt: dwtRaw ? Number(dwtRaw) : null,
+    })
+    .select("id")
+    .single();
 
   if (error) redirect("/fleet?error=failed");
+
+  await logAudit(supabase, userId, userEmail, "vessel_added", "vessel", newVessel?.id as string, `Added vessel "${name}"`);
 
   revalidatePath("/fleet");
   redirect("/fleet?added=1");
 }
 
 export async function deleteVessel(formData: FormData): Promise<void> {
-  const { supabase, userId } = await requireFleetAccess();
+  const { supabase, userId, userEmail } = await requireFleetAccess();
 
   const vesselId = (formData.get("vesselId") as string) || "";
   if (!vesselId) redirect("/fleet");
@@ -71,12 +103,14 @@ export async function deleteVessel(formData: FormData): Promise<void> {
     .eq("id", vesselId)
     .eq("company_id", userId);
 
+  await logAudit(supabase, userId, userEmail, "vessel_deleted", "vessel", vesselId, "Removed vessel");
+
   revalidatePath("/fleet");
   redirect("/fleet?deleted=1");
 }
 
 export async function addFleetCrew(formData: FormData): Promise<void> {
-  const { supabase, userId } = await requireFleetAccess();
+  const { supabase, userId, userEmail } = await requireFleetAccess();
 
   const vesselId = (formData.get("vesselId") as string) || "";
   const fullName = ((formData.get("fullName") as string) || "").trim().slice(0, 100);
@@ -86,23 +120,30 @@ export async function addFleetCrew(formData: FormData): Promise<void> {
 
   if (!vesselId || !fullName) redirect(`/fleet/${vesselId}?error=missing`);
 
-  const { error } = await supabase.from("fleet_crew").insert({
-    vessel_id: vesselId,
-    company_id: userId,
-    full_name: fullName,
-    rank: rank || null,
-    nationality: nationality || null,
-    join_date: joinDate || null,
-  });
+  const { data: newCrew, error } = await supabase
+    .from("fleet_crew")
+    .insert({
+      vessel_id: vesselId,
+      company_id: userId,
+      full_name: fullName,
+      rank: rank || null,
+      nationality: nationality || null,
+      join_date: joinDate || null,
+      status: "active",
+    })
+    .select("id")
+    .single();
 
   if (error) redirect(`/fleet/${vesselId}?error=failed`);
+
+  await logAudit(supabase, userId, userEmail, "crew_added", "crew", newCrew?.id as string, `Added ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}?added=1`);
 }
 
 export async function deleteFleetCrew(formData: FormData): Promise<void> {
-  const { supabase, userId } = await requireFleetAccess();
+  const { supabase, userId, userEmail } = await requireFleetAccess();
 
   const crewId = (formData.get("crewId") as string) || "";
   const vesselId = (formData.get("vesselId") as string) || "";
@@ -114,12 +155,14 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
     .eq("id", crewId)
     .eq("company_id", userId);
 
+  await logAudit(supabase, userId, userEmail, "crew_deleted", "crew", crewId, "Removed crew member");
+
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}?deleted=1`);
 }
 
 export async function updateFleetCrew(formData: FormData): Promise<void> {
-  const { supabase, userId } = await requireFleetAccess();
+  const { supabase, userId, userEmail } = await requireFleetAccess();
 
   const crewId = (formData.get("crewId") as string) || "";
   const vesselId = (formData.get("vesselId") as string) || "";
@@ -159,6 +202,8 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
     .eq("company_id", userId);
 
   if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
+
+  await logAudit(supabase, userId, userEmail, "crew_updated", "crew", crewId, `Updated ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}/${crewId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
