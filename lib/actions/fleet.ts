@@ -164,6 +164,7 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
   await logAudit(supabase, userId, userEmail, "crew_deleted", "crew", crewId, "Removed crew member");
 
   revalidatePath(`/fleet/${vesselId}`);
+  revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?deleted=1`);
 }
 
@@ -233,13 +234,14 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
     .eq("id", crewId)
     .eq("company_id", userId);
 
-  if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
+  if (error) redirect(`/fleet/${{esselId}/${crewId}?error=failed`);
 
   await logAudit(supabase, userId, userEmail, "crew_updated", "crew", crewId, `Updated ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}/${crewId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
 }
+
 
 export async function signOffCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
@@ -265,4 +267,95 @@ export async function signOffCrew(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${vesselId}`);
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?signedoff=1`);
+}}
+
+// ============================================
+// PLANNED SIGN-ON CREW
+// ============================================
+export async function addPlannedCrew(formData: FormData): Promise<void> {
+  const { supabase, userId, userEmail } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const fullName = ((formData.get("fullName") as string) || "").trim().slice(0, 100);
+  const rank = ((formData.get("rank") as string) || "").trim().slice(0, 60);
+  const expectedJoinDate = (formData.get("expectedJoinDate") as string) || "";
+  const planningCountry = ((formData.get("planningCountry") as string) || "").trim().slice(0, 60);
+  const planningStatus = ((formData.get("planningStatus") as string) || "Tentative").trim().slice(0, 30);
+  const replacingCrewId = (formData.get("replacingCrewId") as string) || "";
+
+  if (!vesselId || !fullName) redirect("/fleet?error=missing");
+
+  const { data: newCrew, error } = await supabase
+    .from("fleet_crew")
+    .insert({
+      vessel_id: vesselId,
+      company_id: userId,
+      full_name: fullName,
+      rank: rank || null,
+      status: "planned",
+      expected_join_date: expectedJoinDate || null,
+      planning_country: planningCountry || null,
+      planning_status: planningStatus,
+      replacing_crew_id: replacingCrewId || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) redirect("/fleet?error=failed");
+
+  await logAudit(supabase, userId, userEmail, "planned_crew_added", "crew", newCrew?.id as string, `Planned ${fullName}`);
+
+  revalidatePath("/fleet");
+  redirect("/fleet?planned=1");
+}
+
+export async function activatePlannedCrew(formData: FormData): Promise<void> {
+  const { supabase, userId, userEmail } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  const { data: planned } = await supabase
+    .from("fleet_crew")
+    .select("expected_join_date")
+    .eq("id", crewId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({
+      status: "active",
+      join_date: (planned?.expected_join_date as string) || new Date().toISOString().slice(0, 10),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect("/fleet?error=failed");
+
+  await logAudit(supabase, userId, userEmail, "planned_crew_activated", "crew", crewId, "Activated planned crew member");
+
+  revalidatePath("/fleet");
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
+}
+
+export async function deletePlannedCrew(formData: FormData): Promise<void> {
+  const { supabase, userId, userEmail } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  await supabase
+    .from("fleet_crew")
+    .delete()
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  await logAudit(supabase, userId, userEmail, "planned_crew_deleted", "crew", crewId, "Removed planned crew");
+
+  revalidatePath("/fleet");
+  redirect("/fleet?deleted=1");
 }
