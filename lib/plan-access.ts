@@ -1,17 +1,16 @@
 // Tek gerçek kaynak: hangi paket neye erişebilir.
 // "founding" = eski/mevcut şirketler, Polar canlıya geçene kadar Pro-eşdeğeri sayılıyor.
-// Fleet Crew Manager İSTİSNA: founding dahil, sadece GERÇEK "fleet" planı erişebilir —
-// bu yepyeni bir özellik, geriye dönük ücretsiz erişim verilmiyor.
+// Fleet Crew Manager: HERKES 1 gemi kullanabilir (deneme amaçlı) — 2. gemi için gerçek Fleet planı şart.
 
 export type CompanyPlan = "pro" | "fleet" | "founding" | "free" | null | undefined;
 
 export type PlanAccess = {
-  canSearchCrew: boolean; // /candidate/[id] detay görebilir mi
-  cvViewLimit: number | null; // null = sınırsız
+  canSearchCrew: boolean;
+  cvViewLimit: number | null;
   canPostJob: boolean;
-  jobPostLimit: number | null; // null = sınırsız
-  canUseRadar: boolean; // Rotation Radar'daki isimleri görebilir mi
-  canUseFleetManager: boolean; // Fleet Crew Manager — sadece gerçek Fleet planı
+  jobPostLimit: number | null;
+  canUseRadar: boolean;
+  vesselLimit: number | null; // null = sınırsız gemi, sayı = o kadar gemiye kadar ücretsiz
   label: string;
 };
 
@@ -25,7 +24,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
       canPostJob: true,
       jobPostLimit: null,
       canUseRadar: true,
-      canUseFleetManager: true,
+      vesselLimit: null,
       label: "Fleet",
     };
   }
@@ -37,7 +36,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
       canPostJob: true,
       jobPostLimit: 10,
       canUseRadar: true,
-      canUseFleetManager: false,
+      vesselLimit: 1,
       label: p === "founding" ? "Founding" : "Pro",
     };
   }
@@ -49,7 +48,7 @@ export function getPlanAccess(plan: CompanyPlan): PlanAccess {
     canPostJob: false,
     jobPostLimit: 0,
     canUseRadar: false,
-    canUseFleetManager: false,
+    vesselLimit: 1,
     label: "Free",
   };
 }
