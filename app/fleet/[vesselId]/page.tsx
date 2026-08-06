@@ -51,9 +51,9 @@ export default async function VesselCrewPage({
 
   const { data: allCrew } = await supabase
     .from("fleet_crew")
-    .select("id, full_name, rank, nationality, join_date, departure_date, passport_expiry, health_report_expiry, status, notes, expected_join_date, planning_country, planning_status")
+    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, expected_join_date, planning_country, planning_status")
     .eq("vessel_id", vesselId)
-    .order("created_at", { ascending: false });
+    .order("sort_order", { ascending: true });
 
   const crewAll = allCrew || [];
   const crewList = crewAll.filter((c) => (c.status as string) === "active");
@@ -148,6 +148,21 @@ export default async function VesselCrewPage({
   .cdel{flex-shrink:0}
   .cdel button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .cdel button:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+  .ttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;border:1px solid var(--line2)}
+  table.ctable{width:100%;border-collapse:collapse;min-width:920px;font-size:12.5px}
+  table.ctable thead th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);padding:11px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line2);white-space:nowrap}
+  table.ctable tbody td{padding:11px 12px;border-bottom:1px solid var(--line2);white-space:nowrap;color:var(--tx2)}
+  table.ctable tbody tr:last-child td{border-bottom:none}
+  table.ctable tbody tr:hover{background:rgba(251,191,36,.04)}
+  table.ctable .tname{color:var(--tx);font-weight:700;text-decoration:none;font-family:var(--disp)}
+  table.ctable .tname:hover{color:var(--gold)}
+  table.ctable .texp{font-weight:700}
+  table.ctable .texp.expired{color:var(--red)}
+  table.ctable .texp.soon{color:var(--gold)}
+  table.ctable .texp.ok{color:var(--tx2);font-weight:500}
+  table.ctable .tdel{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  table.ctable .tdel:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+  .thint{font-size:11px;color:var(--tx3);margin-top:8px;text-align:center}
   .empty{text-align:center;padding:30px 12px;font-size:13.5px;color:var(--tx2);line-height:1.7}
   .pacts{display:flex;gap:6px;flex-shrink:0}
   .pacts button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
@@ -217,46 +232,67 @@ export default async function VesselCrewPage({
               No active crew members yet — use the form above to add your first one.
             </div>
           ) : (
-            <div className="clist">
-              {crewList.map((c) => {
-                const passportSt = expiryStatus(c.passport_expiry as string | null);
-                const healthSt = expiryStatus(c.health_report_expiry as string | null);
-                return (
-                  <div key={c.id as string} className="crow">
-                    <div className="cavatar">
-                      {(c.full_name as string || "?").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="cinfo">
-                      <Link href={`/fleet/${vesselId}/${c.id}`} className="cname">
-                        {c.full_name as string}
-                      </Link>
-                      <div className="cmeta">
-                        {(c.rank as string) || "Rank not set"} · {(c.nationality as string) || "—"} · Joined {fmtDate(c.join_date as string | null)}
-                      </div>
-                    </div>
-                    <div className="cbadges">
-                      {passportSt !== "none" ? (
-                        <span className={`cbadge ${passportSt}`}>
-                          Passport {passportSt === "expired" ? "expired" : passportSt === "soon" ? "expiring" : "valid"}
-                        </span>
-                      ) : null}
-                      {healthSt !== "none" ? (
-                        <span className={`cbadge ${healthSt}`}>
-                          Health {healthSt === "expired" ? "expired" : healthSt === "soon" ? "expiring" : "valid"}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="cdel">
-                      <form action={deleteFleetCrew}>
-                        <input type="hidden" name="crewId" value={c.id as string} />
-                        <input type="hidden" name="vesselId" value={vesselId} />
-                        <button type="submit">✕</button>
-                      </form>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <>
+              <div className="ttwrap">
+                <table className="ctable">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>Surname and Name</th>
+                      <th>Sex</th>
+                      <th>Rank</th>
+                      <th>Nationality</th>
+                      <th>Date of Birth</th>
+                      <th>Join Date</th>
+                      <th>Passport No</th>
+                      <th>Passport Exp</th>
+                      <th>Seaman Book No</th>
+                      <th>Seaman Book Exp</th>
+                      <th>Health Exp</th>
+                      <th>Visa Exp</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {crewList.map((c, idx) => {
+                      const passportSt = expiryStatus(c.passport_expiry as string | null);
+                      const seamanSt = expiryStatus(c.seaman_book_expiry as string | null);
+                      const healthSt = expiryStatus(c.health_report_expiry as string | null);
+                      const visaSt = expiryStatus(c.visa_expiry as string | null);
+                      return (
+                        <tr key={c.id as string}>
+                          <td>{idx + 1}</td>
+                          <td>
+                            <Link href={`/fleet/${vesselId}/${c.id}`} className="tname">
+                              {c.full_name as string}
+                            </Link>
+                          </td>
+                          <td>{(c.sex as string) || "—"}</td>
+                          <td>{(c.rank as string) || "—"}</td>
+                          <td>{(c.nationality as string) || "—"}</td>
+                          <td>{fmtDate(c.date_of_birth as string | null)}</td>
+                          <td>{fmtDate(c.join_date as string | null)}</td>
+                          <td>{(c.passport_number as string) || "—"}</td>
+                          <td className={`texp ${passportSt}`}>{fmtDate(c.passport_expiry as string | null)}</td>
+                          <td>{(c.seaman_book_number as string) || "—"}</td>
+                          <td className={`texp ${seamanSt}`}>{fmtDate(c.seaman_book_expiry as string | null)}</td>
+                          <td className={`texp ${healthSt}`}>{fmtDate(c.health_report_expiry as string | null)}</td>
+                          <td className={`texp ${visaSt}`}>{fmtDate(c.visa_expiry as string | null)}</td>
+                          <td>
+                            <form action={deleteFleetCrew}>
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <input type="hidden" name="vesselId" value={vesselId} />
+                              <button type="submit" className="tdel">✕</button>
+                            </form>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="thint">← Scroll sideways to see all columns · tap a name to view full record →</p>
+            </>
           )}
 
           {plannedList.length > 0 ? (
