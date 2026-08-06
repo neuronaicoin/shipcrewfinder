@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew } from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -19,6 +19,7 @@ export default async function VesselCrewPage({
   const sp = await searchParams;
   const added = sp.added;
   const deleted = sp.deleted;
+  const signedoff = sp.signedoff;
   const error = sp.error;
 
   const supabase = await createClient();
@@ -41,18 +42,23 @@ export default async function VesselCrewPage({
 
   const { data: vessel } = await supabase
     .from("vessels")
-    .select("id, name, imo_number, vessel_type")
+    .select("id, name, imo_number, vessel_type, flag, dwt")
     .eq("id", vesselId)
     .eq("company_id", user.id)
     .maybeSingle();
 
   if (!vessel) notFound();
 
-  const { data: crewList } = await supabase
+  const { data: allCrew } = await supabase
     .from("fleet_crew")
-    .select("id, full_name, rank, nationality, join_date, departure_date, passport_expiry, health_report_expiry")
+    .select("id, full_name, rank, nationality, join_date, departure_date, passport_expiry, health_report_expiry, status, notes, expected_join_date, planning_country, planning_status")
     .eq("vessel_id", vesselId)
     .order("created_at", { ascending: false });
+
+  const crewAll = allCrew || [];
+  const crewList = crewAll.filter((c) => (c.status as string) === "active");
+  const historyList = crewAll.filter((c) => (c.status as string) === "signed_off");
+  const plannedList = crewAll.filter((c) => (c.status as string) === "planned");
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -76,6 +82,14 @@ export default async function VesselCrewPage({
           day: "numeric",
         })
       : "—";
+
+  const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
+  const metaParts = [
+    (vessel.vessel_type as string) || null,
+    (vessel.flag as string) ? "Flag: " + (vessel.flag as string) : null,
+    fmtDwt(vessel.dwt as number | null),
+    vessel.imo_number ? "IMO " + vessel.imo_number : null,
+  ].filter(Boolean);
 
   return (
     <>
@@ -101,6 +115,7 @@ export default async function VesselCrewPage({
   h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.4rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:6px}
   .sub{font-size:14px;color:var(--tx2)}
   section{padding:20px 0 44px}
+  .stitle{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:28px 0 12px}
   .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid}
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.err{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
@@ -131,6 +146,10 @@ export default async function VesselCrewPage({
   .cdel button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .cdel button:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
   .empty{text-align:center;padding:30px 12px;font-size:13.5px;color:var(--tx2);line-height:1.7}
+  .pacts{display:flex;gap:6px;flex-shrink:0}
+  .pacts button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  .pacts button.go{color:var(--grn);border-color:rgba(52,211,153,.4)}
+  .pacts button.go:hover{background:rgba(52,211,153,.1)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -143,9 +162,8 @@ export default async function VesselCrewPage({
           <Link href="/fleet" className="back">← My Fleet</Link>
           <h1>🚢 {vessel.name as string}</h1>
           <p className="sub">
-            {(vessel.vessel_type as string) || "Vessel type not set"}
-            {vessel.imo_number ? " · IMO " + vessel.imo_number : ""} ·{" "}
-            {(crewList || []).length} crew member{(crewList || []).length === 1 ? "" : "s"}
+            {metaParts.length > 0 ? metaParts.join(" · ") : "Vessel details not set"} ·{" "}
+            {crewList.length} active crew member{crewList.length === 1 ? "" : "s"}
           </p>
         </div>
       </div>
@@ -154,6 +172,7 @@ export default async function VesselCrewPage({
         <div className="wrap">
           {added === "1" ? <div className="banner ok">Crew member added.</div> : null}
           {deleted === "1" ? <div className="banner ok">Crew member removed.</div> : null}
+          {signedoff === "1" ? <div className="banner ok">Moved to crew history.</div> : null}
           {error === "missing" ? <div className="banner err">Full name is required.</div> : null}
           {error === "failed" ? <div className="banner err">Something went wrong — please try again.</div> : null}
 
@@ -183,9 +202,9 @@ export default async function VesselCrewPage({
             </form>
           </div>
 
-          {!crewList || crewList.length === 0 ? (
+          {crewList.length === 0 ? (
             <div className="empty">
-              No crew members added yet — use the form above to add your first one.
+              No active crew members yet — use the form above to add your first one.
             </div>
           ) : (
             <div className="clist">
@@ -229,6 +248,61 @@ export default async function VesselCrewPage({
               })}
             </div>
           )}
+
+          {plannedList.length > 0 ? (
+            <>
+              <div className="stitle">📅 Planned for this vessel</div>
+              <div className="card">
+                <div className="clist">
+                  {plannedList.map((c) => (
+                    <div key={c.id as string} className="crow">
+                      <div className="cavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
+                      <div className="cinfo">
+                        <span className="cname" style={{ cursor: "default" }}>{c.full_name as string}</span>
+                        <div className="cmeta">
+                          {(c.rank as string) || "Crew"} · expected {fmtDate(c.expected_join_date as string | null)}
+                          {c.planning_country ? " · " + (c.planning_country as string) : ""}
+                        </div>
+                      </div>
+                      <div className="pacts">
+                        <form action={activatePlannedCrew}>
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <input type="hidden" name="vesselId" value={vesselId} />
+                          <button type="submit" className="go">Sign on</button>
+                        </form>
+                        <form action={deletePlannedCrew}>
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <button type="submit">✕</button>
+                        </form>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {historyList.length > 0 ? (
+            <>
+              <div className="stitle">📜 Crew history for this vessel</div>
+              <div className="card">
+                <div className="clist">
+                  {historyList.map((c) => (
+                    <div key={c.id as string} className="crow">
+                      <div className="cavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
+                      <div className="cinfo">
+                        <span className="cname" style={{ cursor: "default" }}>{c.full_name as string}</span>
+                        <div className="cmeta">
+                          {(c.rank as string) || "Crew"} · signed off {fmtDate(c.departure_date as string | null)}
+                          {c.notes ? " · has notes" : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
 
