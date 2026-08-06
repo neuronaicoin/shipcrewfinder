@@ -48,6 +48,11 @@ export default async function FleetPage({
     --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;
     --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
   }
+  body.light{
+    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
+    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
+    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
+  }
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:880px;margin:0 auto;padding:0 20px}
   .fl-hero{position:relative;padding:36px 0 20px;overflow:hidden}
