@@ -96,6 +96,36 @@ export default async function FleetPage({
         })
       : "—";
 
+  // Fleet-wide uyarı paneli için: aktif crew'ların tüm gemilerdeki biten belgeleri
+  let alertPassport = 0;
+  let alertHealth = 0;
+  let alertVisa = 0;
+  let alertStcw = 0;
+  if (vesselIds.length > 0) {
+    const { data: expiryRows } = await supabase
+      .from("fleet_crew")
+      .select("passport_expiry, health_report_expiry, visa_expiry, stcw_endorsement_expiry")
+      .in("vessel_id", vesselIds)
+      .eq("status", "active");
+
+    const today2 = new Date();
+    today2.setHours(0, 0, 0, 0);
+    const dayMs2 = 24 * 3600 * 1000;
+    const isSoonOrExpired = (d: string | null) => {
+      if (!d) return false;
+      const days = Math.round((new Date(d + "T00:00:00").getTime() - today2.getTime()) / dayMs2);
+      return days <= 30;
+    };
+
+    (expiryRows || []).forEach((r) => {
+      if (isSoonOrExpired(r.passport_expiry as string | null)) alertPassport++;
+      if (isSoonOrExpired(r.health_report_expiry as string | null)) alertHealth++;
+      if (isSoonOrExpired(r.visa_expiry as string | null)) alertVisa++;
+      if (isSoonOrExpired(r.stcw_endorsement_expiry as string | null)) alertStcw++;
+    });
+  }
+  const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
+
   return (
     <>
       <style>{`
@@ -125,6 +155,10 @@ export default async function FleetPage({
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.err{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
   .banner.info{color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+  .alertpanel{display:flex;align-items:flex-start;gap:14px;border:1.5px solid rgba(239,68,68,.35);background:rgba(239,68,68,.07);border-radius:15px;padding:16px 18px;margin-bottom:18px}
+  .alertpanel .ai{font-size:20px;flex-shrink:0;margin-top:1px}
+  .alertpanel b{font-family:var(--disp);font-size:14px;display:block;margin-bottom:4px;color:var(--tx)}
+  .alertpanel p{font-size:12.5px;color:var(--tx2);line-height:1.6}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:12.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:9px 16px;font-family:var(--body);white-space:nowrap}
   .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-gold:hover{transform:translateY(-2px)}
@@ -184,6 +218,20 @@ export default async function FleetPage({
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
+          {totalAlerts > 0 ? (
+            <div className="alertpanel">
+              <span className="ai">⚠️</span>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <b>{totalAlerts} document{totalAlerts === 1 ? "" : "s"} expiring within 30 days across your fleet</b>
+                <p>
+                  {alertPassport > 0 ? alertPassport + " passport" + (alertPassport === 1 ? "" : "s") + " · " : ""}
+                  {alertHealth > 0 ? alertHealth + " health report" + (alertHealth === 1 ? "" : "s") + " · " : ""}
+                  {alertVisa > 0 ? alertVisa + " visa" + (alertVisa === 1 ? "" : "s") + " · " : ""}
+                  {alertStcw > 0 ? alertStcw + " STCW endorsement" + (alertStcw === 1 ? "" : "s") : ""}
+                </p>
+              </div>
+            </div>
+          ) : null}
           {added === "1" ? <div className="banner ok">Vessel added.</div> : null}
           {deleted === "1" ? <div className="banner ok">Removed.</div> : null}
           {planned === "1" ? <div className="banner ok">Planned crew member added.</div> : null}
