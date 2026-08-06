@@ -126,6 +126,34 @@ export default async function FleetPage({
   }
   const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
 
+  const { data: auditRows } = await supabase
+    .from("fleet_audit_log")
+    .select("action, detail, actor_email, created_at")
+    .eq("company_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  const actionIcon = (a: string) => {
+    if (a.includes("added")) return "➕";
+    if (a.includes("deleted") || a.includes("removed")) return "🗑️";
+    if (a.includes("signed_off")) return "📤";
+    if (a.includes("rehired")) return "🔄";
+    if (a.includes("activated")) return "📥";
+    if (a.includes("updated")) return "✏️";
+    return "•";
+  };
+
+  const fmtWhen = (d: string) => {
+    const diffMs = Date.now() - new Date(d).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + "m ago";
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + "h ago";
+    const days = Math.floor(hrs / 24);
+    return days + "d ago";
+  };
+
   return (
     <>
       <style>{`
@@ -199,6 +227,12 @@ export default async function FleetPage({
   .pacts button.go{color:var(--grn);border-color:rgba(52,211,153,.4)}
   .pacts button.go:hover{background:rgba(52,211,153,.1)}
   .pacts button.x:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
+  .alist{display:flex;flex-direction:column;gap:2px}
+  .arow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line2);font-size:12.5px}
+  .arow:last-child{border-bottom:none}
+  .aic{flex-shrink:0;font-size:13px}
+  .atext{flex:1;color:var(--tx2)}
+  .awhen{flex-shrink:0;color:var(--tx3);font-size:11px;white-space:nowrap}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -441,6 +475,23 @@ export default async function FleetPage({
                     })}
                   </div>
                 )}
+              </div>
+            </>
+          ) : null}
+
+          {auditRows && auditRows.length > 0 ? (
+            <>
+              <div className="stitle">🕐 Recent activity</div>
+              <div className="card">
+                <div className="alist">
+                  {auditRows.map((a, idx) => (
+                    <div key={idx} className="arow">
+                      <span className="aic">{actionIcon(a.action as string)}</span>
+                      <span className="atext">{a.detail as string}</span>
+                      <span className="awhen">{fmtWhen(a.created_at as string)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           ) : null}
