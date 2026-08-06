@@ -25,7 +25,7 @@ async function requireFleetAccess() {
   return { supabase, userId: user.id, access, userEmail: (profile.email as string) || "" };
 }
 
-async function logAudit(
+function logAudit(
   supabase: Awaited<ReturnType<typeof createClient>>,
   companyId: string,
   actorEmail: string,
@@ -34,18 +34,21 @@ async function logAudit(
   targetId: string | null,
   detail: string
 ) {
-  try {
-    await supabase.from("fleet_audit_log").insert({
+  // Bilinçli olarak beklemiyoruz (fire-and-forget) — kayıt işlemini yavaşlatmasın
+  supabase
+    .from("fleet_audit_log")
+    .insert({
       company_id: companyId,
       actor_email: actorEmail,
       action,
       target_type: targetType,
       target_id: targetId,
       detail,
+    })
+    .then(() => {})
+    .catch(() => {
+      // Log hatası ana işlemi asla bozmasın
     });
-  } catch {
-    // Log hatası ana işlemi asla bozmasın
-  }
 }
 
 export async function addVessel(formData: FormData): Promise<void> {
@@ -85,7 +88,7 @@ export async function addVessel(formData: FormData): Promise<void> {
 
   if (error) redirect("/fleet?error=failed");
 
-  await logAudit(supabase, userId, userEmail, "vessel_added", "vessel", newVessel?.id as string, `Added vessel "${name}"`);
+  logAudit(supabase, userId, userEmail, "vessel_added", "vessel", newVessel?.id as string, `Added vessel "${name}"`);
 
   revalidatePath("/fleet");
   redirect("/fleet?added=1");
@@ -103,7 +106,7 @@ export async function deleteVessel(formData: FormData): Promise<void> {
     .eq("id", vesselId)
     .eq("company_id", userId);
 
-  await logAudit(supabase, userId, userEmail, "vessel_deleted", "vessel", vesselId, "Removed vessel");
+  logAudit(supabase, userId, userEmail, "vessel_deleted", "vessel", vesselId, "Removed vessel");
 
   revalidatePath("/fleet");
   redirect("/fleet?deleted=1");
@@ -142,7 +145,7 @@ export async function addFleetCrew(formData: FormData): Promise<void> {
 
   if (error) redirect(`/fleet/${vesselId}?error=failed`);
 
-  await logAudit(supabase, userId, userEmail, "crew_added", "crew", newCrew?.id as string, `Added ${fullName}`);
+  logAudit(supabase, userId, userEmail, "crew_added", "crew", newCrew?.id as string, `Added ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}?added=1`);
@@ -161,7 +164,7 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
     .eq("id", crewId)
     .eq("company_id", userId);
 
-  await logAudit(supabase, userId, userEmail, "crew_deleted", "crew", crewId, "Removed crew member");
+  logAudit(supabase, userId, userEmail, "crew_deleted", "crew", crewId, "Removed crew member");
 
   revalidatePath(`/fleet/${vesselId}`);
   revalidatePath("/fleet");
@@ -236,7 +239,7 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
 
   if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
 
-  await logAudit(supabase, userId, userEmail, "crew_updated", "crew", crewId, `Updated ${fullName}`);
+  logAudit(supabase, userId, userEmail, "crew_updated", "crew", crewId, `Updated ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}/${crewId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
@@ -261,7 +264,7 @@ export async function signOffCrew(formData: FormData): Promise<void> {
 
   if (error) redirect(`/fleet/${vesselId}?error=failed`);
 
-  await logAudit(supabase, userId, userEmail, "crew_signed_off", "crew", crewId, "Signed off crew member");
+  logAudit(supabase, userId, userEmail, "crew_signed_off", "crew", crewId, "Signed off crew member");
 
   revalidatePath(`/fleet/${vesselId}`);
   revalidatePath("/fleet");
@@ -299,7 +302,7 @@ export async function addPlannedCrew(formData: FormData): Promise<void> {
 
   if (error) redirect("/fleet?error=failed");
 
-  await logAudit(supabase, userId, userEmail, "planned_crew_added", "crew", newCrew?.id as string, `Planned ${fullName}`);
+  logAudit(supabase, userId, userEmail, "planned_crew_added", "crew", newCrew?.id as string, `Planned ${fullName}`);
 
   revalidatePath("/fleet");
   redirect("/fleet?planned=1");
@@ -331,7 +334,7 @@ export async function activatePlannedCrew(formData: FormData): Promise<void> {
 
   if (error) redirect("/fleet?error=failed");
 
-  await logAudit(supabase, userId, userEmail, "planned_crew_activated", "crew", crewId, "Activated planned crew member");
+  logAudit(supabase, userId, userEmail, "planned_crew_activated", "crew", crewId, "Activated planned crew member");
 
   revalidatePath("/fleet");
   revalidatePath(`/fleet/${vesselId}`);
@@ -350,11 +353,12 @@ export async function deletePlannedCrew(formData: FormData): Promise<void> {
     .eq("id", crewId)
     .eq("company_id", userId);
 
-  await logAudit(supabase, userId, userEmail, "planned_crew_deleted", "crew", crewId, "Removed planned crew");
+  logAudit(supabase, userId, userEmail, "planned_crew_deleted", "crew", crewId, "Removed planned crew");
 
   revalidatePath("/fleet");
   redirect("/fleet?deleted=1");
 }
+
 export async function rehireCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
@@ -382,7 +386,7 @@ export async function rehireCrew(formData: FormData): Promise<void> {
 
   if (error) redirect("/fleet?error=failed");
 
-  await logAudit(
+  logAudit(
     supabase,
     userId,
     userEmail,
