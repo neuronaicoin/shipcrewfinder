@@ -45,10 +45,12 @@ function logAudit(
       target_id: targetId,
       detail,
     })
-    .then(() => {})
-    .catch(() => {
-      // Log hatası ana işlemi asla bozmasın
-    });
+    .then(
+      () => {},
+      () => {
+        // Log hatası ana işlemi asla bozmasın
+      }
+    );
 }
 
 export async function addVessel(formData: FormData): Promise<void> {
@@ -170,7 +172,6 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?deleted=1`);
 }
-
 export async function updateFleetCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
@@ -270,7 +271,6 @@ export async function signOffCrew(formData: FormData): Promise<void> {
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?signedoff=1`);
 }
-
 export async function addPlannedCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
