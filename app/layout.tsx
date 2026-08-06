@@ -134,6 +134,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jakarta.variable} ${bricolage.variable} font-sans`}>
         <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('scf_theme')==='light'){document.body.classList.add('light')}}catch(e){}`,
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
         />
