@@ -42,7 +42,7 @@ export default async function FleetPage({
 
   const { data: vessels } = await supabase
     .from("vessels")
-    .select("id, name, imo_number, vessel_type, created_at")
+    .select("id, name, imo_number, vessel_type, flag, dwt, created_at")
     .eq("company_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -55,12 +55,15 @@ export default async function FleetPage({
     const { data: crewRows } = await supabase
       .from("fleet_crew")
       .select("vessel_id")
-      .in("vessel_id", vesselIds);
+      .in("vessel_id", vesselIds)
+      .eq("status", "active");
     (crewRows || []).forEach((c) => {
       const vid = c.vessel_id as string;
       crewCountMap[vid] = (crewCountMap[vid] || 0) + 1;
     });
   }
+
+  const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
 
   return (
     <>
@@ -78,7 +81,7 @@ export default async function FleetPage({
     --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
   }
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
-  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px}
   .fl-hero{position:relative;padding:36px 0 20px;overflow:hidden}
   .aur{position:absolute;width:440px;height:440px;top:-230px;right:-120px;border-radius:50%;filter:blur(90px);opacity:.42;background:radial-gradient(circle,rgba(251,191,36,.3),transparent 65%);pointer-events:none}
   .back{display:inline-flex;align-items:center;gap:7px;color:var(--tx3);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;margin-bottom:16px}
@@ -95,22 +98,21 @@ export default async function FleetPage({
   .btn-gold:hover{transform:translateY(-2px)}
   .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:20px}
   .card h2{font-family:var(--disp);font-size:16px;font-weight:800;margin-bottom:14px}
-  .frow{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end}
-  @media(max-width:700px){.frow{grid-template-columns:1fr}}
+  .frow{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
+  @media(max-width:900px){.frow{grid-template-columns:1fr 1fr}}
   label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
-  input[type=text]{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;outline:none}
+  input[type=text],input[type=number]{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:var(--body);font-size:13.5px;outline:none}
   input:focus{border-color:var(--gold)}
   input:disabled{opacity:.5;cursor:not-allowed}
   .btn-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
   .btn-add.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-add.on:hover{transform:translateY(-2px)}
-  .btn-add.off{background:var(--navy);border:1px solid var(--line2);color:var(--tx3);cursor:not-allowed}
-  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
   .vcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);transition:.2s;display:block;position:relative}
   .vcard:hover{transform:translateY(-3px);border-color:var(--gold)}
   .vcard .vi{font-size:24px;margin-bottom:10px}
   .vcard b{font-family:var(--disp);font-size:16px;display:block;margin-bottom:4px}
-  .vcard p{font-size:12px;color:var(--tx3);line-height:1.5}
+  .vcard p{font-size:12px;color:var(--tx3);line-height:1.6}
   .vdel{position:absolute;top:14px;right:14px}
   .vdel button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .vdel button:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
@@ -153,25 +155,31 @@ export default async function FleetPage({
           <div className="card">
             <h2>+ Add a vessel</h2>
             {atLimit ? (
-              <>
-                <div className="frow">
-                  <div>
-                    <label htmlFor="name">Vessel name</label>
-                    <input id="name" type="text" disabled placeholder="Upgrade to add another vessel" />
-                  </div>
-                  <div>
-                    <label htmlFor="vesselType">Type</label>
-                    <input id="vesselType" type="text" disabled />
-                  </div>
-                  <div>
-                    <label htmlFor="imoNumber">IMO number</label>
-                    <input id="imoNumber" type="text" disabled />
-                  </div>
-                  <Link href="/upgrade" className="btn-add on" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
-                    Upgrade →
-                  </Link>
+              <div className="frow">
+                <div>
+                  <label htmlFor="name">Vessel name</label>
+                  <input id="name" type="text" disabled placeholder="Upgrade to add another vessel" />
                 </div>
-              </>
+                <div>
+                  <label htmlFor="vesselType">Type</label>
+                  <input id="vesselType" type="text" disabled />
+                </div>
+                <div>
+                  <label htmlFor="flag">Flag</label>
+                  <input id="flag" type="text" disabled />
+                </div>
+                <div>
+                  <label htmlFor="dwt">DWT</label>
+                  <input id="dwt" type="text" disabled />
+                </div>
+                <div>
+                  <label htmlFor="imoNumber">IMO number</label>
+                  <input id="imoNumber" type="text" disabled />
+                </div>
+                <Link href="/upgrade" className="btn-add on" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+                  Upgrade →
+                </Link>
+              </div>
             ) : (
               <form action={addVessel}>
                 <div className="frow">
@@ -182,6 +190,14 @@ export default async function FleetPage({
                   <div>
                     <label htmlFor="vesselType">Type</label>
                     <input id="vesselType" name="vesselType" type="text" maxLength={60} placeholder="e.g. Bulk Carrier" />
+                  </div>
+                  <div>
+                    <label htmlFor="flag">Flag</label>
+                    <input id="flag" name="flag" type="text" maxLength={60} placeholder="e.g. Panama" />
+                  </div>
+                  <div>
+                    <label htmlFor="dwt">DWT</label>
+                    <input id="dwt" name="dwt" type="number" min="0" placeholder="e.g. 55000" />
                   </div>
                   <div>
                     <label htmlFor="imoNumber">IMO number</label>
@@ -199,24 +215,33 @@ export default async function FleetPage({
             </div>
           ) : (
             <div className="vgrid">
-              {vessels.map((v) => (
-                <div key={v.id as string} style={{ position: "relative" }}>
-                  <Link href={`/fleet/${v.id}`} className="vcard">
-                    <div className="vi">🚢</div>
-                    <b>{v.name as string}</b>
-                    <p>
-                      {(v.vessel_type as string) || "Vessel type not set"} ·{" "}
-                      {crewCountMap[v.id as string] || 0} crew
-                    </p>
-                  </Link>
-                  <div className="vdel">
-                    <form action={deleteVessel}>
-                      <input type="hidden" name="vesselId" value={v.id as string} />
-                      <button type="submit">✕</button>
-                    </form>
+              {vessels.map((v) => {
+                const dwtLabel = fmtDwt(v.dwt as number | null);
+                const metaParts = [
+                  (v.vessel_type as string) || null,
+                  (v.flag as string) ? "Flag: " + (v.flag as string) : null,
+                  dwtLabel,
+                ].filter(Boolean);
+                return (
+                  <div key={v.id as string} style={{ position: "relative" }}>
+                    <Link href={`/fleet/${v.id}`} className="vcard">
+                      <div className="vi">🚢</div>
+                      <b>{v.name as string}</b>
+                      <p>
+                        {metaParts.length > 0 ? metaParts.join(" · ") : "Vessel details not set"}
+                        <br />
+                        {crewCountMap[v.id as string] || 0} active crew
+                      </p>
+                    </Link>
+                    <div className="vdel">
+                      <form action={deleteVessel}>
+                        <input type="hidden" name="vesselId" value={v.id as string} />
+                        <button type="submit">✕</button>
+                      </form>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
