@@ -509,6 +509,11 @@ export default async function DashboardPage({
                   <b>Salary Index</b>
                   <p>2026 wage benchmarks by rank, vessel type and nationality.</p>
                 </Link>
+                <Link href="/fleet" className="qcard gold">
+                  <div className="qi">🚢</div>
+                  <b>My Fleet</b>
+                  <p>Track vessels and crew — passports, health reports, certificates and salaries.</p>
+                </Link>
               </>
       ) : (
               <>
@@ -530,7 +535,7 @@ export default async function DashboardPage({
                 <Link href="/vault" className="qcard">
                   {vaultWarn > 0 ? (
                     <span className="qbadge warn">{vaultWarn} expiring</span>
-                  ) : vaultCount > 0 ? (
+                  ) vaultCount > 0 ? (
                     <span className="qbadge">{vaultCount} docs</span>
                   ) : null}
                   <div className="qi">📁</div>
@@ -664,7 +669,7 @@ export default async function DashboardPage({
                       <b>
                         {vaultCount > 0 ? (
                           <Link href="/vault" style={{ color: "var(--gold)", textDecoration: "none" }}>
-                            {vaultCount} in vault{vaultWarn > 0 ? " · " + vaultWarn + " expiring" : ""}
+                            {vaultCount} in vault{vaultWarn > 0 ? " · "+vaultWarn+" expiring" : ""}
                           </Link>
                         ) : (
                           <Link href="/vault" style={{ color: "var(--gold)", textDecoration: "none" }}>
@@ -690,7 +695,7 @@ export default async function DashboardPage({
                       <b>
                         {appTotal > 0 ? (
                           <Link href={appLink} style={{ color: "var(--gold)", textDecoration: "none" }}>
-                            {appTotal} total{appNew > 0 ? " · " + appNew + " new" : ""}
+                            {appTotal} total{appNew > 0 ? " ·"+appNew+" new" : ""}
                           </Link>
                         ) : (
                           "0"
@@ -701,7 +706,7 @@ export default async function DashboardPage({
                       <span>Careers page</span>
                       <b>
                         {careersSlug ? (
-                          <a href={"/careers/" + careersSlug} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gold)", textDecoration: "none" }}>View →</a>
+                          <a href={"/careers/"+careersSlug} target="_blank" rel="noopener noreferrer" style={{ color: "var(--gold)", textDecoration: "none" }}>View →</a>
                         ) : (
                           "—"
                         )}
