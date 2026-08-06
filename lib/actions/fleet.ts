@@ -120,6 +120,11 @@ export async function addFleetCrew(formData: FormData): Promise<void> {
 
   if (!vesselId || !fullName) redirect(`/fleet/${vesselId}?error=missing`);
 
+  const { count: currentMax } = await supabase
+    .from("fleet_crew")
+    .select("id", { count: "exact", head: true })
+    .eq("vessel_id", vesselId);
+
   const { data: newCrew, error } = await supabase
     .from("fleet_crew")
     .insert({
@@ -130,6 +135,7 @@ export async function addFleetCrew(formData: FormData): Promise<void> {
       nationality: nationality || null,
       join_date: joinDate || null,
       status: "active",
+      sort_order: currentMax || 0,
     })
     .select("id")
     .single();
@@ -171,9 +177,22 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
   const fullName = ((formData.get("fullName") as string) || "").trim().slice(0, 100);
   const rank = ((formData.get("rank") as string) || "").trim().slice(0, 60);
   const nationality = ((formData.get("nationality") as string) || "").trim().slice(0, 60);
+  const sex = ((formData.get("sex") as string) || "").trim().slice(0, 10);
+  const dateOfBirth = (formData.get("dateOfBirth") as string) || "";
+  const placeOfBirth = ((formData.get("placeOfBirth") as string) || "").trim().slice(0, 100);
+  const placeOfSignOn = ((formData.get("placeOfSignOn") as string) || "").trim().slice(0, 100);
   const passportNumber = ((formData.get("passportNumber") as string) || "").trim().slice(0, 40);
   const passportExpiry = (formData.get("passportExpiry") as string) || "";
+  const seamanBookNumber = ((formData.get("seamanBookNumber") as string) || "").trim().slice(0, 40);
+  const seamanBookExpiry = (formData.get("seamanBookExpiry") as string) || "";
   const healthReportExpiry = (formData.get("healthReportExpiry") as string) || "";
+  const stcwEndorsementExpiry = (formData.get("stcwEndorsementExpiry") as string) || "";
+  const visaType = ((formData.get("visaType") as string) || "").trim().slice(0, 60);
+  const visaExpiry = (formData.get("visaExpiry") as string) || "";
+  const bloodType = ((formData.get("bloodType") as string) || "").trim().slice(0, 10);
+  const emergencyContactName = ((formData.get("emergencyContactName") as string) || "").trim().slice(0, 100);
+  const emergencyContactPhone = ((formData.get("emergencyContactPhone") as string) || "").trim().slice(0, 40);
+  const emergencyContactRelationship = ((formData.get("emergencyContactRelationship") as string) || "").trim().slice(0, 60);
   const joinDate = (formData.get("joinDate") as string) || "";
   const departureDate = (formData.get("departureDate") as string) || "";
   const salaryAmount = (formData.get("salaryAmount") as string) || "";
@@ -188,9 +207,22 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
       full_name: fullName,
       rank: rank || null,
       nationality: nationality || null,
+      sex: sex || null,
+      date_of_birth: dateOfBirth || null,
+      place_of_birth: placeOfBirth || null,
+      place_of_sign_on: placeOfSignOn || null,
       passport_number: passportNumber || null,
       passport_expiry: passportExpiry || null,
+      seaman_book_number: seamanBookNumber || null,
+      seaman_book_expiry: seamanBookExpiry || null,
       health_report_expiry: healthReportExpiry || null,
+      stcw_endorsement_expiry: stcwEndorsementExpiry || null,
+      visa_type: visaType || null,
+      visa_expiry: visaExpiry || null,
+      blood_type: bloodType || null,
+      emergency_contact_name: emergencyContactName || null,
+      emergency_contact_phone: emergencyContactPhone || null,
+      emergency_contact_relationship: emergencyContactRelationship || null,
       join_date: joinDate || null,
       departure_date: departureDate || null,
       salary_amount: salaryAmount ? Number(salaryAmount) : null,
@@ -207,4 +239,30 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
 
   revalidatePath(`/fleet/${vesselId}/${crewId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
+}
+
+export async function signOffCrew(formData: FormData): Promise<void> {
+  const { supabase, userId, userEmail } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({
+      status: "signed_off",
+      departure_date: new Date().toISOString().slice(0, 10),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect(`/fleet/${vesselId}?error=failed`);
+
+  await logAudit(supabase, userId, userEmail, "crew_signed_off", "crew", crewId, "Signed off crew member");
+
+  revalidatePath(`/fleet/${vesselId}`);
+  revalidatePath("/fleet");
+  redirect(`/fleet/${vesselId}?signedoff=1`);
 }
