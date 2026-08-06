@@ -535,7 +535,7 @@ export default async function DashboardPage({
                 <Link href="/vault" className="qcard">
                   {vaultWarn > 0 ? (
                     <span className="qbadge warn">{vaultWarn} expiring</span>
-                  ) vaultCount > 0 ? (
+                 ) : vaultCount > 0 ? (
                     <span className="qbadge">{vaultCount} docs</span>
                   ) : null}
                   <div className="qi">📁</div>
