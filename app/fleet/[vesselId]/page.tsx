@@ -114,6 +114,9 @@ export default async function VesselCrewPage({
   .back:hover{color:var(--gold)}
   h1{font-family:var(--disp);font-size:clamp(1.7rem,4.2vw,2.4rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:6px}
   .sub{font-size:14px;color:var(--tx2)}
+  .hrow{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .btn-export{display:inline-flex;align-items:center;gap:7px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:var(--gold);border-radius:10px;padding:9px 15px;font-weight:700;font-size:12.5px;text-decoration:none;white-space:nowrap;flex-shrink:0;margin-top:4px}
+  .btn-export:hover{background:rgba(251,191,36,.18)}
   section{padding:20px 0 44px}
   .stitle{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:28px 0 12px}
   .banner{border-radius:13px;padding:13px 17px;font-size:13px;margin-bottom:16px;border:1px solid}
@@ -159,12 +162,19 @@ export default async function VesselCrewPage({
       <div className="vc-hero">
         <div className="aur"></div>
         <div className="wrap" style={{ position: "relative" }}>
-          <Link href="/fleet" className="back">← My Fleet</Link>
-          <h1>🚢 {vessel.name as string}</h1>
-          <p className="sub">
-            {metaParts.length > 0 ? metaParts.join(" · ") : "Vessel details not set"} ·{" "}
-            {crewList.length} active crew member{crewList.length === 1 ? "" : "s"}
-          </p>
+          <div className="hrow">
+            <div>
+              <Link href="/fleet" className="back">← My Fleet</Link>
+              <h1>🚢 {vessel.name as string}</h1>
+              <p className="sub">
+                {metaParts.length > 0 ? metaParts.join(" · ") : "Vessel details not set"} ·{" "}
+                {crewList.length} active crew member{crewList.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            {crewList.length > 0 ? (
+              <a href={`/fleet/${vesselId}/export`} className="btn-export">⬇ Export crew list</a>
+            ) : null}
+          </div>
         </div>
       </div>
 
