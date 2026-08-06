@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { getPlanAccess } from "@/lib/plan-access";
 import { addFleetCrew, deleteFleetCrew } from "@/lib/actions/fleet";
 
 export const metadata = {
@@ -39,9 +38,6 @@ export default async function VesselCrewPage({
   ]);
 
   if (!profile || profile.user_type !== "company") redirect("/dashboard");
-
-  const access = getPlanAccess((profile.plan as string) as never);
-  if (!access.canUseFleetManager) redirect("/fleet");
 
   const { data: vessel } = await supabase
     .from("vessels")
