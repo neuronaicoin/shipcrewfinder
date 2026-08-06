@@ -9,6 +9,7 @@ import {
   addPlannedCrew,
   activatePlannedCrew,
   deletePlannedCrew,
+  rehireCrew,
 } from "@/lib/actions/fleet";
 
 export const metadata = {
@@ -96,7 +97,6 @@ export default async function FleetPage({
         })
       : "—";
 
-  // Fleet-wide uyarı paneli için: aktif crew'ların tüm gemilerdeki biten belgeleri
   let alertPassport = 0;
   let alertHealth = 0;
   let alertVisa = 0;
@@ -359,6 +359,13 @@ export default async function FleetPage({
                             {(c.rank as string) || "Crew"} · {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · signed off {fmtDate(c.departure_date as string | null)}
                             {c.notes ? " · has notes" : ""}
                           </div>
+                        </div>
+                        <div className="pacts">
+                          <form action={rehireCrew}>
+                            <input type="hidden" name="crewId" value={c.id as string} />
+                            <input type="hidden" name="vesselId" value={c.vessel_id as string} />
+                            <button type="submit" className="go">🔄 Rehire</button>
+                          </form>
                         </div>
                       </div>
                     ))}
