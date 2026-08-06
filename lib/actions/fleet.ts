@@ -234,14 +234,13 @@ export async function updateFleetCrew(formData: FormData): Promise<void> {
     .eq("id", crewId)
     .eq("company_id", userId);
 
-  if (error) redirect(`/fleet/${{esselId}/${crewId}?error=failed`);
+  if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
 
   await logAudit(supabase, userId, userEmail, "crew_updated", "crew", crewId, `Updated ${fullName}`);
 
   revalidatePath(`/fleet/${vesselId}/${crewId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
 }
-
 
 export async function signOffCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
@@ -267,11 +266,8 @@ export async function signOffCrew(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${vesselId}`);
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?signedoff=1`);
-}}
+}
 
-// ============================================
-// PLANNED SIGN-ON CREW
-// ============================================
 export async function addPlannedCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
