@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote } from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -21,6 +21,8 @@ export default async function VesselCrewPage({
   const deleted = sp.deleted;
   const signedoff = sp.signedoff;
   const error = sp.error;
+  const noteFor = sp.noteFor || "";
+  const noteadded = sp.noteadded;
 
   const supabase = await createClient();
   const {
@@ -158,6 +160,15 @@ export default async function VesselCrewPage({
   table.ctable .texp.ok{color:var(--tx2);font-weight:500}
   table.ctable .tdel{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   table.ctable .tdel:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+  .tnote{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font-size:15px;padding:4px 6px;border-radius:6px}
+  .tnote:hover{background:rgba(251,191,36,.1)}
+  .notepanel{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid rgba(251,191,36,.35);border-radius:16px;padding:20px 22px;margin-top:14px}
+  .notepanel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+  .notepanel-head b{font-family:var(--disp);font-size:14px}
+  .noteclose{color:var(--tx3);text-decoration:none;font-size:12px;font-weight:700}
+  .noteclose:hover{color:var(--gold)}
+  .notepanel textarea{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:12px 14px;font-family:var(--body);font-size:13.5px;outline:none;min-height:110px;resize:vertical;margin-bottom:12px}
+  .notepanel textarea:focus{border-color:var(--gold)}
   .thint{font-size:11px;color:var(--tx3);margin-top:8px;text-align:center}
   .empty{text-align:center;padding:30px 12px;font-size:13.5px;color:var(--tx2);line-height:1.7}
   .pacts{display:flex;gap:6px;flex-shrink:0}
@@ -197,6 +208,7 @@ export default async function VesselCrewPage({
           {added === "1" ? <div className="banner ok">Crew member added.</div> : null}
           {deleted === "1" ? <div className="banner ok">Crew member removed.</div> : null}
           {signedoff === "1" ? <div className="banner ok">Moved to crew history.</div> : null}
+          {noteadded === "1" ? <div className="banner ok">Note saved.</div> : null}
           {error === "missing" ? <div className="banner err">Full name is required.</div> : null}
           {error === "failed" ? <div className="banner err">Something went wrong — please try again.</div> : null}
 
@@ -250,6 +262,7 @@ export default async function VesselCrewPage({
                       <th>Health Exp</th>
                       <th>Visa Exp</th>
                       <th></th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -278,6 +291,11 @@ export default async function VesselCrewPage({
                           <td className={`texp ${healthSt}`}>{fmtDate(c.health_report_expiry as string | null)}</td>
                           <td className={`texp ${visaSt}`}>{fmtDate(c.visa_expiry as string | null)}</td>
                           <td>
+                            <a href={`?noteFor=${c.id}`} className="tnote" title={c.notes ? "Has notes" : "Add note"}>
+                              {c.notes ? "📝" : "📄"}
+                            </a>
+                          </td>
+                          <td>
                             <form action={deleteFleetCrew}>
                               <input type="hidden" name="crewId" value={c.id as string} />
                               <input type="hidden" name="vesselId" value={vesselId} />
@@ -293,6 +311,25 @@ export default async function VesselCrewPage({
               <p className="thint">← Scroll sideways to see all columns · tap a name to view full record →</p>
             </>
           )}
+
+          {noteFor ? (() => {
+            const noteCrew = crewList.find((c) => (c.id as string) === noteFor);
+            if (!noteCrew) return null;
+            return (
+              <div className="notepanel">
+                <div className="notepanel-head">
+                  <b>📝 Note — {noteCrew.full_name as string}</b>
+                  <Link href={`/fleet/${vesselId}`} className="noteclose">✕ Close</Link>
+                </div>
+                <form action={updateCrewNote}>
+                  <input type="hidden" name="crewId" value={noteFor} />
+                  <input type="hidden" name="vesselId" value={vesselId} />
+                  <textarea name="notes" maxLength={2000} placeholder="Add a note about this crew member..." defaultValue={(noteCrew.notes as string) || ""} />
+                  <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "10px 20px" }}>Save note</button>
+                </form>
+              </div>
+            );
+          })() : null}
 
           {plannedList.length > 0 ? (
             <>
