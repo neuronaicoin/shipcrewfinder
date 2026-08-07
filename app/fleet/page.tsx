@@ -128,7 +128,6 @@ export default async function FleetPage({
 
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
-  .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
     .eq("company_id", user.id)
     .order("created_at", { ascending: false })
@@ -419,7 +418,6 @@ export default async function FleetPage({
 
               <div className="stitle">📅 Planned sign-on — all vessels</div>
               <div className="card">
-                <div className="card">
                 <form action={addPlannedCrew} style={{ marginBottom: 16 }}>
                   <div className="frow">
                     <div>
