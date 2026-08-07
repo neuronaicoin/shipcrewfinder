@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { updateFleetCrew, signOffCrew } from "@/lib/actions/fleet";
+import { updateFleetCrew, signOffCrew, updateCustomValues } from "@/lib/actions/fleet";
 import { uploadFleetDocument, deleteFleetDocument } from "@/lib/actions/fleet-documents";
 
 export const metadata = {
@@ -44,7 +44,7 @@ export default async function CrewMemberPage({
 
   const { data: vessel } = await supabase
     .from("vessels")
-    .select("id, name")
+    .select("id, name, custom_columns")
     .eq("id", vesselId)
     .eq("company_id", user.id)
     .maybeSingle();
@@ -62,6 +62,8 @@ export default async function CrewMemberPage({
   if (!crew) notFound();
 
   const isSignedOff = (crew.status as string) === "signed_off";
+  const customColumns: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
+  const customValues: Record<string, string> = (crew.custom_values as Record<string, string>) || {};
 
   const { data: documents } = await supabase
     .from("fleet_crew_documents")
@@ -141,7 +143,6 @@ export default async function CrewMemberPage({
   .docview{flex-shrink:0;color:var(--gold);text-decoration:none;font-size:12px;font-weight:700;border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:6px 12px}
   .docview:hover{background:rgba(251,191,36,.1)}
   .docdel{flex-shrink:0;background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
-  .docdel:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -278,7 +279,7 @@ export default async function CrewMemberPage({
                   <label htmlFor="emergencyContactRelationship">Relationship</label>
                   <input id="emergencyContactRelationship" name="emergencyContactRelationship" type="text" maxLength={60} placeholder="e.g. Spouse" defaultValue={(crew.emergency_contact_relationship as string) || ""} />
                 </div>
-                </div>
+              </div>
             </div>
 
             <div className="card">
@@ -314,6 +315,26 @@ export default async function CrewMemberPage({
 
             <button type="submit" className="btn btn-gold">Save changes</button>
           </form>
+
+          {customColumns.length > 0 ? (
+            <div className="card" style={{ marginTop: 16 }}>
+              <h2>Custom Fields</h2>
+              <form action={updateCustomValues}>
+                <input type="hidden" name="crewId" value={crewId} />
+                <input type="hidden" name="vesselId" value={vesselId} />
+                <input type="hidden" name="columnsList" value={customColumns.join("||")} />
+                <div className="grid2">
+                  {customColumns.map((col) => (
+                    <div key={col}>
+                      <label htmlFor={`cf_${col}`}>{col}</label>
+                      <input id={`cf_${col}`} name={`cf_${col}`} type="text" maxLength={200} defaultValue={customValues[col] || ""} />
+                    </div>
+                  ))}
+                </div>
+                <button type="submit" className="btn btn-gold">Save custom fields</button>
+              </form>
+            </div>
+          ) : null}
 
           <div className="card" style={{ marginTop: 16 }}>
             <h2>Documents</h2>
