@@ -3,8 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --background: #0d1030;
-  --foreground: #eef4fa;
+  --navy: #0d1030;
+  --navy2: #141845;
+  --ink: #050716;
+  --gold: #fbbf24;
+  --gold2: #e0a010;
+  --line: rgba(251, 191, 36, 0.16);
+  --line2: rgba(255, 255, 255, 0.08);
+  --tx: #eef4fa;
+  --tx2: #a8bdd2;
+  --tx3: #6b83a0;
+  --grn: #34d399;
+  --red: #f87171;
+  --background: var(--navy);
+  --foreground: var(--tx);
+}
+
+body.light {
+  --navy: #f2f4fb;
+  --navy2: #ffffff;
+  --ink: #ffffff;
+  --tx: #0e1730;
+  --tx2: #2e3c5e;
+  --tx3: #57678a;
+  --line: rgba(224, 160, 16, 0.4);
+  --line2: rgba(15, 25, 60, 0.12);
 }
 
 * {
@@ -19,7 +42,7 @@ body {
   overflow-x: hidden;
   font-family: var(--font-inter), system-ui, sans-serif;
   color: var(--foreground);
-  background: #0d1030;
+  background: var(--background);
 }
 
 a {
