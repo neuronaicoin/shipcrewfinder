@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory, moveColumn, renameColumn } from "@/lib/actions/fleet";
+import { getEffectiveColumns } from "@/lib/fleet-columns";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -26,6 +27,7 @@ export default async function VesselCrewPage({
   const ccadded = sp.ccadded;
   const ccremoved = sp.ccremoved;
   const ccerror = sp.ccerror;
+  const colrenamed = sp.colrenamed;
 
   const supabase = await createClient();
   const {
@@ -47,7 +49,7 @@ export default async function VesselCrewPage({
 
   const { data: vessel } = await supabase
     .from("vessels")
-    .select("id, name, imo_number, vessel_type, flag, dwt, custom_columns")
+    .select("id, name, imo_number, vessel_type, flag, dwt, custom_columns, column_order, column_labels")
     .eq("id", vesselId)
     .eq("company_id", user.id)
     .maybeSingle();
@@ -96,6 +98,42 @@ export default async function VesselCrewPage({
       : "—";
 
   const customColumns: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
+  const columnOrder: string[] = Array.isArray(vessel.column_order) ? (vessel.column_order as string[]) : [];
+  const columnLabels: Record<string, string> = (vessel.column_labels as Record<string, string>) || {};
+  const effectiveColumns = getEffectiveColumns(columnOrder, columnLabels, customColumns).filter(
+    (c) => c.key !== "name"
+  );
+
+  const getCellValue = (key: string, c: Record<string, unknown>): { value: string; expClass: string | null } => {
+    switch (key) {
+      case "sex":
+        return { value: (c.sex as string) || "—", expClass: null };
+      case "rank":
+        return { value: (c.rank as string) || "—", expClass: null };
+      case "nationality":
+        return { value: (c.nationality as string) || "—", expClass: null };
+      case "dob":
+        return { value: fmtDate(c.date_of_birth as string | null), expClass: null };
+      case "join_date":
+        return { value: fmtDate(c.join_date as string | null), expClass: null };
+      case "passport_no":
+        return { value: (c.passport_number as string) || "—", expClass: null };
+      case "passport_exp":
+        return { value: fmtDate(c.passport_expiry as string | null), expClass: expiryStatus(c.passport_expiry as string | null) };
+      case "seaman_no":
+        return { value: (c.seaman_book_number as string) || "—", expClass: null };
+      case "seaman_exp":
+        return { value: fmtDate(c.seaman_book_expiry as string | null), expClass: expiryStatus(c.seaman_book_expiry as string | null) };
+      case "health_exp":
+        return { value: fmtDate(c.health_report_expiry as string | null), expClass: expiryStatus(c.health_report_expiry as string | null) };
+      case "visa_exp":
+        return { value: fmtDate(c.visa_expiry as string | null), expClass: expiryStatus(c.visa_expiry as string | null) };
+      default: {
+        const cv = (c.custom_values as Record<string, string>) || {};
+        return { value: cv[key] || "—", expClass: null };
+      }
+    }
+  };
 
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
   const metaParts = [
@@ -191,6 +229,17 @@ export default async function VesselCrewPage({
   .ccchip{display:flex;align-items:center;gap:8px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:999px;padding:6px 8px 6px 14px;font-size:12px;font-weight:700;color:var(--gold)}
   .ccchip button{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:11px;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
   .ccchip button:hover{color:var(--red);background:rgba(239,68,68,.1)}
+  .colmglist{display:flex;flex-direction:column;gap:8px}
+  .colmgrow{display:flex;align-items:center;gap:12px;border:1px solid var(--line2);border-radius:12px;padding:9px 12px;background:rgba(255,255,255,.02)}
+  .colmgmove{display:flex;gap:4px;flex-shrink:0}
+  .colmgmove button{width:28px;height:28px;background:var(--navy);border:1px solid var(--line2);color:var(--tx2);border-radius:7px;cursor:pointer;font-size:13px;font-weight:800}
+  .colmgmove button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+  .colmgmove button:disabled{opacity:.3;cursor:not-allowed}
+  .colmgrename{display:flex;gap:8px;flex:1;align-items:center}
+  .colmgrename input{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:7px 11px;font-size:12.5px;font-family:var(--body);flex:1}
+  .colmgrename input:focus{border-color:var(--gold);outline:none}
+  .colmgrename button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:7px 13px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--body);white-space:nowrap}
+  .colmgrename button:hover{color:var(--gold);border-color:var(--gold)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -249,7 +298,7 @@ export default async function VesselCrewPage({
                 <button type="submit" className="btn btn-gold">+ Add</button>
               </div>
             </form>
-          </div>
+            </div>
 
           {ccadded === "1" ? <div className="banner ok">Column added.</div> : null}
           {ccremoved === "1" ? <div className="banner ok">Column removed.</div> : null}
@@ -281,6 +330,41 @@ export default async function VesselCrewPage({
             )}
           </div>
 
+          {colrenamed === "1" ? <div className="banner ok">Column renamed.</div> : null}
+
+          <div className="card">
+            <h2>Manage columns</h2>
+            <p className="filehint" style={{ marginBottom: 12 }}>
+              Reorder or rename table columns. &quot;No&quot; and name always stay first.
+            </p>
+            <div className="colmglist">
+              {effectiveColumns.map((col, idx) => (
+                <div key={col.key} className="colmgrow">
+                  <div className="colmgmove">
+                    <form action={moveColumn}>
+                      <input type="hidden" name="vesselId" value={vesselId} />
+                      <input type="hidden" name="columnKey" value={col.key} />
+                      <input type="hidden" name="direction" value="up" />
+                      <button type="submit" disabled={idx === 0}>↑</button>
+                    </form>
+                    <form action={moveColumn}>
+                      <input type="hidden" name="vesselId" value={vesselId} />
+                      <input type="hidden" name="columnKey" value={col.key} />
+                      <input type="hidden" name="direction" value="down" />
+                      <button type="submit" disabled={idx === effectiveColumns.length - 1}>↓</button>
+                    </form>
+                  </div>
+                  <form action={renameColumn} className="colmgrename">
+                    <input type="hidden" name="vesselId" value={vesselId} />
+                    <input type="hidden" name="columnKey" value={col.key} />
+                    <input type="text" name="newLabel" defaultValue={col.label} maxLength={40} />
+                    <button type="submit">Rename</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {crewList.length === 0 ? (
             <div className="empty">
               No active crew members yet — use the form above to add your first one.
@@ -293,19 +377,8 @@ export default async function VesselCrewPage({
                     <tr>
                       <th>No</th>
                       <th>Surname and Name</th>
-                      <th>Sex</th>
-                      <th>Rank</th>
-                      <th>Nationality</th>
-                      <th>Date of Birth</th>
-                      <th>Join Date</th>
-                      <th>Passport No</th>
-                      <th>Passport Exp</th>
-                      <th>Seaman Book No</th>
-                      <th>Seaman Book Exp</th>
-                      <th>Health Exp</th>
-                      <th>Visa Exp</th>
-                      {customColumns.map((col) => (
-                        <th key={col}>{col}</th>
+                      {effectiveColumns.map((col) => (
+                        <th key={col.key}>{col.label}</th>
                       ))}
                       <th></th>
                       <th></th>
@@ -313,10 +386,6 @@ export default async function VesselCrewPage({
                   </thead>
                   <tbody>
                     {crewList.map((c, idx) => {
-                      const passportSt = expiryStatus(c.passport_expiry as string | null);
-                      const seamanSt = expiryStatus(c.seaman_book_expiry as string | null);
-                      const healthSt = expiryStatus(c.health_report_expiry as string | null);
-                      const visaSt = expiryStatus(c.visa_expiry as string | null);
                       return (
                         <tr key={c.id as string}>
                           <td>{idx + 1}</td>
@@ -325,20 +394,13 @@ export default async function VesselCrewPage({
                               {c.full_name as string}
                             </Link>
                           </td>
-                          <td>{(c.sex as string) || "—"}</td>
-                          <td>{(c.rank as string) || "—"}</td>
-                          <td>{(c.nationality as string) || "—"}</td>
-                          <td>{fmtDate(c.date_of_birth as string | null)}</td>
-                          <td>{fmtDate(c.join_date as string | null)}</td>
-                          <td>{(c.passport_number as string) || "—"}</td>
-                          <td className={`texp ${passportSt}`}>{fmtDate(c.passport_expiry as string | null)}</td>
-                          <td>{(c.seaman_book_number as string) || "—"}</td>
-                          <td className={`texp ${seamanSt}`}>{fmtDate(c.seaman_book_expiry as string | null)}</td>
-                          <td className={`texp ${healthSt}`}>{fmtDate(c.health_report_expiry as string | null)}</td>
-                          <td className={`texp ${visaSt}`}>{fmtDate(c.visa_expiry as string | null)}</td>
-                          {customColumns.map((col) => {
-                            const cv = (c.custom_values as Record<string, string>) || {};
-                            return <td key={col}>{cv[col] || "—"}</td>;
+                          {effectiveColumns.map((col) => {
+                            const cell = getCellValue(col.key, c);
+                            return (
+                              <td key={col.key} className={cell.expClass ? `texp ${cell.expClass}` : undefined}>
+                                {cell.value}
+                              </td>
+                            );
                           })}
                           <td>
                             <a href={`?noteFor=${c.id}`} className="tnote" title={c.notes ? "Has notes" : "Add note"}>
@@ -376,7 +438,7 @@ export default async function VesselCrewPage({
                   <input type="hidden" name="vesselId" value={vesselId} />
                   <textarea name="notes" maxLength={2000} placeholder="Add a note about this crew member..." defaultValue={(noteCrew.notes as string) || ""} />
                   <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "10px 20px" }}>Save note</button>
-                </form>
+                  </form>
               </div>
             );
           })() : null}
