@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory } from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -183,6 +183,9 @@ export default async function VesselCrewPage({
   .rehireform{display:flex;gap:7px;align-items:center;flex-shrink:0}
   .rehiresel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:11.5px;font-family:var(--body);cursor:pointer;max-width:150px}
   .rehiresel:focus{border-color:var(--gold)}
+  .histacts{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+  .planbtn{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.4);color:#60a5fa;border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  .planbtn:hover{background:rgba(96,165,250,.18)}
   .filehint{font-size:11px;color:var(--tx3)}
   .cclist{display:flex;flex-wrap:wrap;gap:8px}
   .ccchip{display:flex;align-items:center;gap:8px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:999px;padding:6px 8px 6px 14px;font-size:12px;font-weight:700;color:var(--gold)}
@@ -426,15 +429,26 @@ export default async function VesselCrewPage({
                           {c.notes ? " · has notes" : ""}
                         </div>
                       </div>
-                      <form action={rehireCrew} className="rehireform">
-                        <input type="hidden" name="crewId" value={c.id as string} />
-                        <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
-                          {vesselList.map((v) => (
-                            <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                          ))}
-                        </select>
-                        <button type="submit" className="go">🔄 Rehire</button>
-                      </form>
+                      <div className="histacts">
+                        <form action={rehireCrew} className="rehireform">
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
+                            {vesselList.map((v) => (
+                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                            ))}
+                          </select>
+                          <button type="submit" className="go">🔄 Rehire</button>
+                        </form>
+                        <form action={moveToPlannedFromHistory} className="rehireform">
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
+                            {vesselList.map((v) => (
+                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                            ))}
+                          </select>
+                          <button type="submit" className="planbtn">📅 Add to Planned</button>
+                        </form>
+                      </div>
                     </div>
                   ))}
                 </div>
