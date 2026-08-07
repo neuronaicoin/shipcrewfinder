@@ -65,7 +65,7 @@ export default async function VesselCrewPage({
 
   const { data: allCrew } = await supabase
     .from("fleet_crew")
-    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, custom_values, expected_join_date, planning_country, planning_status")
+    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, custom_values, expected_join_date, planning_country, planning_status, emergency_contact_name, emergency_contact_phone")
     .eq("vessel_id", vesselId)
     .order("sort_order", { ascending: true });
 
@@ -135,6 +135,17 @@ export default async function VesselCrewPage({
     }
   };
 
+  const getReadiness = (c: Record<string, unknown>): number => {
+    const checks: boolean[] = [];
+    checks.push(!!(c.passport_number && expiryStatus(c.passport_expiry as string | null) !== "expired" && c.passport_expiry));
+    checks.push(!!(c.seaman_book_number && expiryStatus(c.seaman_book_expiry as string | null) !== "expired" && c.seaman_book_expiry));
+    checks.push(!!(c.health_report_expiry && expiryStatus(c.health_report_expiry as string | null) !== "expired"));
+    checks.push(!!(c.emergency_contact_name && c.emergency_contact_phone));
+    checks.push(!!c.nationality);
+    const passed = checks.filter(Boolean).length;
+    return Math.round((passed / checks.length) * 100);
+  };
+
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
   const metaParts = [
     (vessel.vessel_type as string) || null,
@@ -142,7 +153,6 @@ export default async function VesselCrewPage({
     fmtDwt(vessel.dwt as number | null),
     vessel.imo_number ? "IMO " + vessel.imo_number : null,
   ].filter(Boolean);
-
   return (
     <>
       <style>{`
@@ -240,6 +250,10 @@ export default async function VesselCrewPage({
   .colmgrename input:focus{border-color:var(--gold);outline:none}
   .colmgrename button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:7px 13px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--body);white-space:nowrap}
   .colmgrename button:hover{color:var(--gold);border-color:var(--gold)}
+  .rdybadge{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;border:1px solid}
+  .rdybadge.rdy-high{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+  .rdybadge.rdy-mid{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
+  .rdybadge.rdy-low{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -280,10 +294,7 @@ export default async function VesselCrewPage({
               <input type="hidden" name="vesselId" value={vesselId} />
               <div className="frow">
                 <div>
-                  <label htmlFor="fullName">Full name</label>
-                  <input id="fullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. John Smith" />
-                </div>
-                <div>
+                  <div>
                   <label htmlFor="rank">Rank</label>
                   <input id="rank" name="rank" type="text" maxLength={60} placeholder="e.g. Chief Engineer" />
                 </div>
@@ -298,7 +309,7 @@ export default async function VesselCrewPage({
                 <button type="submit" className="btn btn-gold">+ Add</button>
               </div>
             </form>
-            </div>
+          </div>
 
           {ccadded === "1" ? <div className="banner ok">Column added.</div> : null}
           {ccremoved === "1" ? <div className="banner ok">Column removed.</div> : null}
@@ -377,6 +388,7 @@ export default async function VesselCrewPage({
                     <tr>
                       <th>No</th>
                       <th>Surname and Name</th>
+                      <th>Ready</th>
                       {effectiveColumns.map((col) => (
                         <th key={col.key}>{col.label}</th>
                       ))}
@@ -393,6 +405,13 @@ export default async function VesselCrewPage({
                             <Link href={`/fleet/${vesselId}/${c.id}`} className="tname">
                               {c.full_name as string}
                             </Link>
+                          </td>
+                          <td>
+                            {(() => {
+                              const r = getReadiness(c);
+                              const cls = r >= 80 ? "rdy-high" : r >= 50 ? "rdy-mid" : "rdy-low";
+                              return <span className={`rdybadge ${cls}`}>{r}%</span>;
+                            })()}
                           </td>
                           {effectiveColumns.map((col) => {
                             const cell = getCellValue(col.key, c);
@@ -415,8 +434,7 @@ export default async function VesselCrewPage({
                             </form>
                           </td>
                         </tr>
-                      );
-                    })}
+                        })}
                   </tbody>
                 </table>
               </div>
@@ -438,7 +456,7 @@ export default async function VesselCrewPage({
                   <input type="hidden" name="vesselId" value={vesselId} />
                   <textarea name="notes" maxLength={2000} placeholder="Add a note about this crew member..." defaultValue={(noteCrew.notes as string) || ""} />
                   <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "10px 20px" }}>Save note</button>
-                  </form>
+                </form>
               </div>
             );
           })() : null}
