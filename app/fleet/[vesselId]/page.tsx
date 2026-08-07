@@ -49,6 +49,13 @@ export default async function VesselCrewPage({
 
   if (!vessel) notFound();
 
+  const { data: allVessels } = await supabase
+    .from("vessels")
+    .select("id, name")
+    .eq("company_id", user.id)
+    .order("created_at", { ascending: false });
+  const vesselList = allVessels || [];
+
   const { data: allCrew } = await supabase
     .from("fleet_crew")
     .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, expected_join_date, planning_country, planning_status")
@@ -95,17 +102,6 @@ export default async function VesselCrewPage({
     <>
       <style>{`
   *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --navy:#0d1030;--navy2:#141845;--ink:#050716;
-    --gold:#fbbf24;--gold2:#e0a010;--line:rgba(251,191,36,.16);--line2:rgba(255,255,255,.08);
-    --tx:#eef4fa;--tx2:#a8bdd2;--tx3:#6b83a0;--grn:#34d399;--red:#f87171;
-    --disp:var(--font-bricolage),sans-serif;--body:var(--font-jakarta),sans-serif;
-  }
-  body.light{
-    --navy:#f2f4fb;--navy2:#ffffff;--ink:#ffffff;
-    --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
-    --line:rgba(224,160,16,.4);--line2:rgba(15,25,60,.12);
-  }
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:920px;margin:0 auto;padding:0 20px}
   .vc-hero{position:relative;padding:36px 0 20px;overflow:hidden}
@@ -168,6 +164,9 @@ export default async function VesselCrewPage({
   .pacts button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .pacts button.go{color:var(--grn);border-color:rgba(52,211,153,.4)}
   .pacts button.go:hover{background:rgba(52,211,153,.1)}
+  .rehireform{display:flex;gap:7px;align-items:center;flex-shrink:0}
+  .rehiresel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:11.5px;font-family:var(--body);cursor:pointer;max-width:150px}
+  .rehiresel:focus{border-color:var(--gold)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -343,13 +342,15 @@ export default async function VesselCrewPage({
                           {c.notes ? " · has notes" : ""}
                         </div>
                       </div>
-                      <div className="pacts">
-                        <form action={rehireCrew}>
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <input type="hidden" name="vesselId" value={vesselId} />
-                          <button type="submit" className="go">🔄 Rehire</button>
-                        </form>
-                      </div>
+                      <form action={rehireCrew} className="rehireform">
+                        <input type="hidden" name="crewId" value={c.id as string} />
+                        <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
+                          {vesselList.map((v) => (
+                            <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                          ))}
+                        </select>
+                        <button type="submit" className="go">🔄 Rehire</button>
+                      </form>
                     </div>
                   ))}
                 </div>
