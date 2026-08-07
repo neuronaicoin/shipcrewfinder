@@ -10,6 +10,7 @@ import {
   activatePlannedCrew,
   deletePlannedCrew,
   rehireCrew,
+  moveToPlannedFromHistory,
 } from "@/lib/actions/fleet";
 
 export const metadata = {
@@ -147,7 +148,7 @@ export default async function FleetPage({
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
-    .eq("company_id", user.id)
+  .eq("company_id", user.id)
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -238,6 +239,9 @@ export default async function FleetPage({
   .rehireform{display:flex;gap:7px;align-items:center;flex-shrink:0}
   .rehiresel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:11.5px;font-family:var(--body);cursor:pointer;max-width:130px}
   .rehiresel:focus{border-color:var(--gold)}
+  .histacts{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+  .planbtn{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.4);color:#60a5fa;border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  .planbtn:hover{background:rgba(96,165,250,.18)}
   .alist{display:flex;flex-direction:column;gap:2px}
   .arow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line2);font-size:12.5px}
   .arow:last-child{border-bottom:none}
@@ -294,7 +298,7 @@ export default async function FleetPage({
           {!atLimit && access.vesselLimit !== null && vesselCount === 0 ? (
             <div className="banner info">
               You can add 1 vessel free and use every Fleet feature on it. Add a second vessel anytime with the Fleet plan.
-            </div>
+              </div>
           ) : null}
 
           <div className="card">
@@ -431,16 +435,28 @@ export default async function FleetPage({
                             {c.notes ? " · has notes" : ""}
                           </div>
                         </div>
-                        <form action={rehireCrew} className="rehireform">
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <select name="targetVesselId" required defaultValue="" className="rehiresel">
-                            <option value="" disabled>Rehire to…</option>
-                            {vesselList.map((v) => (
-                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                            ))}
-                          </select>
-                          <button type="submit" className="go">🔄 Rehire</button>
-                        </form>
+                        <div className="histacts">
+                          <form action={rehireCrew} className="rehireform">
+                            <input type="hidden" name="crewId" value={c.id as string} />
+                            <select name="targetVesselId" required defaultValue="" className="rehiresel">
+                              <option value="" disabled>Rehire to…</option>
+                              {vesselList.map((v) => (
+                                <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                              ))}
+                            </select>
+                            <button type="submit" className="go">🔄 Rehire</button>
+                          </form>
+                          <form action={moveToPlannedFromHistory} className="rehireform">
+                            <input type="hidden" name="crewId" value={c.id as string} />
+                            <select name="targetVesselId" required defaultValue="" className="rehiresel">
+                              <option value="" disabled>Plan for…</option>
+                              {vesselList.map((v) => (
+                                <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                              ))}
+                            </select>
+                            <button type="submit" className="planbtn">📅 Add to Planned</button>
+                          </form>
+                        </div>
                       </div>
                     ))}
                   </div>
