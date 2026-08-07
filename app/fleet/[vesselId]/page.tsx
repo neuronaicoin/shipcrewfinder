@@ -153,6 +153,7 @@ export default async function VesselCrewPage({
     fmtDwt(vessel.dwt as number | null),
     vessel.imo_number ? "IMO " + vessel.imo_number : null,
   ].filter(Boolean);
+
   return (
     <>
       <style>{`
@@ -294,7 +295,10 @@ export default async function VesselCrewPage({
               <input type="hidden" name="vesselId" value={vesselId} />
               <div className="frow">
                 <div>
-                  <div>
+                  <label htmlFor="fullName">Full name</label>
+                  <input id="fullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. John Smith" />
+                </div>
+                <div>
                   <label htmlFor="rank">Rank</label>
                   <input id="rank" name="rank" type="text" maxLength={60} placeholder="e.g. Chief Engineer" />
                 </div>
@@ -434,7 +438,8 @@ export default async function VesselCrewPage({
                             </form>
                           </td>
                         </tr>
-                        })}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
