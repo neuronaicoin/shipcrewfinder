@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getPlanAccess } from "@/lib/plan-access";
+import { getEffectiveColumns } from "@/lib/fleet-columns";
 
 async function requireFleetAccess() {
   const supabase = await createClient();
@@ -559,4 +560,77 @@ export async function moveToPlannedFromHistory(formData: FormData): Promise<void
   revalidatePath("/fleet");
   revalidatePath(`/fleet/${targetVesselId}`);
   redirect(`/fleet?planned=1`);
+}
+export async function moveColumn(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const columnKey = (formData.get("columnKey") as string) || "";
+  const direction = (formData.get("direction") as string) || "";
+  if (!vesselId || !columnKey) redirect("/fleet");
+
+  const { data: vessel } = await supabase
+    .from("vessels")
+    .select("column_order, column_labels, custom_columns")
+    .eq("id", vesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!vessel) redirect("/fleet");
+
+  const customColumns: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
+  const currentOrder: string[] = Array.isArray(vessel.column_order) ? (vessel.column_order as string[]) : [];
+  const labels: Record<string, string> = (vessel.column_labels as Record<string, string>) || {};
+
+  const effective = getEffectiveColumns(currentOrder, labels, customColumns);
+  const keys = effective.map((c) => c.key);
+
+  const idx = keys.indexOf(columnKey);
+  if (idx === -1) redirect(`/fleet/${vesselId}`);
+
+  const swapWith = direction === "up" ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= keys.length) redirect(`/fleet/${vesselId}`);
+
+  const tmp = keys[idx];
+  keys[idx] = keys[swapWith];
+  keys[swapWith] = tmp;
+
+  await supabase
+    .from("vessels")
+    .update({ column_order: keys })
+    .eq("id", vesselId)
+    .eq("company_id", userId);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}`);
+}
+
+export async function renameColumn(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const columnKey = (formData.get("columnKey") as string) || "";
+  const newLabel = ((formData.get("newLabel") as string) || "").trim().slice(0, 40);
+  if (!vesselId || !columnKey || !newLabel) redirect(`/fleet/${vesselId}`);
+
+  const { data: vessel } = await supabase
+    .from("vessels")
+    .select("column_labels")
+    .eq("id", vesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!vessel) redirect("/fleet");
+
+  const labels: Record<string, string> = (vessel.column_labels as Record<string, string>) || {};
+  labels[columnKey] = newLabel;
+
+  await supabase
+    .from("vessels")
+    .update({ column_labels: labels })
+    .eq("id", vesselId)
+    .eq("company_id", userId);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?colrenamed=1`);
 }
