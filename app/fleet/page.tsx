@@ -128,6 +128,7 @@ export default async function FleetPage({
 
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
+  .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
     .eq("company_id", user.id)
     .order("created_at", { ascending: false })
@@ -227,6 +228,10 @@ export default async function FleetPage({
   .pacts button.go{color:var(--grn);border-color:rgba(52,211,153,.4)}
   .pacts button.go:hover{background:rgba(52,211,153,.1)}
   .pacts button.x:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
+  .ptarget{font-family:var(--disp);font-weight:800;font-size:13px;color:var(--gold);margin-top:2px}
+  .rehireform{display:flex;gap:7px;align-items:center;flex-shrink:0}
+  .rehiresel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:11.5px;font-family:var(--body);cursor:pointer;max-width:130px}
+  .rehiresel:focus{border-color:var(--gold)}
   .alist{display:flex;flex-direction:column;gap:2px}
   .arow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line2);font-size:12.5px}
   .arow:last-child{border-bottom:none}
@@ -388,19 +393,24 @@ export default async function FleetPage({
                       <div key={c.id as string} className="prow">
                         <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
                         <div className="pinfo">
-                          <div className="pname">{c.full_name as string}</div>
+                          <Link href={`/fleet/${c.vessel_id}/${c.id}`} className="pname" style={{ textDecoration: "none" }}>
+                            {c.full_name as string}
+                          </Link>
                           <div className="pmeta">
-                            {(c.rank as string) || "Crew"} · {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · signed off {fmtDate(c.departure_date as string | null)}
+                            {(c.rank as string) || "Crew"} · was on {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · signed off {fmtDate(c.departure_date as string | null)}
                             {c.notes ? " · has notes" : ""}
                           </div>
                         </div>
-                        <div className="pacts">
-                          <form action={rehireCrew}>
-                            <input type="hidden" name="crewId" value={c.id as string} />
-                            <input type="hidden" name="vesselId" value={c.vessel_id as string} />
-                            <button type="submit" className="go">🔄 Rehire</button>
-                          </form>
-                        </div>
+                        <form action={rehireCrew} className="rehireform">
+                          <input type="hidden" name="crewId" value={c.id as string} />
+                          <select name="targetVesselId" required defaultValue="" className="rehiresel">
+                            <option value="" disabled>Rehire to…</option>
+                            {vesselList.map((v) => (
+                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                            ))}
+                          </select>
+                          <button type="submit" className="go">🔄 Rehire</button>
+                        </form>
                       </div>
                     ))}
                   </div>
@@ -409,6 +419,7 @@ export default async function FleetPage({
 
               <div className="stitle">📅 Planned sign-on — all vessels</div>
               <div className="card">
+                <div className="card">
                 <form action={addPlannedCrew} style={{ marginBottom: 16 }}>
                   <div className="frow">
                     <div>
@@ -453,8 +464,9 @@ export default async function FleetPage({
                           <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
                           <div className="pinfo">
                             <div className="pname">{c.full_name as string}</div>
+                            <div className="ptarget">→ {vesselNameMap[c.vessel_id as string] || "Unknown vessel"}</div>
                             <div className="pmeta">
-                              {(c.rank as string) || "Crew"} · {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · expected {fmtDate(c.expected_join_date as string | null)}
+                              {(c.rank as string) || "Crew"} · expected {fmtDate(c.expected_join_date as string | null)}
                               {c.planning_country ? " · " + (c.planning_country as string) : ""}
                             </div>
                           </div>
