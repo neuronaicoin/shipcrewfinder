@@ -26,6 +26,8 @@ export default async function FleetPage({
   const deleted = sp.deleted;
   const planned = sp.planned;
   const error = sp.error;
+  const fVessel = sp.fVessel || "";
+  const fRank = sp.fRank || "";
 
   const supabase = await createClient();
   const {
@@ -97,6 +99,22 @@ export default async function FleetPage({
         })
       : "—";
 
+  const rankSet = new Set<string>();
+  historyCrew.forEach((c) => { if (c.rank) rankSet.add(c.rank as string); });
+  plannedCrew.forEach((c) => { if (c.rank) rankSet.add(c.rank as string); });
+  const rankOptions = Array.from(rankSet).sort();
+
+  const historyCrewFiltered = historyCrew.filter((c) => {
+    if (fVessel && (c.vessel_id as string) !== fVessel) return false;
+    if (fRank && (c.rank as string) !== fRank) return false;
+    return true;
+  });
+  const plannedCrewFiltered = plannedCrew.filter((c) => {
+    if (fVessel && (c.vessel_id as string) !== fVessel) return false;
+    if (fRank && (c.rank as string) !== fRank) return false;
+    return true;
+  });
+
   let alertPassport = 0;
   let alertHealth = 0;
   let alertVisa = 0;
@@ -125,7 +143,6 @@ export default async function FleetPage({
     });
   }
   const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
-
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
@@ -226,6 +243,9 @@ export default async function FleetPage({
   .aic{flex-shrink:0;font-size:13px}
   .atext{flex:1;color:var(--tx2)}
   .awhen{flex-shrink:0;color:var(--tx3);font-size:11px;white-space:nowrap}
+  .filterbar{display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+  .filtersel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:10px;padding:9px 13px;font-size:12.5px;font-family:var(--body);cursor:pointer;min-width:140px}
+  .filtersel:focus{border-color:var(--gold)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -247,6 +267,7 @@ export default async function FleetPage({
         <div className="wrap">
           {totalAlerts > 0 ? (
             <div className="alertpanel">
+              <div className="alertpanel">
               <span className="ai">⚠️</span>
               <div style={{ flex: 1, minWidth: 200 }}>
                 <b>{totalAlerts} document{totalAlerts === 1 ? "" : "s"} expiring within 30 days across your fleet</b>
@@ -338,7 +359,7 @@ export default async function FleetPage({
               No vessels yet — add your first one above to start tracking crew.
             </div>
           ) : (
-      <div className="vgrid">
+            <div className="vgrid">
               {vesselList.map((v) => {
                 const dwtLabel = fmtDwt(v.dwt as number | null);
                 const metaParts = [
@@ -371,13 +392,34 @@ export default async function FleetPage({
 
           {vesselList.length > 0 ? (
             <>
+              <div className="filterbar">
+                <form method="get" style={{ display: "flex", gap: 10, flexWrap: "wrap", flex: 1 }}>
+                  <select name="fVessel" defaultValue={fVessel} className="filtersel">
+                    <option value="">All vessels</option>
+                    {vesselList.map((v) => (
+                      <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                    ))}
+                  </select>
+                  <select name="fRank" defaultValue={fRank} className="filtersel">
+                    <option value="">All ranks</option>
+                    {rankOptions.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <button type="submit" className="btn btn-gold" style={{ padding: "9px 16px" }}>Filter</button>
+                  {(fVessel || fRank) ? (
+                    <Link href="/fleet" className="btn" style={{ color: "var(--tx3)", border: "1px solid var(--line2)" }}>Clear</Link>
+                  ) : null}
+                </form>
+              </div>
+
               <div className="stitle">📜 Crew history — all vessels</div>
               <div className="card">
-                {historyCrew.length === 0 ? (
-                  <div className="empty">No sign-offs recorded yet.</div>
+                {historyCrewFiltered.length === 0 ? (
+                  <div className="empty">{historyCrew.length === 0 ? "No sign-offs recorded yet." : "No results match your filter."}</div>
                 ) : (
-                  <div className="plist">
-                    {historyCrew.map((c) => (
+              <div className="plist">
+                    {historyCrewFiltered.map((c) => (
                       <div key={c.id as string} className="prow">
                         <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
                         <div className="pinfo">
@@ -438,11 +480,11 @@ export default async function FleetPage({
                   </div>
                 </form>
 
-                {plannedCrew.length === 0 ? (
-                  <div className="empty">No planned sign-ons yet — use the form above.</div>
+                {plannedCrewFiltered.length === 0 ? (
+                  <div className="empty">{plannedCrew.length === 0 ? "No planned sign-ons yet — use the form above." : "No results match your filter."}</div>
                 ) : (
                   <div className="plist">
-                    {plannedCrew.map((c) => {
+                    {plannedCrewFiltered.map((c) => {
                       const statusRaw = ((c.planning_status as string) || "Tentative").toLowerCase();
                       const pillClass =
                         statusRaw.includes("confirm") ? "confirmed" : statusRaw.includes("doc") ? "docs" : "tentative";
