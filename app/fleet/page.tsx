@@ -143,6 +143,7 @@ export default async function FleetPage({
     });
   }
   const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
+
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
@@ -267,7 +268,6 @@ export default async function FleetPage({
         <div className="wrap">
           {totalAlerts > 0 ? (
             <div className="alertpanel">
-              <div className="alertpanel">
               <span className="ai">⚠️</span>
               <div style={{ flex: 1, minWidth: 200 }}>
                 <b>{totalAlerts} document{totalAlerts === 1 ? "" : "s"} expiring within 30 days across your fleet</b>
@@ -418,7 +418,7 @@ export default async function FleetPage({
                 {historyCrewFiltered.length === 0 ? (
                   <div className="empty">{historyCrew.length === 0 ? "No sign-offs recorded yet." : "No results match your filter."}</div>
                 ) : (
-              <div className="plist">
+                  <div className="plist">
                     {historyCrewFiltered.map((c) => (
                       <div key={c.id as string} className="prow">
                         <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
