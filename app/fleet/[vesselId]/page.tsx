@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn } from "@/lib/actions/fleet";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -23,6 +23,9 @@ export default async function VesselCrewPage({
   const error = sp.error;
   const noteFor = sp.noteFor || "";
   const noteadded = sp.noteadded;
+  const ccadded = sp.ccadded;
+  const ccremoved = sp.ccremoved;
+  const ccerror = sp.ccerror;
 
   const supabase = await createClient();
   const {
@@ -44,7 +47,7 @@ export default async function VesselCrewPage({
 
   const { data: vessel } = await supabase
     .from("vessels")
-    .select("id, name, imo_number, vessel_type, flag, dwt")
+    .select("id, name, imo_number, vessel_type, flag, dwt, custom_columns")
     .eq("id", vesselId)
     .eq("company_id", user.id)
     .maybeSingle();
@@ -60,7 +63,7 @@ export default async function VesselCrewPage({
 
   const { data: allCrew } = await supabase
     .from("fleet_crew")
-    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, expected_join_date, planning_country, planning_status")
+    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, custom_values, expected_join_date, planning_country, planning_status")
     .eq("vessel_id", vesselId)
     .order("sort_order", { ascending: true });
 
@@ -91,6 +94,8 @@ export default async function VesselCrewPage({
           day: "numeric",
         })
       : "—";
+
+  const customColumns: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
 
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
   const metaParts = [
@@ -178,6 +183,11 @@ export default async function VesselCrewPage({
   .rehireform{display:flex;gap:7px;align-items:center;flex-shrink:0}
   .rehiresel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:8px;padding:6px 9px;font-size:11.5px;font-family:var(--body);cursor:pointer;max-width:150px}
   .rehiresel:focus{border-color:var(--gold)}
+  .filehint{font-size:11px;color:var(--tx3)}
+  .cclist{display:flex;flex-wrap:wrap;gap:8px}
+  .ccchip{display:flex;align-items:center;gap:8px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:999px;padding:6px 8px 6px 14px;font-size:12px;font-weight:700;color:var(--gold)}
+  .ccchip button{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:11px;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+  .ccchip button:hover{color:var(--red);background:rgba(239,68,68,.1)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -238,6 +248,36 @@ export default async function VesselCrewPage({
             </form>
           </div>
 
+          {ccadded === "1" ? <div className="banner ok">Column added.</div> : null}
+          {ccremoved === "1" ? <div className="banner ok">Column removed.</div> : null}
+          {ccerror === "limit" ? <div className="banner err">Maximum 8 custom columns per vessel.</div> : null}
+          {ccerror === "dupe" ? <div className="banner err">A column with that name already exists.</div> : null}
+
+          <div className="card">
+            <h2>Custom columns</h2>
+            <form action={addCustomColumn} style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: customColumns.length > 0 ? 14 : 0 }}>
+              <input type="hidden" name="vesselId" value={vesselId} />
+              <input type="text" name="columnName" maxLength={40} placeholder="e.g. Cabin Number" style={{ flex: 1, minWidth: 180, marginBottom: 0 }} />
+              <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "11px 20px" }}>+ Add column</button>
+            </form>
+            {customColumns.length > 0 ? (
+              <div className="cclist">
+                {customColumns.map((col) => (
+                  <div key={col} className="ccchip">
+                    <span>{col}</span>
+                    <form action={removeCustomColumn}>
+                      <input type="hidden" name="vesselId" value={vesselId} />
+                      <input type="hidden" name="columnName" value={col} />
+                      <button type="submit">✕</button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="filehint">No custom columns yet — add one above (e.g. Cabin Number, Union Membership).</p>
+            )}
+          </div>
+
           {crewList.length === 0 ? (
             <div className="empty">
               No active crew members yet — use the form above to add your first one.
@@ -261,6 +301,9 @@ export default async function VesselCrewPage({
                       <th>Seaman Book Exp</th>
                       <th>Health Exp</th>
                       <th>Visa Exp</th>
+                      {customColumns.map((col) => (
+                        <th key={col}>{col}</th>
+                      ))}
                       <th></th>
                       <th></th>
                     </tr>
@@ -290,6 +333,10 @@ export default async function VesselCrewPage({
                           <td className={`texp ${seamanSt}`}>{fmtDate(c.seaman_book_expiry as string | null)}</td>
                           <td className={`texp ${healthSt}`}>{fmtDate(c.health_report_expiry as string | null)}</td>
                           <td className={`texp ${visaSt}`}>{fmtDate(c.visa_expiry as string | null)}</td>
+                          {customColumns.map((col) => {
+                            const cv = (c.custom_values as Record<string, string>) || {};
+                            return <td key={col}>{cv[col] || "—"}</td>;
+                          })}
                           <td>
                             <a href={`?noteFor=${c.id}`} className="tnote" title={c.notes ? "Has notes" : "Add note"}>
                               {c.notes ? "📝" : "📄"}
