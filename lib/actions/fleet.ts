@@ -432,3 +432,96 @@ export async function updateCrewNote(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}?noteadded=1`);
 }
+// ============================================
+// CUSTOM COLUMNS — şirketin gemiye özel ek sütunları
+// ============================================
+export async function addCustomColumn(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const columnName = ((formData.get("columnName") as string) || "").trim().slice(0, 40);
+  if (!vesselId || !columnName) redirect(`/fleet/${vesselId}`);
+
+  const { data: vessel } = await supabase
+    .from("vessels")
+    .select("custom_columns")
+    .eq("id", vesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!vessel) redirect("/fleet");
+
+  const existing: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
+  if (existing.length >= 8) redirect(`/fleet/${vesselId}?ccerror=limit`);
+  if (existing.some((c) => c.toLowerCase() === columnName.toLowerCase())) {
+    redirect(`/fleet/${vesselId}?ccerror=dupe`);
+  }
+
+  const updated = [...existing, columnName];
+
+  await supabase
+    .from("vessels")
+    .update({ custom_columns: updated })
+    .eq("id", vesselId)
+    .eq("company_id", userId);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?ccadded=1`);
+}
+
+export async function removeCustomColumn(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const columnName = (formData.get("columnName") as string) || "";
+  if (!vesselId || !columnName) redirect("/fleet");
+
+  const { data: vessel } = await supabase
+    .from("vessels")
+    .select("custom_columns")
+    .eq("id", vesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!vessel) redirect("/fleet");
+
+  const existing: string[] = Array.isArray(vessel.custom_columns) ? (vessel.custom_columns as string[]) : [];
+  const updated = existing.filter((c) => c !== columnName);
+
+  await supabase
+    .from("vessels")
+    .update({ custom_columns: updated })
+    .eq("id", vesselId)
+    .eq("company_id", userId);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?ccremoved=1`);
+}
+
+export async function updateCustomValues(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const columnsRaw = (formData.get("columnsList") as string) || "";
+  if (!crewId) redirect("/fleet");
+
+  const columnNames = columnsRaw.split("||").filter(Boolean);
+  const customValues: Record<string, string> = {};
+  columnNames.forEach((col) => {
+    const val = ((formData.get("cf_" + col) as string) || "").trim().slice(0, 200);
+    if (val) customValues[col] = val;
+  });
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({ custom_values: customValues, updated_at: new Date().toISOString() })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect(`/fleet/${vesselId}/${crewId}?error=failed`);
+
+  revalidatePath(`/fleet/${vesselId}/${crewId}`);
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
+}
