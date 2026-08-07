@@ -172,6 +172,7 @@ export async function deleteFleetCrew(formData: FormData): Promise<void> {
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?deleted=1`);
 }
+
 export async function updateFleetCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
@@ -271,6 +272,7 @@ export async function signOffCrew(formData: FormData): Promise<void> {
   revalidatePath("/fleet");
   redirect(`/fleet/${vesselId}?signedoff=1`);
 }
+
 export async function addPlannedCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
@@ -363,8 +365,18 @@ export async function rehireCrew(formData: FormData): Promise<void> {
   const { supabase, userId, userEmail } = await requireFleetAccess();
 
   const crewId = (formData.get("crewId") as string) || "";
-  const vesselId = (formData.get("vesselId") as string) || "";
-  if (!crewId) redirect("/fleet");
+  const targetVesselId = (formData.get("targetVesselId") as string) || "";
+  if (!crewId || !targetVesselId) redirect("/fleet?error=missing");
+
+  // Hedef geminin gerçekten bu şirkete ait olduğunu doğrula
+  const { data: targetVessel } = await supabase
+    .from("vessels")
+    .select("id")
+    .eq("id", targetVesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!targetVessel) redirect("/fleet?error=failed");
 
   const { data: existing } = await supabase
     .from("fleet_crew")
@@ -377,6 +389,7 @@ export async function rehireCrew(formData: FormData): Promise<void> {
     .from("fleet_crew")
     .update({
       status: "active",
+      vessel_id: targetVesselId,
       join_date: new Date().toISOString().slice(0, 10),
       departure_date: null,
       updated_at: new Date().toISOString(),
@@ -397,6 +410,6 @@ export async function rehireCrew(formData: FormData): Promise<void> {
   );
 
   revalidatePath("/fleet");
-  if (vesselId) revalidatePath(`/fleet/${vesselId}`);
-  redirect(vesselId ? `/fleet/${vesselId}?added=1` : "/fleet?added=1");
+  revalidatePath(`/fleet/${targetVesselId}`);
+  redirect(`/fleet/${targetVesselId}/${crewId}?saved=1`);
 }
