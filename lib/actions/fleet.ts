@@ -413,3 +413,22 @@ export async function rehireCrew(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${targetVesselId}`);
   redirect(`/fleet/${targetVesselId}/${crewId}?saved=1`);
 }
+export async function updateCrewNote(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const vesselId = (formData.get("vesselId") as string) || "";
+  const notes = ((formData.get("notes") as string) || "").trim().slice(0, 2000);
+  if (!crewId) redirect("/fleet");
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({ notes: notes || null, updated_at: new Date().toISOString() })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect(`/fleet/${vesselId}?error=failed`);
+
+  revalidatePath(`/fleet/${vesselId}`);
+  redirect(`/fleet/${vesselId}?noteadded=1`);
+}
