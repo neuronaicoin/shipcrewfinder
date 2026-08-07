@@ -525,3 +525,38 @@ export async function updateCustomValues(formData: FormData): Promise<void> {
   revalidatePath(`/fleet/${vesselId}`);
   redirect(`/fleet/${vesselId}/${crewId}?saved=1`);
 }
+export async function moveToPlannedFromHistory(formData: FormData): Promise<void> {
+  const { supabase, userId } = await requireFleetAccess();
+
+  const crewId = (formData.get("crewId") as string) || "";
+  const targetVesselId = (formData.get("targetVesselId") as string) || "";
+  if (!crewId || !targetVesselId) redirect("/fleet?error=missing");
+
+  const { data: targetVessel } = await supabase
+    .from("vessels")
+    .select("id")
+    .eq("id", targetVesselId)
+    .eq("company_id", userId)
+    .maybeSingle();
+
+  if (!targetVessel) redirect("/fleet?error=failed");
+
+  const { error } = await supabase
+    .from("fleet_crew")
+    .update({
+      status: "planned",
+      vessel_id: targetVesselId,
+      expected_join_date: null,
+      planning_status: "Tentative",
+      planning_country: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", crewId)
+    .eq("company_id", userId);
+
+  if (error) redirect("/fleet?error=failed");
+
+  revalidatePath("/fleet");
+  revalidatePath(`/fleet/${targetVesselId}`);
+  redirect(`/fleet?planned=1`);
+}
