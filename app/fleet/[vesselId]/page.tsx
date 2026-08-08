@@ -4,6 +4,7 @@ import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
 import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory, moveColumn, renameColumn } from "@/lib/actions/fleet";
 import { getEffectiveColumns } from "@/lib/fleet-columns";
+import { SALARY_DATA, VESSELS } from "@/lib/data/salary";
 
 export const metadata = {
   title: "Vessel Crew — ShipCrewFinder",
@@ -65,7 +66,7 @@ export default async function VesselCrewPage({
 
   const { data: allCrew } = await supabase
     .from("fleet_crew")
-    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, custom_values, expected_join_date, planning_country, planning_status, emergency_contact_name, emergency_contact_phone")
+    .select("id, full_name, rank, nationality, sex, date_of_birth, join_date, departure_date, passport_number, passport_expiry, seaman_book_number, seaman_book_expiry, health_report_expiry, visa_expiry, status, notes, custom_values, expected_join_date, planning_country, planning_status, emergency_contact_name, emergency_contact_phone, salary_amount, salary_currency")
     .eq("vessel_id", vesselId)
     .order("sort_order", { ascending: true });
 
@@ -144,6 +145,26 @@ export default async function VesselCrewPage({
     checks.push(!!c.nationality);
     const passed = checks.filter(Boolean).length;
     return Math.round((passed / checks.length) * 100);
+  };
+
+  const vesselTypeLower = ((vessel.vessel_type as string) || "").toLowerCase();
+  const matchedVesselKey = VESSELS.find(
+    (v) => vesselTypeLower.includes(v.key) || vesselTypeLower.includes(v.label.toLowerCase())
+  )?.key;
+
+  const getMarketComparison = (c: Record<string, unknown>): { label: string; cls: string } | null => {
+    const amount = c.salary_amount as number | null;
+    const currency = ((c.salary_currency as string) || "USD").toUpperCase();
+    const rank = ((c.rank as string) || "").trim();
+    if (!amount || currency !== "USD" || !rank || !matchedVesselKey) return null;
+
+    const rankData = SALARY_DATA.find((r) => r.rank.toLowerCase() === rank.toLowerCase());
+    if (!rankData) return null;
+
+    const range = rankData.ranges[matchedVesselKey];
+    if (amount < range.min) return { label: "Below market", cls: "mkt-low" };
+    if (amount > range.max) return { label: "Above market", cls: "mkt-high" };
+    return { label: "Fair", cls: "mkt-fair" };
   };
 
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
@@ -255,6 +276,10 @@ export default async function VesselCrewPage({
   .rdybadge.rdy-high{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
   .rdybadge.rdy-mid{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
   .rdybadge.rdy-low{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .mktbadge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
+  .mktbadge.mkt-low{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .mktbadge.mkt-fair{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+  .mktbadge.mkt-high{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -393,6 +418,7 @@ export default async function VesselCrewPage({
                       <th>No</th>
                       <th>Surname and Name</th>
                       <th>Ready</th>
+                      <th>Market</th>
                       {effectiveColumns.map((col) => (
                         <th key={col.key}>{col.label}</th>
                       ))}
@@ -415,6 +441,13 @@ export default async function VesselCrewPage({
                               const r = getReadiness(c);
                               const cls = r >= 80 ? "rdy-high" : r >= 50 ? "rdy-mid" : "rdy-low";
                               return <span className={`rdybadge ${cls}`}>{r}%</span>;
+                            })()}
+                          </td>
+                          <td>
+                            {(() => {
+                              const m = getMarketComparison(c);
+                              if (!m) return "—";
+                              return <span className={`mktbadge ${m.cls}`}>{m.label}</span>;
                             })()}
                           </td>
                           {effectiveColumns.map((col) => {
