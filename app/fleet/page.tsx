@@ -145,10 +145,28 @@ export default async function FleetPage({
   }
   const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
 
+  const costByCurrency: Record<string, number> = {};
+  if (vesselIds.length > 0) {
+    const { data: salaryRows } = await supabase
+      .from("fleet_crew")
+      .select("salary_amount, salary_currency")
+      .in("vessel_id", vesselIds)
+      .eq("status", "active");
+
+    (salaryRows || []).forEach((r) => {
+      const amt = r.salary_amount as number | null;
+      if (!amt) return;
+      const cur = (r.salary_currency as string) || "USD";
+      costByCurrency[cur] = (costByCurrency[cur] || 0) + amt;
+    });
+  }
+  const costCurrencies = Object.keys(costByCurrency);
+  const fmtMoney = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+
   const { data: auditRows } = await supabase
     .from("fleet_audit_log")
     .select("action, detail, actor_email, created_at")
-  .eq("company_id", user.id)
+    .eq("company_id", user.id)
     .order("created_at", { ascending: false })
     .limit(6);
 
@@ -251,6 +269,14 @@ export default async function FleetPage({
   .filterbar{display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
   .filtersel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:10px;padding:9px 13px;font-size:12.5px;font-family:var(--body);cursor:pointer;min-width:140px}
   .filtersel:focus{border-color:var(--gold)}
+  .costcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid rgba(52,211,153,.3);border-radius:15px;padding:16px 20px;margin-bottom:18px}
+  .costhead{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .costhead b{font-family:var(--disp);font-size:13.5px;color:var(--tx)}
+  .costrows{display:flex;flex-direction:column;gap:8px}
+  .costrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .costcur{font-size:11px;font-weight:800;color:var(--tx3);letter-spacing:.05em;min-width:32px}
+  .costval{font-family:var(--disp);font-size:19px;font-weight:800;color:var(--grn)}
+  .costproj{font-size:11.5px;color:var(--tx3)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -284,6 +310,23 @@ export default async function FleetPage({
               </div>
             </div>
           ) : null}
+          {costCurrencies.length > 0 ? (
+            <div className="costcard">
+              <div className="costhead">
+                <span>💰</span>
+                <b>Fleet crew cost — monthly</b>
+              </div>
+              <div className="costrows">
+                {costCurrencies.map((cur) => (
+                  <div key={cur} className="costrow">
+                    <span className="costcur">{cur}</span>
+                    <span className="costval">{fmtMoney(costByCurrency[cur])}</span>
+                    <span className="costproj">≈ {fmtMoney(costByCurrency[cur] * 12)} / 12 months</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {added === "1" ? <div className="banner ok">Vessel added.</div> : null}
           {deleted === "1" ? <div className="banner ok">Removed.</div> : null}
           {planned === "1" ? <div className="banner ok">Planned crew member added.</div> : null}
@@ -298,7 +341,7 @@ export default async function FleetPage({
           {!atLimit && access.vesselLimit !== null && vesselCount === 0 ? (
             <div className="banner info">
               You can add 1 vessel free and use every Fleet feature on it. Add a second vessel anytime with the Fleet plan.
-              </div>
+            </div>
           ) : null}
 
           <div className="card">
