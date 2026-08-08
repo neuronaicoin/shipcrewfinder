@@ -20,9 +20,15 @@ export default async function OnboardingCompletePage() {
   if (!profile) redirect("/dashboard");
 
   const firstName = profile.full_name?.split(" ")[0] || null;
+  const userType = (profile.user_type as string) || "unknown";
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `if (typeof window.gtag === 'function') { window.gtag('event', 'sign_up', { method: '${userType}' }); }`,
+        }}
+      />
       <div className="max-w-lg w-full text-center">
         {/* Success Icon */}
         <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/15 border-2 border-green-500/40 rounded-3xl mb-6">
