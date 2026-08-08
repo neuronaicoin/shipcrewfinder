@@ -30,6 +30,7 @@ export default async function FleetPage({
   const fVessel = sp.fVessel || "";
   const fRank = sp.fRank || "";
   const costVessel = sp.costVessel || "";
+  const healthView = sp.healthView || "";
 
   const supabase = await createClient();
   const {
@@ -179,8 +180,7 @@ export default async function FleetPage({
   };
 
   let readySum = 0;
-  let atRiskCount = 0;
-  let fullyReadyCount = 0;
+  const crewHealthList: { id: string; name: string; rank: string; vesselId: string; score: number }[] = [];
   activeCrew.forEach((c) => {
     const checks: boolean[] = [];
     checks.push(!!(c.passport_number && expiryStatus3(c.passport_expiry as string | null) !== "expired" && c.passport_expiry));
@@ -191,11 +191,22 @@ export default async function FleetPage({
     const passed = checks.filter(Boolean).length;
     const score = Math.round((passed / checks.length) * 100);
     readySum += score;
-    if (score < 50) atRiskCount++;
-    if (score === 100) fullyReadyCount++;
+    crewHealthList.push({
+      id: c.id as string,
+      name: c.full_name as string,
+      rank: (c.rank as string) || "Crew",
+      vesselId: c.vessel_id as string,
+      score,
+    });
   });
+  const fullyReadyCount = crewHealthList.filter((c) => c.score === 100).length;
+  const atRiskCount = crewHealthList.filter((c) => c.score < 50).length;
   const fleetHealthScore = activeCrew.length > 0 ? Math.round(readySum / activeCrew.length) : null;
   const healthCls = fleetHealthScore === null ? "" : fleetHealthScore >= 80 ? "hgood" : fleetHealthScore >= 50 ? "hmid" : "hbad";
+  const healthViewList =
+    healthView === "ready" ? crewHealthList.filter((c) => c.score === 100)
+    : healthView === "atrisk" ? crewHealthList.filter((c) => c.score < 50)
+    : [];
 
   const costByCurrency: Record<string, number> = {};
   if (vesselIds.length > 0) {
@@ -281,7 +292,7 @@ export default async function FleetPage({
   .btn-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
   .btn-add.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-add.on:hover{transform:translateY(-2px)}
-  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:28px}
   .vcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px;text-decoration:none;color:var(--tx);transition:.25s cubic-bezier(.2,.8,.2,1);display:block;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.25)}
   .vcard::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(251,191,36,.08),transparent 60%);opacity:0;transition:.25s}
   .vcard:hover{transform:translateY(-5px);border-color:rgba(251,191,36,.55);box-shadow:0 14px 32px rgba(0,0,0,.4),0 0 0 1px rgba(251,191,36,.12)}
@@ -349,6 +360,14 @@ export default async function FleetPage({
   .healthcard.hbad .healthring{border-color:var(--red);color:var(--red)}
   .healthcard b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:4px;color:var(--tx);letter-spacing:-.01em}
   .healthcard p{font-size:12.5px;color:var(--tx2)}
+  .healthlink{color:inherit;text-decoration:underline;text-underline-offset:2px;font-weight:700}
+  .healthlink.hlgood{color:var(--grn)}
+  .healthlink.hlbad{color:var(--red)}
+  .healthlink:hover{opacity:.8}
+  .rdybadge{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;border:1px solid}
+  .rdybadge.rdy-high{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
+  .rdybadge.rdy-mid{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
+  .rdybadge.rdy-low{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
   .ttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;border:1px solid var(--line2)}
   table.ctable{width:100%;border-collapse:collapse;min-width:640px;font-size:12.5px}
   table.ctable thead th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);padding:11px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line2);white-space:nowrap}
@@ -388,10 +407,45 @@ export default async function FleetPage({
               <div style={{ flex: 1, minWidth: 180 }}>
                 <b>Fleet Health</b>
                 <p>
-                  {activeCrew.length} active crew · {fullyReadyCount} fully ready
-                  {atRiskCount > 0 ? ` · ${atRiskCount} at risk` : ""}
+                  {activeCrew.length} active crew ·{" "}
+                  <Link href="/fleet?healthView=ready#health-list" className="healthlink hlgood">{fullyReadyCount} fully ready</Link>
+                  {atRiskCount > 0 ? (
+                    <> · <Link href="/fleet?healthView=atrisk#health-list" className="healthlink hlbad">{atRiskCount} at risk</Link></>
+                  ) : null}
                 </p>
               </div>
+            </div>
+          ) : null}
+          {healthView && healthViewList.length > 0 ? (
+            <div className="card" id="health-list">
+              <h2>{healthView === "ready" ? "✅ Fully ready crew" : "⚠️ Crew at risk"}</h2>
+              <div className="ttwrap">
+                <table className="ctable">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Rank</th>
+                      <th>Vessel</th>
+                      <th>Readiness</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {healthViewList.map((c) => (
+                      <tr key={c.id}>
+                        <td>
+                          <Link href={`/fleet/${c.vesselId}/${c.id}`} className="tname">{c.name}</Link>
+                        </td>
+                        <td>{c.rank}</td>
+                        <td>{vesselNameMap[c.vesselId] || "Unknown vessel"}</td>
+                        <td>
+                          <span className={`rdybadge ${c.score >= 80 ? "rdy-high" : c.score >= 50 ? "rdy-mid" : "rdy-low"}`}>{c.score}%</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Link href="/fleet" className="filehint" style={{ display: "inline-block", marginTop: 12 }}>✕ Clear filter</Link>
             </div>
           ) : null}
           {totalAlerts > 0 ? (
