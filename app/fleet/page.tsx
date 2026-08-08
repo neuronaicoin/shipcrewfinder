@@ -76,7 +76,7 @@ export default async function FleetPage({
   if (vesselIds.length > 0) {
     const { data: allCrew } = await supabase
       .from("fleet_crew")
-      .select("id, full_name, rank, vessel_id, status, join_date, departure_date, notes, expected_join_date, planning_country, planning_status, passport_expiry, visa_expiry")
+      .select("id, full_name, rank, vessel_id, status, join_date, departure_date, notes, expected_join_date, planning_country, planning_status, passport_expiry, visa_expiry, passport_number, seaman_book_number, seaman_book_expiry, health_report_expiry, emergency_contact_name, emergency_contact_phone, nationality")
       .in("vessel_id", vesselIds)
       .order("created_at", { ascending: false });
 
@@ -167,6 +167,35 @@ export default async function FleetPage({
     });
   }
   const totalAlerts = alertPassport + alertHealth + alertVisa + alertStcw;
+
+  const today3 = new Date();
+  today3.setHours(0, 0, 0, 0);
+  const dayMs3 = 24 * 3600 * 1000;
+  const expiryStatus3 = (d: string | null): string => {
+    if (!d) return "none";
+    const days = Math.round((new Date(d + "T00:00:00").getTime() - today3.getTime()) / dayMs3);
+    if (days < 0) return "expired";
+    return "ok";
+  };
+
+  let readySum = 0;
+  let atRiskCount = 0;
+  let fullyReadyCount = 0;
+  activeCrew.forEach((c) => {
+    const checks: boolean[] = [];
+    checks.push(!!(c.passport_number && expiryStatus3(c.passport_expiry as string | null) !== "expired" && c.passport_expiry));
+    checks.push(!!(c.seaman_book_number && expiryStatus3(c.seaman_book_expiry as string | null) !== "expired" && c.seaman_book_expiry));
+    checks.push(!!(c.health_report_expiry && expiryStatus3(c.health_report_expiry as string | null) !== "expired"));
+    checks.push(!!(c.emergency_contact_name && c.emergency_contact_phone));
+    checks.push(!!c.nationality);
+    const passed = checks.filter(Boolean).length;
+    const score = Math.round((passed / checks.length) * 100);
+    readySum += score;
+    if (score < 50) atRiskCount++;
+    if (score === 100) fullyReadyCount++;
+  });
+  const fleetHealthScore = activeCrew.length > 0 ? Math.round(readySum / activeCrew.length) : null;
+  const healthCls = fleetHealthScore === null ? "" : fleetHealthScore >= 80 ? "hgood" : fleetHealthScore >= 50 ? "hmid" : "hbad";
 
   const costByCurrency: Record<string, number> = {};
   if (vesselIds.length > 0) {
@@ -310,6 +339,16 @@ export default async function FleetPage({
   .costgo:hover{background:var(--gold2)}
   .filehint{font-size:11px;color:var(--tx3)}
   .riskwarn{font-size:11px;font-weight:700;color:var(--red);margin-top:4px}
+  .healthcard{display:flex;align-items:center;gap:16px;border-radius:17px;padding:16px 20px;margin-bottom:18px;box-shadow:0 4px 18px rgba(0,0,0,.2);border:1px solid var(--line2);background:linear-gradient(150deg,rgba(255,255,255,.03),var(--navy2) 40%)}
+  .healthcard.hgood{border-color:rgba(52,211,153,.32);background:linear-gradient(150deg,rgba(52,211,153,.09),var(--navy2) 45%)}
+  .healthcard.hmid{border-color:rgba(251,191,36,.32);background:linear-gradient(150deg,rgba(251,191,36,.09),var(--navy2) 45%)}
+  .healthcard.hbad{border-color:rgba(239,68,68,.32);background:linear-gradient(150deg,rgba(239,68,68,.09),var(--navy2) 45%)}
+  .healthring{width:58px;height:58px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-family:var(--disp);font-weight:800;font-size:15px;border:3px solid}
+  .healthcard.hgood .healthring{border-color:var(--grn);color:var(--grn)}
+  .healthcard.hmid .healthring{border-color:var(--gold);color:var(--gold)}
+  .healthcard.hbad .healthring{border-color:var(--red);color:var(--red)}
+  .healthcard b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:4px;color:var(--tx);letter-spacing:-.01em}
+  .healthcard p{font-size:12.5px;color:var(--tx2)}
   .ttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;border:1px solid var(--line2)}
   table.ctable{width:100%;border-collapse:collapse;min-width:640px;font-size:12.5px}
   table.ctable thead th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);padding:11px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line2);white-space:nowrap}
@@ -341,6 +380,20 @@ export default async function FleetPage({
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
+          {fleetHealthScore !== null ? (
+            <div className={`healthcard ${healthCls}`}>
+              <div className="healthring">
+                <span>{fleetHealthScore}%</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <b>Fleet Health</b>
+                <p>
+                  {activeCrew.length} active crew · {fullyReadyCount} fully ready
+                  {atRiskCount > 0 ? ` · ${atRiskCount} at risk` : ""}
+                </p>
+              </div>
+            </div>
+          ) : null}
           {totalAlerts > 0 ? (
             <div className="alertpanel">
               <span className="ai">⚠️</span>
