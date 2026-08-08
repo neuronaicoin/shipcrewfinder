@@ -298,6 +298,8 @@ export default async function VesselCrewPage({
   .rowmove button{width:22px;height:22px;background:var(--navy);border:1px solid var(--line2);color:var(--tx3);border-radius:5px;cursor:pointer;font-size:11px;font-weight:800;padding:0}
   .rowmove button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
   .rowmove button:disabled{opacity:.25;cursor:not-allowed}
+  .tnoteflag{margin-left:6px;font-size:11px}
+  .tsub{font-size:10.5px;color:var(--tx3);margin-top:2px}
   .managepanel{margin-bottom:20px}
   .managesummary{cursor:pointer;list-style:none;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:14px;padding:14px 18px;font-family:var(--disp);font-weight:700;font-size:13.5px;color:var(--gold);user-select:none}
   .managesummary::-webkit-details-marker{display:none}
@@ -570,30 +572,43 @@ export default async function VesselCrewPage({
             <>
               <div className="stitle">📅 Planned for this vessel</div>
               <div className="card">
-                <div className="clist">
-                  {plannedList.map((c) => (
-                    <div key={c.id as string} className="crow">
-                      <div className="cavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
-                      <div className="cinfo">
-                        <span className="cname" style={{ cursor: "default" }}>{c.full_name as string}</span>
-                        <div className="cmeta">
-                          {(c.rank as string) || "Crew"} · expected {fmtDate(c.expected_join_date as string | null)}
-                          {c.planning_country ? " · " + (c.planning_country as string) : ""}
-                        </div>
-                      </div>
-                      <div className="pacts">
-                        <form action={activatePlannedCrew}>
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <input type="hidden" name="vesselId" value={vesselId} />
-                          <button type="submit" className="go">Sign on</button>
-                        </form>
-                        <form action={deletePlannedCrew}>
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <button type="submit">✕</button>
-                        </form>
-                      </div>
-                    </div>
-                  ))}
+                <div className="ttwrap">
+                  <table className="ctable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Rank</th>
+                        <th>Expected Join</th>
+                        <th></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {plannedList.map((c) => (
+                        <tr key={c.id as string}>
+                          <td><span className="tname" style={{ cursor: "default" }}>{c.full_name as string}</span></td>
+                          <td>{(c.rank as string) || "—"}</td>
+                          <td>
+                            {fmtDate(c.expected_join_date as string | null)}
+                            {c.planning_country ? <div className="tsub">{c.planning_country as string}</div> : null}
+                          </td>
+                          <td>
+                            <form action={activatePlannedCrew}>
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <input type="hidden" name="vesselId" value={vesselId} />
+                              <button type="submit" className="go">Sign on</button>
+                            </form>
+                          </td>
+                          <td>
+                            <form action={deletePlannedCrew}>
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <button type="submit" className="tdel">✕</button>
+                            </form>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>
@@ -603,39 +618,52 @@ export default async function VesselCrewPage({
             <>
               <div className="stitle">📜 Crew history for this vessel</div>
               <div className="card">
-                <div className="clist">
-                  {historyList.map((c) => (
-                    <div key={c.id as string} className="crow">
-                      <div className="cavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
-                      <div className="cinfo">
-                        <span className="cname" style={{ cursor: "default" }}>{c.full_name as string}</span>
-                        <div className="cmeta">
-                          {(c.rank as string) || "Crew"} · signed off {fmtDate(c.departure_date as string | null)}
-                          {c.notes ? " · has notes" : ""}
-                        </div>
-                      </div>
-                      <div className="histacts">
-                        <form action={rehireCrew} className="rehireform">
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
-                            {vesselList.map((v) => (
-                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                            ))}
-                          </select>
-                          <button type="submit" className="go">🔄 Rehire</button>
-                        </form>
-                        <form action={moveToPlannedFromHistory} className="rehireform">
-                          <input type="hidden" name="crewId" value={c.id as string} />
-                          <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
-                            {vesselList.map((v) => (
-                              <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                            ))}
-                          </select>
-                          <button type="submit" className="planbtn">📅 Add to Planned</button>
-                        </form>
-                      </div>
-                    </div>
-                  ))}
+                <div className="ttwrap">
+                  <table className="ctable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Rank</th>
+                        <th>Signed Off</th>
+                        <th></th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyList.map((c) => (
+                        <tr key={c.id as string}>
+                          <td>
+                            <span className="tname" style={{ cursor: "default" }}>{c.full_name as string}</span>
+                            {c.notes ? <span className="tnoteflag" title="Has notes">📝</span> : null}
+                          </td>
+                          <td>{(c.rank as string) || "—"}</td>
+                          <td>{fmtDate(c.departure_date as string | null)}</td>
+                          <td>
+                            <form action={rehireCrew} className="rehireform">
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
+                                {vesselList.map((v) => (
+                                  <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                                ))}
+                              </select>
+                              <button type="submit" className="go">🔄</button>
+                            </form>
+                          </td>
+                          <td>
+                            <form action={moveToPlannedFromHistory} className="rehireform">
+                              <input type="hidden" name="crewId" value={c.id as string} />
+                              <select name="targetVesselId" required defaultValue={vesselId} className="rehiresel">
+                                {vesselList.map((v) => (
+                                  <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                                ))}
+                              </select>
+                              <button type="submit" className="planbtn">📅</button>
+                            </form>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>
