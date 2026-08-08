@@ -309,6 +309,8 @@ export default async function VesselCrewPage({
   .subpanel summary{cursor:pointer;list-style:none;font-family:var(--disp);font-weight:700;font-size:13px;color:var(--tx);user-select:none}
   .subpanel summary::-webkit-details-marker{display:none}
   .subpanel summary:hover{color:var(--gold)}
+  #manage-panel:target > .managebody{display:flex !important}
+  #manage-panel{scroll-margin-top:20px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
