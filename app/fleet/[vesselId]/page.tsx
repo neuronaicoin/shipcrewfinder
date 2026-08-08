@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
-import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory, moveColumn, renameColumn } from "@/lib/actions/fleet";
+import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory, moveColumn, renameColumn, moveCrewRow } from "@/lib/actions/fleet";
 import { getEffectiveColumns } from "@/lib/fleet-columns";
 import { SALARY_DATA, VESSELS } from "@/lib/data/salary";
 
@@ -294,6 +294,10 @@ export default async function VesselCrewPage({
   .fatbadge.fat-low{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.04)}
   .fatbadge.fat-mid{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
   .fatbadge.fat-high{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
+  .rowmove{display:flex;gap:3px}
+  .rowmove button{width:22px;height:22px;background:var(--navy);border:1px solid var(--line2);color:var(--tx3);border-radius:5px;cursor:pointer;font-size:11px;font-weight:800;padding:0}
+  .rowmove button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+  .rowmove button:disabled{opacity:.25;cursor:not-allowed}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -429,6 +433,7 @@ export default async function VesselCrewPage({
                 <table className="ctable">
                   <thead>
                     <tr>
+                      <th></th>
                       <th>No</th>
                       <th>Surname and Name</th>
                       <th>Ready</th>
@@ -445,6 +450,22 @@ export default async function VesselCrewPage({
                     {crewList.map((c, idx) => {
                       return (
                         <tr key={c.id as string}>
+                          <td>
+                            <div className="rowmove">
+                              <form action={moveCrewRow}>
+                                <input type="hidden" name="vesselId" value={vesselId} />
+                                <input type="hidden" name="crewId" value={c.id as string} />
+                                <input type="hidden" name="direction" value="up" />
+                                <button type="submit" disabled={idx === 0}>↑</button>
+                              </form>
+                              <form action={moveCrewRow}>
+                                <input type="hidden" name="vesselId" value={vesselId} />
+                                <input type="hidden" name="crewId" value={c.id as string} />
+                                <input type="hidden" name="direction" value="down" />
+                                <button type="submit" disabled={idx === crewList.length - 1}>↓</button>
+                              </form>
+                            </div>
+                          </td>
                           <td>{idx + 1}</td>
                           <td>
                             <Link href={`/fleet/${vesselId}/${c.id}`} className="tname">
