@@ -29,6 +29,7 @@ export default async function FleetPage({
   const error = sp.error;
   const fVessel = sp.fVessel || "";
   const fRank = sp.fRank || "";
+  const costVessel = sp.costVessel || "";
 
   const supabase = await createClient();
   const {
@@ -169,10 +170,11 @@ export default async function FleetPage({
 
   const costByCurrency: Record<string, number> = {};
   if (vesselIds.length > 0) {
+    const costVesselIds = costVessel ? [costVessel] : vesselIds;
     const { data: salaryRows } = await supabase
       .from("fleet_crew")
       .select("salary_amount, salary_currency")
-      .in("vessel_id", vesselIds)
+      .in("vessel_id", costVesselIds)
       .eq("status", "active");
 
     (salaryRows || []).forEach((r) => {
@@ -299,6 +301,11 @@ export default async function FleetPage({
   .costcur{font-size:11px;font-weight:800;color:var(--tx3);letter-spacing:.05em;min-width:32px}
   .costval{font-family:var(--disp);font-size:19px;font-weight:800;color:var(--grn)}
   .costproj{font-size:11.5px;color:var(--tx3)}
+  .costsel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:9px;padding:6px 11px;font-size:12px;font-family:var(--body);cursor:pointer}
+  .costsel:focus{border-color:var(--gold);outline:none}
+  .costgo{background:var(--gold);color:#0b0e13;border:none;border-radius:9px;padding:6px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  .costgo:hover{background:var(--gold2)}
+  .filehint{font-size:11px;color:var(--tx3)}
   .riskwarn{font-size:11px;font-weight:700;color:var(--red);margin-top:4px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
@@ -333,21 +340,34 @@ export default async function FleetPage({
               </div>
             </div>
           ) : null}
-          {costCurrencies.length > 0 ? (
+          {vesselList.length > 0 ? (
             <div className="costcard">
               <div className="costhead">
                 <span>💰</span>
                 <b>Fleet crew cost — monthly</b>
+                <form method="get" style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                  <select name="costVessel" defaultValue={costVessel} className="costsel">
+                    <option value="">All vessels</option>
+                    {vesselList.map((v) => (
+                      <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                    ))}
+                  </select>
+                  <button type="submit" className="costgo">Show</button>
+                </form>
               </div>
-              <div className="costrows">
-                {costCurrencies.map((cur) => (
-                  <div key={cur} className="costrow">
-                    <span className="costcur">{cur}</span>
-                    <span className="costval">{fmtMoney(costByCurrency[cur])}</span>
-                    <span className="costproj">≈ {fmtMoney(costByCurrency[cur] * 12)} / 12 months</span>
-                  </div>
-                ))}
-              </div>
+              {costCurrencies.length > 0 ? (
+                <div className="costrows">
+                  {costCurrencies.map((cur) => (
+                    <div key={cur} className="costrow">
+                      <span className="costcur">{cur}</span>
+                      <span className="costval">{fmtMoney(costByCurrency[cur])}</span>
+                      <span className="costproj">≈ {fmtMoney(costByCurrency[cur] * 12)} / 12 months</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="filehint">No salary data recorded {costVessel ? "for this vessel" : "yet"}.</p>
+              )}
             </div>
           ) : null}
           {added === "1" ? <div className="banner ok">Vessel added.</div> : null}
