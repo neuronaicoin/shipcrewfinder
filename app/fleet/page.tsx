@@ -75,7 +75,7 @@ export default async function FleetPage({
   if (vesselIds.length > 0) {
     const { data: allCrew } = await supabase
       .from("fleet_crew")
-      .select("id, full_name, rank, vessel_id, status, join_date, departure_date, notes, expected_join_date, planning_country, planning_status")
+      .select("id, full_name, rank, vessel_id, status, join_date, departure_date, notes, expected_join_date, planning_country, planning_status, passport_expiry, visa_expiry")
       .in("vessel_id", vesselIds)
       .order("created_at", { ascending: false });
 
@@ -99,6 +99,28 @@ export default async function FleetPage({
           day: "numeric",
         })
       : "—";
+
+  const getPlanningRisk = (c: Record<string, unknown>): string | null => {
+    const expectedJoin = c.expected_join_date as string | null;
+    if (!expectedJoin) return null;
+    const joinDate = new Date(expectedJoin + "T00:00:00");
+
+    const passportExp = c.passport_expiry as string | null;
+    if (passportExp) {
+      const pExp = new Date(passportExp + "T00:00:00");
+      const daysBuffer = Math.round((pExp.getTime() - joinDate.getTime()) / (24 * 3600 * 1000));
+      if (daysBuffer < 0) return "Passport expires before planned join date";
+      if (daysBuffer < 180) return "Passport has less than 6 months validity at join";
+    }
+
+    const visaExp = c.visa_expiry as string | null;
+    if (visaExp) {
+      const vExp = new Date(visaExp + "T00:00:00");
+      if (vExp.getTime() < joinDate.getTime()) return "Visa expires before planned join date";
+    }
+
+    return null;
+  };
 
   const rankSet = new Set<string>();
   historyCrew.forEach((c) => { if (c.rank) rankSet.add(c.rank as string); });
@@ -277,6 +299,7 @@ export default async function FleetPage({
   .costcur{font-size:11px;font-weight:800;color:var(--tx3);letter-spacing:.05em;min-width:32px}
   .costval{font-family:var(--disp);font-size:19px;font-weight:800;color:var(--grn)}
   .costproj{font-size:11.5px;color:var(--tx3)}
+  .riskwarn{font-size:11px;font-weight:700;color:var(--red);margin-top:4px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -557,6 +580,10 @@ export default async function FleetPage({
                               {(c.rank as string) || "Crew"} · expected {fmtDate(c.expected_join_date as string | null)}
                               {c.planning_country ? " · " + (c.planning_country as string) : ""}
                             </div>
+                            {(() => {
+                              const risk = getPlanningRisk(c);
+                              return risk ? <div className="riskwarn">⚠️ {risk}</div> : null;
+                            })()}
                           </div>
                           <span className={`ppill ${pillClass}`}>{(c.planning_status as string) || "Tentative"}</span>
                           <div className="pacts">
