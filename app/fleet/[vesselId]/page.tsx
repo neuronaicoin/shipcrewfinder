@@ -298,6 +298,15 @@ export default async function VesselCrewPage({
   .rowmove button{width:22px;height:22px;background:var(--navy);border:1px solid var(--line2);color:var(--tx3);border-radius:5px;cursor:pointer;font-size:11px;font-weight:800;padding:0}
   .rowmove button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
   .rowmove button:disabled{opacity:.25;cursor:not-allowed}
+  .managepanel{margin-bottom:20px}
+  .managesummary{cursor:pointer;list-style:none;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:14px;padding:14px 18px;font-family:var(--disp);font-weight:700;font-size:13.5px;color:var(--gold);user-select:none}
+  .managesummary::-webkit-details-marker{display:none}
+  .managesummary:hover{border-color:var(--gold)}
+  .managebody{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-top:none;border-radius:0 0 14px 14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+  .subpanel{border:1px solid var(--line2);border-radius:12px;padding:14px 16px;background:rgba(255,255,255,.02)}
+  .subpanel summary{cursor:pointer;list-style:none;font-family:var(--disp);font-weight:700;font-size:13px;color:var(--tx);user-select:none}
+  .subpanel summary::-webkit-details-marker{display:none}
+  .subpanel summary:hover{color:var(--gold)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -310,15 +319,18 @@ export default async function VesselCrewPage({
           <div className="hrow">
             <div>
               <Link href="/fleet" className="back">← My Fleet</Link>
-              <h1>🚢 {vessel.name as string}</h1>
+              <h1>🚢 M/V {vessel.name as string} Crew List</h1>
               <p className="sub">
                 {metaParts.length > 0 ? metaParts.join(" · ") : "Vessel details not set"} ·{" "}
                 {crewList.length} active crew member{crewList.length === 1 ? "" : "s"}
               </p>
             </div>
-            {crewList.length > 0 ? (
-              <a href={`/fleet/${vesselId}/export`} className="btn-export">⬇ Export crew list</a>
-            ) : null}
+            <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+              <a href="#manage-panel" className="btn-export">⚙️ Manage</a>
+              {crewList.length > 0 ? (
+                <a href={`/fleet/${vesselId}/export`} className="btn-export">⬇ Export crew list</a>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
@@ -332,96 +344,107 @@ export default async function VesselCrewPage({
           {error === "missing" ? <div className="banner err">Full name is required.</div> : null}
           {error === "failed" ? <div className="banner err">Something went wrong — please try again.</div> : null}
 
-          <div className="card">
-            <h2>+ Add crew member</h2>
-            <form action={addFleetCrew}>
-              <input type="hidden" name="vesselId" value={vesselId} />
-              <div className="frow">
-                <div>
-                  <label htmlFor="fullName">Full name</label>
-                  <input id="fullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. John Smith" />
-                </div>
-                <div>
-                  <label htmlFor="rank">Rank</label>
-                  <input id="rank" name="rank" type="text" maxLength={60} placeholder="e.g. Chief Engineer" />
-                </div>
-                <div>
-                  <label htmlFor="nationality">Nationality</label>
-                  <input id="nationality" name="nationality" type="text" maxLength={60} placeholder="e.g. Turkey" />
-                </div>
-                <div>
-                  <label htmlFor="joinDate">Join date</label>
-                  <input id="joinDate" name="joinDate" type="date" />
-                </div>
-                <button type="submit" className="btn btn-gold">+ Add</button>
-              </div>
-            </form>
-          </div>
-
-          {ccadded === "1" ? <div className="banner ok">Column added.</div> : null}
-          {ccremoved === "1" ? <div className="banner ok">Column removed.</div> : null}
-          {ccerror === "limit" ? <div className="banner err">Maximum 8 custom columns per vessel.</div> : null}
-          {ccerror === "dupe" ? <div className="banner err">A column with that name already exists.</div> : null}
-
-          <div className="card">
-            <h2>Custom columns</h2>
-            <form action={addCustomColumn} style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: customColumns.length > 0 ? 14 : 0 }}>
-              <input type="hidden" name="vesselId" value={vesselId} />
-              <input type="text" name="columnName" maxLength={40} placeholder="e.g. Cabin Number" style={{ flex: 1, minWidth: 180, marginBottom: 0 }} />
-              <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "11px 20px" }}>+ Add column</button>
-            </form>
-            {customColumns.length > 0 ? (
-              <div className="cclist">
-                {customColumns.map((col) => (
-                  <div key={col} className="ccchip">
-                    <span>{col}</span>
-                    <form action={removeCustomColumn}>
-                      <input type="hidden" name="vesselId" value={vesselId} />
-                      <input type="hidden" name="columnName" value={col} />
-                      <button type="submit">✕</button>
-                    </form>
+          <details id="manage-panel" className="managepanel">
+            <summary className="managesummary">⚙️ Manage this vessel — add crew, adjust columns, reorder table</summary>
+            <div className="managebody">
+              <details className="subpanel">
+                <summary>+ Add crew member</summary>
+                <form action={addFleetCrew} style={{ marginTop: 14 }}>
+                  <input type="hidden" name="vesselId" value={vesselId} />
+                  <div className="frow">
+                    <div>
+                      <label htmlFor="fullName">Full name</label>
+                      <input id="fullName" name="fullName" type="text" required maxLength={100} placeholder="e.g. John Smith" />
+                    </div>
+                    <div>
+                      <label htmlFor="rank">Rank</label>
+                      <input id="rank" name="rank" type="text" maxLength={60} placeholder="e.g. Chief Engineer" />
+                    </div>
+                    <div>
+                      <label htmlFor="nationality">Nationality</label>
+                      <input id="nationality" name="nationality" type="text" maxLength={60} placeholder="e.g. Turkey" />
+                    </div>
+                    <div>
+                      <label htmlFor="joinDate">Join date</label>
+                      <input id="joinDate" name="joinDate" type="date" />
+                    </div>
+                    <button type="submit" className="btn btn-gold">+ Add</button>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="filehint">No custom columns yet — add one above (e.g. Cabin Number, Union Membership).</p>
-            )}
-          </div>
+                </form>
+              </details>
 
-          {colrenamed === "1" ? <div className="banner ok">Column renamed.</div> : null}
+              {ccadded === "1" ? <div className="banner ok">Column added.</div> : null}
+              {ccremoved === "1" ? <div className="banner ok">Column removed.</div> : null}
+              {ccerror === "limit" ? <div className="banner err">Maximum 8 custom columns per vessel.</div> : null}
+              {ccerror === "dupe" ? <div className="banner err">A column with that name already exists.</div> : null}
 
-          <div className="card">
-            <h2>Manage columns</h2>
-            <p className="filehint" style={{ marginBottom: 12 }}>
-              Reorder or rename table columns. &quot;No&quot; and name always stay first.
-            </p>
-            <div className="colmglist">
-              {effectiveColumns.map((col, idx) => (
-                <div key={col.key} className="colmgrow">
-                  <div className="colmgmove">
-                    <form action={moveColumn}>
-                      <input type="hidden" name="vesselId" value={vesselId} />
-                      <input type="hidden" name="columnKey" value={col.key} />
-                      <input type="hidden" name="direction" value="up" />
-                      <button type="submit" disabled={idx === 0}>↑</button>
-                    </form>
-                    <form action={moveColumn}>
-                      <input type="hidden" name="vesselId" value={vesselId} />
-                      <input type="hidden" name="columnKey" value={col.key} />
-                      <input type="hidden" name="direction" value="down" />
-                      <button type="submit" disabled={idx === effectiveColumns.length - 1}>↓</button>
-                    </form>
-                  </div>
-                  <form action={renameColumn} className="colmgrename">
+              <details className="subpanel">
+                <summary>Adjust columns</summary>
+                <div style={{ marginTop: 14 }}>
+                  <form action={addCustomColumn} style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: customColumns.length > 0 ? 14 : 0 }}>
                     <input type="hidden" name="vesselId" value={vesselId} />
-                    <input type="hidden" name="columnKey" value={col.key} />
-                    <input type="text" name="newLabel" defaultValue={col.label} maxLength={40} />
-                    <button type="submit">Rename</button>
+                    <input type="text" name="columnName" maxLength={40} placeholder="e.g. Cabin Number" style={{ flex: 1, minWidth: 180, marginBottom: 0 }} />
+                    <button type="submit" className="btn btn-gold" style={{ width: "auto", padding: "11px 20px" }}>+ Add column</button>
                   </form>
+                  {customColumns.length > 0 ? (
+                    <div className="cclist">
+                      {customColumns.map((col) => (
+                        <div key={col} className="ccchip">
+                          <span>{col}</span>
+                          <form action={removeCustomColumn}>
+                            <input type="hidden" name="vesselId" value={vesselId} />
+                            <input type="hidden" name="columnName" value={col} />
+                            <button type="submit">✕</button>
+                          </form>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="filehint">No custom columns yet — add one above (e.g. Cabin Number, Union Membership).</p>
+                  )}
                 </div>
-              ))}
+              </details>
+
+              {colrenamed === "1" ? <div className="banner ok">Column renamed.</div> : null}
+
+              <details className="subpanel">
+                <summary>Manage columns</summary>
+                <div style={{ marginTop: 14 }}>
+                  <p className="filehint" style={{ marginBottom: 12 }}>
+                    Reorder or rename table columns. &quot;No&quot; and name always stay first.
+                  </p>
+                  <div className="colmglist">
+                    {effectiveColumns.map((col, idx) => (
+                      <div key={col.key} className="colmgrow">
+                        <div className="colmgmove">
+                          <form action={moveColumn}>
+                            <input type="hidden" name="vesselId" value={vesselId} />
+                            <input type="hidden" name="columnKey" value={col.key} />
+                            <input type="hidden" name="direction" value="up" />
+                            <button type="submit" disabled={idx === 0}>↑</button>
+                          </form>
+                          <form action={moveColumn}>
+                            <input type="hidden" name="vesselId" value={vesselId} />
+                            <input type="hidden" name="columnKey" value={col.key} />
+                            <input type="hidden" name="direction" value="down" />
+                            <button type="submit" disabled={idx === effectiveColumns.length - 1}>↓</button>
+                          </form>
+                        </div>
+                        <form action={renameColumn} className="colmgrename">
+                          <input type="hidden" name="vesselId" value={vesselId} />
+                          <input type="hidden" name="columnKey" value={col.key} />
+                          <input type="text" name="newLabel" defaultValue={col.label} maxLength={40} />
+                          <button type="submit">Rename</button>
+                        </form>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </details>
             </div>
-          </div>
+          </details>
+
+          <div className="stitle" style={{ marginTop: 24 }}>👥 Crew List</div>
 
           {crewList.length === 0 ? (
             <div className="empty">
