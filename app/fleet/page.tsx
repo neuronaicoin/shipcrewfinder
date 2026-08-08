@@ -307,6 +307,18 @@ export default async function FleetPage({
   .costgo:hover{background:var(--gold2)}
   .filehint{font-size:11px;color:var(--tx3)}
   .riskwarn{font-size:11px;font-weight:700;color:var(--red);margin-top:4px}
+  .ttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px;border:1px solid var(--line2)}
+  table.ctable{width:100%;border-collapse:collapse;min-width:640px;font-size:12.5px}
+  table.ctable thead th{text-align:left;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);padding:11px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line2);white-space:nowrap}
+  table.ctable tbody td{padding:11px 12px;border-bottom:1px solid var(--line2);white-space:nowrap;color:var(--tx2)}
+  table.ctable tbody tr:last-child td{border-bottom:none}
+  table.ctable tbody tr:hover{background:rgba(251,191,36,.04)}
+  table.ctable .tname{color:var(--tx);font-weight:700;text-decoration:none;font-family:var(--disp)}
+  table.ctable .tname:hover{color:var(--gold)}
+  table.ctable .tdel{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
+  table.ctable .tdel:hover{color:var(--red);border-color:rgba(239,68,68,.4)}
+  .tnoteflag{margin-left:6px;font-size:11px}
+  .tsub{font-size:10.5px;color:var(--tx3);margin-top:2px}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -508,43 +520,58 @@ export default async function FleetPage({
                 {historyCrewFiltered.length === 0 ? (
                   <div className="empty">{historyCrew.length === 0 ? "No sign-offs recorded yet." : "No results match your filter."}</div>
                 ) : (
-                  <div className="plist">
-                    {historyCrewFiltered.map((c) => (
-                      <div key={c.id as string} className="prow">
-                        <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
-                        <div className="pinfo">
-                          <Link href={`/fleet/${c.vessel_id}/${c.id}`} className="pname" style={{ textDecoration: "none" }}>
-                            {c.full_name as string}
-                          </Link>
-                          <div className="pmeta">
-                            {(c.rank as string) || "Crew"} · was on {vesselNameMap[c.vessel_id as string] || "Unknown vessel"} · signed off {fmtDate(c.departure_date as string | null)}
-                            {c.notes ? " · has notes" : ""}
-                          </div>
-                        </div>
-                        <div className="histacts">
-                          <form action={rehireCrew} className="rehireform">
-                            <input type="hidden" name="crewId" value={c.id as string} />
-                            <select name="targetVesselId" required defaultValue="" className="rehiresel">
-                              <option value="" disabled>Rehire to…</option>
-                              {vesselList.map((v) => (
-                                <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                              ))}
-                            </select>
-                            <button type="submit" className="go">🔄 Rehire</button>
-                          </form>
-                          <form action={moveToPlannedFromHistory} className="rehireform">
-                            <input type="hidden" name="crewId" value={c.id as string} />
-                            <select name="targetVesselId" required defaultValue="" className="rehiresel">
-                              <option value="" disabled>Plan for…</option>
-                              {vesselList.map((v) => (
-                                <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
-                              ))}
-                            </select>
-                            <button type="submit" className="planbtn">📅 Add to Planned</button>
-                          </form>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="ttwrap">
+                    <table className="ctable">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Rank</th>
+                          <th>Vessel</th>
+                          <th>Signed Off</th>
+                          <th></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyCrewFiltered.map((c) => (
+                          <tr key={c.id as string}>
+                            <td>
+                              <Link href={`/fleet/${c.vessel_id}/${c.id}`} className="tname">
+                                {c.full_name as string}
+                              </Link>
+                              {c.notes ? <span className="tnoteflag" title="Has notes">📝</span> : null}
+                            </td>
+                            <td>{(c.rank as string) || "—"}</td>
+                            <td>{vesselNameMap[c.vessel_id as string] || "Unknown vessel"}</td>
+                            <td>{fmtDate(c.departure_date as string | null)}</td>
+                            <td>
+                              <form action={rehireCrew} className="rehireform">
+                                <input type="hidden" name="crewId" value={c.id as string} />
+                                <select name="targetVesselId" required defaultValue="" className="rehiresel">
+                                  <option value="" disabled>Rehire to…</option>
+                                  {vesselList.map((v) => (
+                                    <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                                  ))}
+                                </select>
+                                <button type="submit" className="go">🔄</button>
+                              </form>
+                            </td>
+                            <td>
+                              <form action={moveToPlannedFromHistory} className="rehireform">
+                                <input type="hidden" name="crewId" value={c.id as string} />
+                                <select name="targetVesselId" required defaultValue="" className="rehiresel">
+                                  <option value="" disabled>Plan for…</option>
+                                  {vesselList.map((v) => (
+                                    <option key={v.id as string} value={v.id as string}>{v.name as string}</option>
+                                  ))}
+                                </select>
+                                <button type="submit" className="planbtn">📅</button>
+                              </form>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
@@ -585,41 +612,56 @@ export default async function FleetPage({
                 {plannedCrewFiltered.length === 0 ? (
                   <div className="empty">{plannedCrew.length === 0 ? "No planned sign-ons yet — use the form above." : "No results match your filter."}</div>
                 ) : (
-                  <div className="plist">
-                    {plannedCrewFiltered.map((c) => {
-                      const statusRaw = ((c.planning_status as string) || "Tentative").toLowerCase();
-                      const pillClass =
-                        statusRaw.includes("confirm") ? "confirmed" : statusRaw.includes("doc") ? "docs" : "tentative";
-                      return (
-                        <div key={c.id as string} className="prow">
-                          <div className="pavatar">{(c.full_name as string || "?").charAt(0).toUpperCase()}</div>
-                          <div className="pinfo">
-                            <div className="pname">{c.full_name as string}</div>
-                            <div className="ptarget">→ {vesselNameMap[c.vessel_id as string] || "Unknown vessel"}</div>
-                            <div className="pmeta">
-                              {(c.rank as string) || "Crew"} · expected {fmtDate(c.expected_join_date as string | null)}
-                              {c.planning_country ? " · " + (c.planning_country as string) : ""}
-                            </div>
-                            {(() => {
-                              const risk = getPlanningRisk(c);
-                              return risk ? <div className="riskwarn">⚠️ {risk}</div> : null;
-                            })()}
-                          </div>
-                          <span className={`ppill ${pillClass}`}>{(c.planning_status as string) || "Tentative"}</span>
-                          <div className="pacts">
-                            <form action={activatePlannedCrew}>
-                              <input type="hidden" name="crewId" value={c.id as string} />
-                              <input type="hidden" name="vesselId" value={c.vessel_id as string} />
-                              <button type="submit" className="go">Sign on</button>
-                            </form>
-                            <form action={deletePlannedCrew}>
-                              <input type="hidden" name="crewId" value={c.id as string} />
-                              <button type="submit" className="x">✕</button>
-                            </form>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="ttwrap">
+                    <table className="ctable">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Rank</th>
+                          <th>Vessel</th>
+                          <th>Expected Join</th>
+                          <th>Status</th>
+                          <th></th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {plannedCrewFiltered.map((c) => {
+                          const statusRaw = ((c.planning_status as string) || "Tentative").toLowerCase();
+                          const pillClass =
+                            statusRaw.includes("confirm") ? "confirmed" : statusRaw.includes("doc") ? "docs" : "tentative";
+                          const risk = getPlanningRisk(c);
+                          return (
+                            <tr key={c.id as string}>
+                              <td>
+                                <span className="tname" style={{ cursor: "default" }}>{c.full_name as string}</span>
+                                {risk ? <div className="riskwarn">⚠️ {risk}</div> : null}
+                              </td>
+                              <td>{(c.rank as string) || "—"}</td>
+                              <td>{vesselNameMap[c.vessel_id as string] || "Unknown vessel"}</td>
+                              <td>
+                                {fmtDate(c.expected_join_date as string | null)}
+                                {c.planning_country ? <div className="tsub">{c.planning_country as string}</div> : null}
+                              </td>
+                              <td><span className={`ppill ${pillClass}`}>{(c.planning_status as string) || "Tentative"}</span></td>
+                              <td>
+                                <form action={activatePlannedCrew}>
+                                  <input type="hidden" name="crewId" value={c.id as string} />
+                                  <input type="hidden" name="vesselId" value={c.vessel_id as string} />
+                                  <button type="submit" className="go">Sign on</button>
+                                </form>
+                              </td>
+                              <td>
+                                <form action={deletePlannedCrew}>
+                                  <input type="hidden" name="crewId" value={c.id as string} />
+                                  <button type="submit" className="tdel">✕</button>
+                                </form>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
