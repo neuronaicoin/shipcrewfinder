@@ -167,6 +167,16 @@ export default async function VesselCrewPage({
     return { label: "Fair", cls: "mkt-fair" };
   };
 
+  const getFatigueRisk = (c: Record<string, unknown>): number | null => {
+    const joinDate = c.join_date as string | null;
+    if (!joinDate) return null;
+    const jDate = new Date(joinDate + "T00:00:00");
+    const daysAboard = Math.round((today.getTime() - jDate.getTime()) / dayMs);
+    if (daysAboard < 0) return null;
+    const monthsAboard = Math.round(daysAboard / 30);
+    return monthsAboard;
+  };
+
   const fmtDwt = (d: number | null) => (d ? Number(d).toLocaleString("en-US") + " DWT" : null);
   const metaParts = [
     (vessel.vessel_type as string) || null,
@@ -280,6 +290,10 @@ export default async function VesselCrewPage({
   .mktbadge.mkt-low{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
   .mktbadge.mkt-fair{color:var(--grn);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.1)}
   .mktbadge.mkt-high{color:#60a5fa;border-color:rgba(96,165,250,.4);background:rgba(96,165,250,.1)}
+  .fatbadge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid;white-space:nowrap}
+  .fatbadge.fat-low{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.04)}
+  .fatbadge.fat-mid{color:var(--gold);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1)}
+  .fatbadge.fat-high{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -419,6 +433,7 @@ export default async function VesselCrewPage({
                       <th>Surname and Name</th>
                       <th>Ready</th>
                       <th>Market</th>
+                      <th>Aboard</th>
                       {effectiveColumns.map((col) => (
                         <th key={col.key}>{col.label}</th>
                       ))}
@@ -448,6 +463,14 @@ export default async function VesselCrewPage({
                               const m = getMarketComparison(c);
                               if (!m) return "—";
                               return <span className={`mktbadge ${m.cls}`}>{m.label}</span>;
+                            })()}
+                          </td>
+                          <td>
+                            {(() => {
+                              const months = getFatigueRisk(c);
+                              if (months === null) return "—";
+                              const cls = months >= 9 ? "fat-high" : months >= 6 ? "fat-mid" : "fat-low";
+                              return <span className={`fatbadge ${cls}`}>{months}mo</span>;
                             })()}
                           </td>
                           {effectiveColumns.map((col) => {
