@@ -233,15 +233,15 @@ export default async function FleetPage({
   .banner.ok{color:var(--grn);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
   .banner.err{color:#f87171;border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.08)}
   .banner.info{color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
-  .alertpanel{display:flex;align-items:flex-start;gap:14px;border:1.5px solid rgba(239,68,68,.35);background:rgba(239,68,68,.07);border-radius:15px;padding:16px 18px;margin-bottom:18px}
-  .alertpanel .ai{font-size:20px;flex-shrink:0;margin-top:1px}
-  .alertpanel b{font-family:var(--disp);font-size:14px;display:block;margin-bottom:4px;color:var(--tx)}
-  .alertpanel p{font-size:12.5px;color:var(--tx2);line-height:1.6}
+  .alertpanel{display:flex;align-items:flex-start;gap:15px;border:1.5px solid rgba(239,68,68,.32);background:linear-gradient(150deg,rgba(239,68,68,.09),var(--navy2) 45%);border-radius:17px;padding:18px 20px;margin-bottom:18px;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+  .alertpanel .ai{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.3);display:grid;place-items:center;font-size:17px;flex-shrink:0}
+  .alertpanel b{font-family:var(--disp);font-size:14.5px;display:block;margin-bottom:5px;color:var(--tx);letter-spacing:-.01em}
+  .alertpanel p{font-size:12.5px;color:var(--tx2);line-height:1.65}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:12.5px;text-decoration:none;cursor:pointer;transition:.18s;border:none;padding:9px 16px;font-family:var(--body);white-space:nowrap}
   .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-gold:hover{transform:translateY(-2px)}
-  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:20px}
-  .card h2{font-family:var(--disp);font-size:16px;font-weight:800;margin-bottom:14px}
+  .card{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px 24px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+  .card h2{font-family:var(--disp);font-size:16px;font-weight:800;margin-bottom:14px;letter-spacing:-.01em}
   .frow{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
   @media(max-width:900px){.frow{grid-template-columns:1fr 1fr}}
   label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
@@ -252,12 +252,14 @@ export default async function FleetPage({
   .btn-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.18s;border:none;padding:11px 19px;font-family:var(--body)}
   .btn-add.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13}
   .btn-add.on:hover{transform:translateY(-2px)}
-  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
-  .vcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:16px;padding:20px;text-decoration:none;color:var(--tx);transition:.2s;display:block;position:relative}
-  .vcard:hover{transform:translateY(-3px);border-color:var(--gold)}
-  .vcard .vi{font-size:24px;margin-bottom:10px}
-  .vcard b{font-family:var(--disp);font-size:16px;display:block;margin-bottom:4px}
-  .vcard p{font-size:12px;color:var(--tx3);line-height:1.6}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .vcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:22px;text-decoration:none;color:var(--tx);transition:.25s cubic-bezier(.2,.8,.2,1);display:block;position:relative;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+  .vcard::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at top right,rgba(251,191,36,.08),transparent 60%);opacity:0;transition:.25s}
+  .vcard:hover{transform:translateY(-5px);border-color:rgba(251,191,36,.55);box-shadow:0 14px 32px rgba(0,0,0,.4),0 0 0 1px rgba(251,191,36,.12)}
+  .vcard:hover::before{opacity:1}
+  .vcard .vi{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(251,191,36,.05));border:1px solid rgba(251,191,36,.25);display:grid;place-items:center;font-size:20px;margin-bottom:14px}
+  .vcard b{font-family:var(--disp);font-size:17px;display:block;margin-bottom:5px;letter-spacing:-.01em}
+  .vcard p{font-size:12px;color:var(--tx3);line-height:1.65}
   .vdel{position:absolute;top:14px;right:14px}
   .vdel button{background:none;border:1px solid var(--line2);color:var(--tx3);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--body)}
   .vdel button:hover{color:#f87171;border-color:rgba(239,68,68,.4)}
@@ -293,9 +295,10 @@ export default async function FleetPage({
   .filterbar{display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
   .filtersel{background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:10px;padding:9px 13px;font-size:12.5px;font-family:var(--body);cursor:pointer;min-width:140px}
   .filtersel:focus{border-color:var(--gold)}
-  .costcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid rgba(52,211,153,.3);border-radius:15px;padding:16px 20px;margin-bottom:18px}
-  .costhead{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-  .costhead b{font-family:var(--disp);font-size:13.5px;color:var(--tx)}
+  .costcard{background:linear-gradient(150deg,rgba(52,211,153,.07),var(--navy2) 40%,var(--ink));border:1px solid rgba(52,211,153,.28);border-radius:17px;padding:18px 22px;margin-bottom:18px;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+  .costhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .costhead span{width:32px;height:32px;border-radius:10px;background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.3);display:grid;place-items:center;font-size:15px;flex-shrink:0}
+  .costhead b{font-family:var(--disp);font-size:13.5px;color:var(--tx);letter-spacing:-.01em}
   .costrows{display:flex;flex-direction:column;gap:8px}
   .costrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .costcur{font-size:11px;font-weight:800;color:var(--tx3);letter-spacing:.05em;min-width:32px}
