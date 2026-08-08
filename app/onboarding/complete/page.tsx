@@ -26,7 +26,7 @@ export default async function OnboardingCompletePage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <script
         dangerouslySetInnerHTML={{
-          __html: `if (typeof window.gtag === 'function') { window.gtag('event', 'sign_up', { method: '${userType}' }); }`,
+          __html: `if (typeof window.gtag === 'function') { window.gtag('event', 'sign_up', { method: '${userType}' }); } if (typeof window.fbq === 'function') { window.fbq('track', 'CompleteRegistration', { content_name: '${userType}' }); }`,
         }}
       />
       <div className="max-w-lg w-full text-center">
