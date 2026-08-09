@@ -9,7 +9,11 @@ jobs:
   send-alerts:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger document expiry check
+      - name: Trigger company document expiry check
         run: |
           curl -f -X GET "https://shipcrewfinder.com/api/cron/document-alerts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+      - name: Trigger personal document expiry check
+        run: |
+          curl -f -X GET "https://shipcrewfinder.com/api/cron/personal-document-alerts" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
