@@ -2,12 +2,19 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
+import { updatePersonalDocuments } from "@/lib/actions/profile";
 
 export const metadata = {
   title: "My Profile — ShipCrewFinder",
 };
 
-export default async function MyProfilePage() {
+export default async function MyProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = await searchParams;
+  const docsaved = sp.docsaved;
   const supabase = await createClient();
 
   const {
@@ -151,6 +158,11 @@ export default async function MyProfilePage() {
   .row a:hover{text-decoration:underline}
   .about{font-size:13px;color:var(--tx2);line-height:1.7;margin-top:12px;padding-top:12px;border-top:1px solid var(--line2)}
   .fine{font-size:11.5px;color:var(--tx3);margin-top:12px;line-height:1.5}
+  .docgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.docgrid{grid-template-columns:1fr}}
+  .docgrid label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+  .docgrid input[type=date]{width:100%;background:var(--navy);border:1px solid var(--line2);color:var(--tx);border-radius:11px;padding:11px 13px;font-family:inherit;font-size:13.5px;outline:none}
+  .docgrid input[type=date]:focus{border-color:var(--gold)}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
@@ -232,6 +244,40 @@ export default async function MyProfilePage() {
                   )}
                 </div>
               </div>
+            </div>
+          ) : null}
+
+          {/* My Documents — personal reminder dates */}
+          {isCrew ? (
+            <div className="card">
+              <h2>My Documents</h2>
+              <p className="fine" style={{ marginBottom: 14 }}>
+                Add your document expiry dates and we&apos;ll email you a reminder before they expire — free, no extra signup needed.
+              </p>
+              {docsaved === "1" ? (
+                <p className="fine" style={{ color: "#34d399", marginBottom: 14 }}>Saved.</p>
+              ) : null}
+              <form action={updatePersonalDocuments}>
+                <div className="docgrid">
+                  <div>
+                    <label htmlFor="passportExpiry">Passport expiry</label>
+                    <input id="passportExpiry" name="passportExpiry" type="date" defaultValue={(profile.passport_expiry as string) || ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="seamanBookExpiry">Seaman&apos;s book expiry</label>
+                    <input id="seamanBookExpiry" name="seamanBookExpiry" type="date" defaultValue={(profile.seaman_book_expiry as string) || ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="stcwExpiry">STCW expiry</label>
+                    <input id="stcwExpiry" name="stcwExpiry" type="date" defaultValue={(profile.stcw_expiry as string) || ""} />
+                  </div>
+                  <div>
+                    <label htmlFor="medicalExpiry">Medical certificate expiry</label>
+                    <input id="medicalExpiry" name="medicalExpiry" type="date" defaultValue={(profile.medical_expiry as string) || ""} />
+                  </div>
+                </div>
+                <button type="submit" className="btn btn-gold" style={{ marginTop: 14, width: "auto", padding: "10px 22px" }}>Save &amp; get reminders</button>
+              </form>
             </div>
           ) : null}
 
