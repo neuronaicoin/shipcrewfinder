@@ -459,3 +459,30 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
   revalidatePath("/", "layout");
   redirect("/onboarding/complete");
 }
+// ============================================
+// CREW: Personal document expiry dates (self-service reminders)
+// ============================================
+export async function updatePersonalDocuments(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const passportExpiry = (formData.get("passportExpiry") as string) || null;
+  const seamanBookExpiry = (formData.get("seamanBookExpiry") as string) || null;
+  const stcwExpiry = (formData.get("stcwExpiry") as string) || null;
+  const medicalExpiry = (formData.get("medicalExpiry") as string) || null;
+
+  await supabase
+    .from("profiles")
+    .update({
+      passport_expiry: passportExpiry,
+      seaman_book_expiry: seamanBookExpiry,
+      stcw_expiry: stcwExpiry,
+      medical_expiry: medicalExpiry,
+    })
+    .eq("id", user.id);
+
+  revalidatePath("/profile/me");
+  redirect("/profile/me?docsaved=1");
+}
