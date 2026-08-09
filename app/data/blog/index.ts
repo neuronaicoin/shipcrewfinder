@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import womenInShippingCareers2026 from "./women-in-shipping-maritime-careers-2026";
 import itfIloMlcExplained from "./itf-ilo-mlc-2006-seafarer-rights-explained";
 import turkeyBlackSeaRestrictions from "./turkey-black-sea-shipping-restrictions-drone-attacks-august-2026";
 import ultimateSeafarerJobSearchPlaybook from "./ultimate-seafarer-job-search-playbook-2026";
@@ -53,6 +54,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  womenInShippingCareers2026,
   itfIloMlcExplained,
   turkeyBlackSeaRestrictions,
   ultimateSeafarerJobSearchPlaybook,
