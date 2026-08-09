@@ -6,8 +6,6 @@ import MessRoomBox from "@/app/components/mess-room-box";
 import PopularSearches from "@/app/components/popular-searches";
 import LiveActivityStrip from "@/app/components/live-activity-strip";
 import AiProfilePromo from "@/app/components/ai-profile-promo";
-import SalaryCheckPromo from "@/app/components/salary-check-promo";
-import DocumentReminderPromo from "@/app/components/document-reminder-promo";
 
 export default async function HomePage({
   searchParams,
@@ -29,8 +27,6 @@ export default async function HomePage({
       deckSlot={
         <>
           <AiProfilePromo />
-          <SalaryCheckPromo />
-          <DocumentReminderPromo />
           <LiveActivityStrip />
           <DeckRail />
           <MessRoomBox messStatus={sp.mess} />
