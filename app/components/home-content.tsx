@@ -248,8 +248,7 @@ if(a2hsBtn){
     display:grid;place-items:center;color:var(--ink);font-family:var(--disp);font-weight:800;font-size:19px}
   .logo b{font-family:var(--disp);font-size:18px;font-weight:700}
   .logo b span{color:var(--gold)}
-  nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  @media(max-width:1180px){ nav{gap:4px} nav a{font-size:12.5px;padding:8px 10px} }
+  nav{display:flex;gap:8px}
   nav a{color:var(--tx2);text-decoration:none;font-size:13.5px;font-weight:600;transition:.18s;
     border:1px solid var(--line2);border-radius:10px;padding:8px 15px;background:rgba(255,255,255,.02)}
   nav a:hover{color:var(--gold);border-color:var(--gold);background:rgba(251,191,36,.07)}
@@ -562,8 +561,6 @@ if(a2hsBtn){
       <a href="#companies">For Companies</a>
       <a href="#how">How it works</a>
       <a href="/salary">Salary Index</a>
-      <a href="/salary-check">Salary Check</a>
-      <a href="/signup/crew">Reminders</a>
       <a href="#faq">FAQ</a>
       <a href="/blog">Blog</a>
     </nav>
