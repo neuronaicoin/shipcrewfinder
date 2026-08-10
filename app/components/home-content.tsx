@@ -674,9 +674,7 @@ if(a2hsBtn){
   </div>
 </section>
 
-{deckSlot}
-
-<section className="wis">
+<section className="wis" style={{paddingTop:"14px"}}>
   <div className="wrap">
     <div className="sec-tag rv">Try it right now — no signup needed</div>
     <h2 className="rv">Three free tools, live today</h2>
@@ -703,6 +701,8 @@ if(a2hsBtn){
     </div>
   </div>
 </section>
+
+{deckSlot}
 
 <div className="marq" style={{marginTop:"44px"}}>
   <div className="marq-in">
