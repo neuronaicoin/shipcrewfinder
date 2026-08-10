@@ -248,7 +248,8 @@ if(a2hsBtn){
     display:grid;place-items:center;color:var(--ink);font-family:var(--disp);font-weight:800;font-size:19px}
   .logo b{font-family:var(--disp);font-size:18px;font-weight:700}
   .logo b span{color:var(--gold)}
-  nav{display:flex;gap:8px}
+  nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  @media(max-width:1180px){ nav{gap:4px} nav a{font-size:12.5px;padding:8px 10px} }
   nav a{color:var(--tx2);text-decoration:none;font-size:13.5px;font-weight:600;transition:.18s;
     border:1px solid var(--line2);border-radius:10px;padding:8px 15px;background:rgba(255,255,255,.02)}
   nav a:hover{color:var(--gold);border-color:var(--gold);background:rgba(251,191,36,.07)}
@@ -494,6 +495,10 @@ if(a2hsBtn){
   .wis-card .wi{font-size:24px;margin-bottom:9px}
   .wis-card b{display:block;font-family:var(--disp);font-size:15px;font-weight:800;margin-bottom:6px}
   .wis-card p{font-size:13px;color:var(--tx2);line-height:1.6}
+  .wis-link{text-decoration:none;color:inherit;transition:.2s;cursor:pointer}
+  .wis-link:hover{transform:translateY(-3px);border-color:rgba(251,191,36,.5);box-shadow:0 10px 28px rgba(251,191,36,.15)}
+  .wis-go{display:inline-block;margin-top:12px;font-family:var(--disp);font-weight:800;font-size:12.5px;color:var(--gold)}
+  .wis-go.wis-static{color:var(--grn)}
 
   /* ── add-to-home-screen kutusu ── */
   .a2hs{margin:22px 0 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:1.5px solid var(--line);border-radius:16px;padding:14px 18px;background:linear-gradient(160deg,rgba(251,191,36,.08),var(--ink));box-shadow:0 0 18px rgba(251,191,36,.12);max-width:560px}
@@ -673,24 +678,27 @@ if(a2hsBtn){
 
 <section className="wis">
   <div className="wrap">
-    <div className="sec-tag rv">What is ShipCrewFinder?</div>
-    <h2 className="rv">The direct line between seafarers and shipping companies</h2>
-    <p className="sec-sub rv">A verified maritime career platform — no crewing agency in the middle, no commission taken from anyone. Here&apos;s how it works for each side:</p>
+    <div className="sec-tag rv">Try it right now — no signup needed</div>
+    <h2 className="rv">Three free tools, live today</h2>
+    <p className="sec-sub rv">Not ready to commit? Try these first — completely free, no account required for the first two.</p>
     <div className="wisg">
+      <a href="/salary-check" className="wis-card wis-link rv">
+        <div className="wi">💰</div>
+        <b>Check your salary — instantly</b>
+        <p>See if you're below, at, or above the 2026 market rate for your rank and vessel type. 10 seconds, no signup.</p>
+        <span className="wis-go">Try it free →</span>
+      </a>
+      <a href="/signup/crew" className="wis-card wis-link rv">
+        <div className="wi">⏰</div>
+        <b>Never miss a document renewal</b>
+        <p>Passport, STCW, medical certificate — add your dates once and we email you before they expire. Free forever.</p>
+        <span className="wis-go">Set up free →</span>
+      </a>
       <div className="wis-card rv">
-        <div className="wi">⚓</div>
-        <b>Seafarers get found</b>
-        <p>Create a verified profile, build your CV, track sea time and certificates — companies contact you directly. First month free.</p>
-      </div>
-      <div className="wis-card rv">
-        <div className="wi">🏢</div>
-        <b>Companies hire directly</b>
-        <p>Search verified crew by rank, availability and vessel experience. Message candidates and manage applications — no agency fees.</p>
-      </div>
-      <div className="wis-card rv">
-        <div className="wi">🚫</div>
-        <b>0% commission — ever</b>
-        <p>Flat, transparent subscriptions. Nobody takes a cut of your salary or your placement. Your contract is between you and the employer.</p>
+        <div className="wi">⚡</div>
+        <b>Your profile goes live instantly</b>
+        <p>Finish your profile and it appears on our homepage automatically — no extra step. Companies can see you the same day.</p>
+        <span className="wis-go wis-static">Included, always</span>
       </div>
     </div>
   </div>
@@ -755,10 +763,10 @@ if(a2hsBtn){
     </div>
     <div className="price rv">
       <div className="plabel">CREW MEMBERSHIP</div>
-      <div className="free-strip">🎁 FIRST MONTH COMPLETELY FREE</div>
-      <div className="pnum">$4.99 <small>for 3 months</small></div>
-      <div className="pper">after your free month · cancel anytime</div>
-      <div className="pwhy">Why not fully free? The symbolic fee keeps bots, fake profiles and time-wasters out — so companies take every profile here seriously. Your visibility is worth more on a clean platform.</div>
+      <div className="free-strip" style={{fontSize:"14px",padding:"11px 18px"}}>🎁 100% FREE — NO CATCH, NO CARD</div>
+      <div className="pnum" style={{color:"var(--grn)"}}>$0 <small>forever</small></div>
+      <div className="pper">Free while we grow — always will be for early members</div>
+      <div className="pwhy">We're building the crew pool first. Every feature below is unlocked, free, for every seafarer who joins now. No trial, no expiry, no surprise charge.</div>
       <ul className="plist">
         <li>Verified profile badge</li>
         <li>Stealth mode — invisible to your employer</li>
@@ -847,7 +855,7 @@ if(a2hsBtn){
     <p className="sec-sub rv">No fine print surprises. Here's how it actually works.</p>
     <div className="faq">
       <details className="rv"><summary>Is the first month really free?</summary><p>Yes — both crew and companies get a full month with all features unlocked, no charge. Cancel any time during the free month and you pay nothing at all.</p></details>
-      <details className="rv"><summary>Why does crew membership cost $4.99 when other job boards are free?</summary><p>Free platforms fill up with bots, duplicate accounts and abandoned profiles — and companies stop trusting them. A symbolic $4.99 for 3 months keeps the pool clean and serious, which means the companies contacting you are serious too.</p></details>
+      <details className="rv"><summary>Is crew membership really free — no hidden cost later?</summary><p>Yes. Right now, while we build the crew pool, every feature is free for seafarers — no trial period, no card required, no surprise charge. We may introduce paid tiers in the future once the platform has scaled, but any account created now keeps its free access.</p></details>
       <details className="rv"><summary>How does profile verification work?</summary><p>After you upload your CV and certificates (STCW, COC, medical), our team manually reviews the documents before your profile goes live. Verified profiles carry a visible badge that companies can trust.</p></details>
       <details className="rv"><summary>Can my current employer see that I'm looking?</summary><p>Not if you don't want them to. Stealth Mode hides your profile from specific companies you choose — including your current employer. You stay invisible to them while staying visible to everyone else.</p></details>
       <details className="rv"><summary>Do you take any commission from my salary or the placement?</summary><p>Never. Zero commission, from either side, ever. Companies pay a flat subscription; crew pay a symbolic membership. Your salary is between you and your employer — as it should be.</p></details>
