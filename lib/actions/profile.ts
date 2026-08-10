@@ -254,6 +254,27 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
 
   if (!profile) redirect("/dashboard");
 
+  // ── Ana sayfa kartı: onboarding bitince otomatik oluştur (elle paylaşmaya gerek yok) ──
+  if (profile.user_type === "seafarer" || profile.user_type === "yacht") {
+    try {
+      const THIRTY_DAYS_MS = 30 * 24 * 3600 * 1000;
+      const nowIso = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + THIRTY_DAYS_MS).toISOString();
+
+      await supabase.from("deck_posts").delete().eq("user_id", user.id).eq("post_type", "crew");
+      await supabase.from("deck_posts").insert({
+        user_id: user.id,
+        post_type: "crew",
+        note: null,
+        show_contact: false,
+        expires_at: expiresAt,
+        boosted_at: nowIso,
+      });
+    } catch {
+      // Kart oluşturma hatası onboarding'i asla bozmasın
+    }
+  }
+
   if (profile.user_type === "seafarer") {
     await supabase
       .from("seafarer_details")
@@ -459,6 +480,7 @@ export async function completeCompanyOnboarding(formData: FormData): Promise<voi
   revalidatePath("/", "layout");
   redirect("/onboarding/complete");
 }
+
 // ============================================
 // CREW: Personal document expiry dates (self-service reminders)
 // ============================================
