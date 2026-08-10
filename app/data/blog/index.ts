@@ -1,5 +1,6 @@
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
+import gibraltarCrewChangeHubGuide from "./gibraltar-crew-change-hub-guide-2026";
 import panamaCanalCrewChangeHubGuide from "./panama-canal-crew-change-hub-guide-2026";
 import suezCanalCrewChangeHubGuide from "./suez-canal-crew-change-hub-guide-2026";
 import singaporeCrewChangeHubGuide from "./singapore-crew-change-hub-guide-2026";
@@ -66,6 +67,7 @@ import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  gibraltarCrewChangeHubGuide,
   panamaCanalCrewChangeHubGuide,
   suezCanalCrewChangeHubGuide,
   singaporeCrewChangeHubGuide,
