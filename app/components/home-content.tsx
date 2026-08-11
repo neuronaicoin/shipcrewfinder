@@ -141,6 +141,56 @@ if(iosTip && isIOS && !standalone && !iosDis){
   };
 }
 
+// ── Exit-intent: dürüst, çeşitlenen hatırlatma (masaüstü fare + mobil hızlı yukarı kaydırma, oturumda 1 kez) ──
+const EXIT_TIPS=[
+  {ic:'💰',t:'Leaving without checking your salary?',s:'Free, 10 seconds, no signup — see if you\'re below or above market rate.',href:'/salary-check',btn:'Check now'},
+  {ic:'⏰',t:'Forgot to set up document reminders?',s:'Passport, STCW, medical — free alerts before anything expires.',href:'/signup/crew',btn:'Set up free'},
+  {ic:'⚓',t:'Your profile could be live in 2 minutes',s:'Companies contact you directly — no agency, no commission, ever.',href:'/signup/crew',btn:'Join free'},
+  {ic:'📊',t:'See what 15 ranks actually earn in 2026',s:'Real, current salary ranges by rank and vessel type.',href:'/salary',btn:'View index'},
+  {ic:'🔍',t:'Still looking for your next contract?',s:'Browse open positions from verified shipping companies.',href:'/jobs',btn:'See jobs'},
+  {ic:'🎁',t:'Crew membership is $0 — forever',s:'No trial, no card, no catch. Just a free, verified profile.',href:'/signup/crew',btn:'Get started'},
+  {ic:'💬',t:'Talk to other seafarers right now',s:'The Mess Room — live 24/7 crew chat, no signup needed to look.',href:'/messroom',btn:'Take a look'},
+  {ic:'🏢',t:'Hiring? Post your first job free',s:'Reach verified, available crew directly — no agency fees.',href:'/signup/company',btn:'Post a job'},
+  {ic:'📄',t:'Your CV, built in 2 minutes',s:'Auto-generated from your profile — downloadable, shareable.',href:'/signup/crew',btn:'Build mine'},
+  {ic:'⚡',t:'Companies are searching right now',s:'A finished profile appears on our homepage automatically.',href:'/signup/crew',btn:'Finish mine'},
+];
+let exitShown = false;
+try{ exitShown = sessionStorage.getItem('scf_exit_shown') === '1'; }catch(e){}
+const exitCard = document.getElementById('exit-intent');
+if(exitCard && !exitShown){
+  const tip = EXIT_TIPS[Math.floor(Math.random()*EXIT_TIPS.length)];
+  const fillCard=()=>{
+    document.getElementById('exit-ic').textContent=tip.ic;
+    document.getElementById('exit-t').textContent=tip.t;
+    document.getElementById('exit-s').textContent=tip.s;
+    const a=document.getElementById('exit-btn');
+    a.textContent=tip.btn; a.href=tip.href;
+  };
+  const trigger=()=>{
+    if(exitShown) return;
+    fillCard();
+    exitCard.style.display='flex';
+    exitShown=true;
+    try{ sessionStorage.setItem('scf_exit_shown','1'); }catch(err){}
+  };
+  // masaüstü: fare sekme/kapatma yönüne gidiyor
+  if(!isIOS && !/android/i.test(navigator.userAgent)){
+    const onMouseLeave=(e)=>{ if(e.clientY <= 0){ trigger(); document.removeEventListener('mouseleave', onMouseLeave); } };
+    document.addEventListener('mouseleave', onMouseLeave);
+  }
+  // mobil: sayfanın en üstünde hızlı yukarı kaydırma (geri/kapatma niyeti işareti)
+  let lastY=window.scrollY, upStreak=0;
+  const onScroll=()=>{
+    const y=window.scrollY;
+    if(y < lastY && y < 120){ upStreak++; if(upStreak>4){ trigger(); window.removeEventListener('scroll', onScroll); } }
+    else { upStreak=0; }
+    lastY=y;
+  };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  const exitX=document.getElementById('exit-intent-x');
+  if(exitX) exitX.onclick=()=>{ exitCard.style.display='none'; };
+}
+
 // ── Ana sayfa "Install" kutusu ──
 const a2hsBtn=document.getElementById('a2hs-btn');
 const a2hsHint=document.getElementById('a2hs-hint');
@@ -484,6 +534,20 @@ if(a2hsBtn){
   .pwa-chip span{font-size:11px;color:var(--tx3);line-height:1.4}
   .pwa-chip .px{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
   #pwa-install{cursor:pointer}
+
+  /* ── exit-intent kartı ── */
+  .exit-card{position:fixed;z-index:95;left:20px;right:20px;bottom:calc(76px + env(safe-area-inset-bottom));
+    display:none;align-items:center;gap:14px;background:linear-gradient(160deg,var(--navy2),var(--ink));
+    border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:0 22px 50px rgba(0,0,0,.55);
+    max-width:460px;margin:0 auto}
+  .exit-card .ec-ic{width:42px;height:42px;border-radius:12px;background:rgba(52,211,153,.14);
+    display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .exit-card b{display:block;font-size:13.5px;font-family:var(--disp)}
+  .exit-card span{font-size:11.5px;color:var(--tx3);line-height:1.4}
+  .exit-card .ec-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0b0e13;
+    border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:12.5px;cursor:pointer;
+    text-decoration:none;white-space:nowrap;font-family:var(--body)}
+  .exit-card .ec-x{background:none;border:none;color:var(--tx3);font-size:17px;cursor:pointer;padding:2px;flex-shrink:0}
 
   /* ── what is scf ── */
   .wis{padding:38px 0 4px}
@@ -930,6 +994,17 @@ if(a2hsBtn){
   <div className="pic">⚓</div>
   <div><b>Add to Home Screen</b><span>Tap Share <span style={{fontSize:"13px"}}>⎋</span> then "Add to Home Screen" — opens like an app</span></div>
   <button className="px" id="ios-tip-x" aria-label="Close">✕</button>
+</div>
+
+{/* Exit-intent: dürüst, çeşitlenen hatırlatma */}
+<div className="exit-card" id="exit-intent">
+  <div className="ec-ic" id="exit-ic">💰</div>
+  <div style={{flex:1,minWidth:0}}>
+    <b id="exit-t">Leaving without checking your salary?</b>
+    <span id="exit-s">Free, 10 seconds, no signup — see if you&apos;re below or above market rate.</span>
+  </div>
+  <a href="/salary-check" className="ec-btn" id="exit-btn">Check now</a>
+  <button className="ec-x" id="exit-intent-x" aria-label="Close">✕</button>
 </div>
     </>
   );
