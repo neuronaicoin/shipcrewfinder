@@ -50,7 +50,13 @@ export default async function BlogPostPage({
 
   const url = `https://shipcrewfinder.com/blog/${post.slug}`;
 
-  const related = blogIndex.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const sameCategory = blogIndex.filter(
+    (p) => p.slug !== post.slug && p.category === post.category
+  );
+  const otherPosts = blogIndex.filter(
+    (p) => p.slug !== post.slug && p.category !== post.category
+  );
+  const related = [...sameCategory, ...otherPosts].slice(0, 3);
 
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
