@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import SearchWizard from "./search-wizard";
-import SiteShareButton from "./site-share-button";
 
 export default function HomeContent({ deckSlot }: { deckSlot?: React.ReactNode }) {
   useEffect(() => {
@@ -192,6 +191,21 @@ if(exitCard && !exitShown){
   if(exitX) exitX.onclick=()=>{ exitCard.style.display='none'; };
 }
 
+// ── Site linkini kopyala kutusu ──
+const linkShareBtn=document.getElementById('link-share-btn');
+if(linkShareBtn){
+  linkShareBtn.onclick=async()=>{
+    const url='https://shipcrewfinder.com';
+    try{
+      await navigator.clipboard.writeText(url);
+      linkShareBtn.textContent='Copied! ✓';
+      setTimeout(()=>{ linkShareBtn.textContent='Copy Link'; },2200);
+    }catch(e){
+      window.prompt('Copy this link:', url);
+    }
+  };
+}
+
 // ── Ana sayfa "Install" kutusu ──
 const a2hsBtn=document.getElementById('a2hs-btn');
 const a2hsHint=document.getElementById('a2hs-hint');
@@ -317,7 +331,6 @@ if(a2hsBtn){
   .ham{display:none;place-items:center;width:42px;height:42px;border:1px solid var(--line2);border-radius:10px;
     background:rgba(255,255,255,.03);cursor:pointer;color:var(--tx);font-size:19px}
   @media(max-width:860px){ nav{display:none} .ham{display:grid} .top-cta .btn-ghost{padding:9px 13px;font-size:13px} }
-  @media(max-width:520px){ .ssb-label{display:none} }
   .mnav{display:none;flex-direction:column;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line2);
     background:rgba(7,26,48,.97)}
   .mnav.open{display:flex}
@@ -590,10 +603,9 @@ if(a2hsBtn){
   }
   @media(max-width:860px){ .steps{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr 1fr} }
   @media(max-width:820px){ .cplans{grid-template-columns:1fr} .foot-grid{grid-template-columns:1fr 1fr} }
- @media(max-width:640px){
+  @media(max-width:640px){
     .top-in{height:56px}
     .top-cta .btn-gold{display:none}
-    .top-cta > div > button{padding:9px 10px !important}
     .logo-ic{width:32px;height:32px}
     .logo b{font-size:16px}
     .hero{padding:30px 0 30px}
@@ -637,7 +649,6 @@ if(a2hsBtn){
       <a href="/blog">Blog</a>
     </nav>
     <div className="top-cta">
-      <SiteShareButton />
       <a className="btn btn-ghost" href="/login" style={{borderColor:"var(--gold)",color:"var(--gold)",fontWeight:800}}>Login</a>
       <a className="btn btn-gold" href="/signup">Sign Up Free</a>
       <button className="btn btn-ghost" id="theme-btn" aria-label="Theme" style={{padding:"10px 13px",fontSize:"16px",lineHeight:"1"}}>🌙</button>
@@ -700,6 +711,17 @@ if(a2hsBtn){
         <button type="button" className="a2hs-btn" id="a2hs-btn">Install ⚓</button>
         <span className="a2hs-hint" id="a2hs-hint"></span>
       </div>
+
+      <div className="a2hs" id="link-share">
+        <div className="ai">
+          <span className="aic">🔗</span>
+          <span style={{minWidth:0}}>
+            <b>Send this site to your ship friend</b>
+            <p>Copy the link — send it on WhatsApp, Telegram, anywhere.</p>
+          </span>
+        </div>
+        <button type="button" className="a2hs-btn" id="link-share-btn">Copy Link</button>
+      </div>
     </div>
     <div className="hero-vis">
       <div className="pcard">
@@ -742,7 +764,9 @@ if(a2hsBtn){
   </div>
 </section>
 
-<section className="wis" style={{paddingTop:"14px"}}>
+{deckSlot}
+
+<section className="wis">
   <div className="wrap">
     <div className="sec-tag rv">Try it right now — no signup needed</div>
     <h2 className="rv">Three free tools, live today</h2>
@@ -769,8 +793,6 @@ if(a2hsBtn){
     </div>
   </div>
 </section>
-
-{deckSlot}
 
 <div className="marq" style={{marginTop:"44px"}}>
   <div className="marq-in">
