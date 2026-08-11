@@ -65,7 +65,7 @@ export default function SiteShareButton() {
           whiteSpace: "nowrap",
         }}
       >
-        📤 Share with a friend
+        📤 <span className="ssb-label">Share with a friend</span>
       </button>
 
       {menuOpen && (
