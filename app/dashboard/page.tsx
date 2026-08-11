@@ -131,6 +131,17 @@ export default async function DashboardPage({
   completion = Math.min(completion, 100);
   const isComplete = completion === 100;
 
+  // Eksik madde kontrol listesi (sadece crew/yacht) — hangi alan eksik net göster
+  const missingItems: string[] = [];
+  if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
+    if (!(detailsData?.rank || detailsData?.position)) missingItems.push("Rank");
+    if (detailsData?.years_experience === undefined || detailsData?.years_experience === null) missingItems.push("Experience");
+    if (!(detailsData?.nationality || profile?.country)) missingItems.push("Nationality");
+    if (!detailsData?.cv_url) missingItems.push("CV upload");
+    if (!detailsData?.availability) missingItems.push("Availability");
+    if (!profile?.phone) missingItems.push("Phone number");
+  }
+
   // Vault özeti: 90 gün içinde bitecek + süresi geçmiş belge sayısı
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -412,6 +423,26 @@ export default async function DashboardPage({
                     ? "Fully complete — you appear in search results."
                     : "Incomplete profiles get significantly fewer views."}
                 </p>
+                {!isComplete && missingItems.length > 0 && (
+                  <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {missingItems.map((m) => (
+                      <span
+                        key={m}
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          color: "#f87171",
+                          background: "rgba(239,68,68,.1)",
+                          border: "1px solid rgba(239,68,68,.3)",
+                          borderRadius: 999,
+                          padding: "3px 9px",
+                        }}
+                      >
+                        Missing: {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {!isComplete && (
                   <Link href={onboardingUrl} className="btn btn-gold" style={{ marginTop: 10, padding: "8px 14px", fontSize: 12.5 }}>
                     Complete now →
