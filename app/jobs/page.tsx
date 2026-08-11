@@ -74,6 +74,35 @@ export default async function JobsPage({
     }
   }
 
+  // ── Akıllı Eşleşme Skoru: giriş yapmış crew'un rütbesini çek ──
+  let myRank = "";
+  if (user && !isCompany) {
+    const detailsTable = userType === "yacht" ? "yacht_details" : "seafarer_details";
+    const { data: myDetails } = await supabase
+      .from(detailsTable)
+      .select(userType === "yacht" ? "position" : "rank")
+      .eq("id", user.id)
+      .maybeSingle();
+    myRank = ((myDetails?.rank as string) || (myDetails?.position as string) || "").toUpperCase();
+  }
+
+  const rankDept = (rank: string): string => {
+    for (const [dept, ranks] of Object.entries(SHIP_RANKS)) {
+      if ((ranks as string[]).includes(rank)) return dept;
+    }
+    return "";
+  };
+
+  const matchScore = (jobPosition: string): number | null => {
+    if (!myRank || !jobPosition) return null;
+    const jp = jobPosition.toUpperCase();
+    if (jp === myRank) return 96;
+    const myDept = rankDept(myRank);
+    const jobDept = rankDept(jp);
+    if (myDept && myDept === jobDept) return 58;
+    return null; // farklı departman — alakasız, rozet gösterme
+  };
+
   const alertRedirectTo = `/jobs?rank=${encodeURIComponent(fRank)}${fCountry ? `&country=${encodeURIComponent(fCountry)}` : ""}`;
 
   // Şirket adları + puanları (tek turda)
@@ -153,6 +182,9 @@ export default async function JobsPage({
   .jtag.rank{color:var(--gold);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
   .jtag.sal{color:var(--grn);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08)}
   .jtag.dur{color:var(--tx3);border-color:var(--line2);background:rgba(255,255,255,.03)}
+  .jtag.match{order:-1}
+  .jtag.match.hi{color:#0b0e13;background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:var(--gold);font-weight:900}
+  .jtag.match.mid{color:var(--tx2);border-color:var(--line2);background:rgba(255,255,255,.05)}
   .jtitle{font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:6px}
   .jcard:hover .jtitle{color:var(--gold)}
   .jmeta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--tx3);align-items:center}
@@ -252,6 +284,15 @@ export default async function JobsPage({
               {jobList.map((job) => (
                 <Link key={job.id} href={`/jobs/${job.id}`} className="jcard">
                   <div className="jtags">
+                    {(() => {
+                      const ms = matchScore(job.position as string);
+                      if (ms === null) return null;
+                      return (
+                        <span className={`jtag match ${ms >= 90 ? "hi" : "mid"}`}>
+                          {ms}% match
+                        </span>
+                      );
+                    })()}
                     <span className="jtag rank">{job.position}</span>
                     {salaryOf(job) ? <span className="jtag sal">{salaryOf(job)}</span> : null}
                     {job.contract_duration ? <span className="jtag dur">{job.contract_duration}</span> : null}
