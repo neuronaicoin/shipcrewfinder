@@ -4,6 +4,82 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const FROM = "ShipCrewFinder <jobs@shipcrewfinder.com>";
+
+// Onboarding'i tamamlayan bir denizcinin rütbesini "hiring_for_ranks" listesinde
+// arayan tüm görünür şirketlere otomatik "yeni eşleşen aday" bildirimi + mail gönderir
+async function notifyMatchingCompanies(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  crewRank: string,
+  crewId: string
+) {
+  try {
+    if (!crewRank) return;
+
+    const { data: matchingCompanies } = await supabase
+      .from("company_details")
+      .select("id, company_name, hiring_for_ranks, profiles!inner(email, full_name, visibility)")
+      .contains("hiring_for_ranks", [crewRank]);
+
+    if (!matchingCompanies || matchingCompanies.length === 0) return;
+
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { data: secret } = await admin
+      .from("app_secrets")
+      .select("value")
+      .eq("key", "resend_api_key")
+      .single();
+
+    for (const c of matchingCompanies) {
+      const companyProfile = (c as { profiles?: { email?: string; full_name?: string; visibility?: string } }).profiles;
+      if (!companyProfile || companyProfile.visibility !== "public") continue;
+
+      const companyName = (c.company_name as string) || companyProfile.full_name || "there";
+
+      await admin.from("notifications").insert({
+        user_id: c.id,
+        type: "new_candidate",
+        title: `⚓ New ${crewRank} joined ShipCrewFinder`,
+        message: `A verified ${crewRank} profile matching your hiring needs just went live.`,
+        link: `/candidate/${crewId}`,
+        read: false,
+      });
+
+      if (!secret?.value || !companyProfile.email) continue;
+
+      try {
+        await fetch(RESEND_ENDPOINT, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${secret.value as string}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: FROM,
+            to: [companyProfile.email],
+            subject: `⚓ New ${crewRank} just joined ShipCrewFinder`,
+            html: `
+<div style="font-family:Arial,sans-serif;max-width:560px">
+  <h2 style="color:#0d1030">⚓ A new candidate matches your search</h2>
+  <p>Hi ${companyName},</p>
+  <p>A verified <b>${crewRank}</b> just completed their profile on ShipCrewFinder — matching one of the ranks you're hiring for.</p>
+  <p><a href="https://shipcrewfinder.com/candidate/${crewId}" style="background:#fbbf24;color:#0b0e13;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">View Profile</a></p>
+  <p style="color:#888;font-size:12px;margin-top:18px">You're receiving this because you listed ${crewRank} as a rank you're hiring for on shipcrewfinder.com.</p>
+</div>`,
+            text: `A new ${crewRank} just joined ShipCrewFinder — matching your hiring needs. View: https://shipcrewfinder.com/candidate/${crewId}`,
+          }),
+        });
+      } catch {
+        // Bir şirkete mail gönderimi başarısız olsa bile diğerlerini etkilemesin
+      }
+    }
+  } catch {
+    // Bu bildirim asla onboarding akışını bozmasın
+  }
+}
+
 // ============================================
 // CREW: Step 1 - Rank
 // ============================================
@@ -294,6 +370,20 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       })
       .eq("id", user.id);
   }
+
+  // ── Şirketlere otomatik "yeni eşleşen aday" bildirimi ──
+  if (profile.user_type === "seafarer" || profile.user_type === "yacht") {
+    const { data: freshDetails } = await supabase
+      .from(profile.user_type === "seafarer" ? "seafarer_details" : "yacht_details")
+      .select("rank, position")
+      .eq("id", user.id)
+      .maybeSingle();
+    const candidateRank = (freshDetails?.rank as string) || (freshDetails?.position as string) || "";
+    if (candidateRank) {
+      notifyMatchingCompanies(supabase, candidateRank, user.id);
+    }
+  }
+
   // ── Davet ödülü: profil TAMAMLANINCA, bir kez ──
   if (profile.referred_by && !profile.referral_rewarded) {
     try {
