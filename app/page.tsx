@@ -26,9 +26,9 @@ export default async function HomePage({
     <HomeContent
       deckSlot={
         <>
+          <DeckRail />
           <AiProfilePromo />
           <LiveActivityStrip />
-          <DeckRail />
           <MessRoomBox messStatus={sp.mess} />
           <PopularSearches />
         </>
