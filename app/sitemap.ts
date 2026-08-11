@@ -153,6 +153,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Salary Index sayfaları (programatik SEO)
   const salaryPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/salary`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${baseUrl}/salary-check`, lastModified, changeFrequency: "weekly", priority: 0.8 },
     { url: `${baseUrl}/salary/tools`, lastModified, changeFrequency: "monthly", priority: 0.7 },
     ...SALARY_DATA.map((r) => ({
       url: `${baseUrl}/salary/${r.slug}`,
