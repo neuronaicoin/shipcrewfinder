@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { blogIndex } from "@/app/data/blog";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { SALARY_DATA, VESSELS } from "@/lib/data/salary";
+import { PORTS } from "@/lib/data/ports";
+import { RANK_CONTEXTS } from "@/lib/data/rank-context";
 import { NATIONALITIES } from "@/lib/data/nationalities";
 import { createClient } from "@/lib/supabase/server";
 
@@ -150,6 +152,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }))
     );
+  // Port × rütbe sayfaları (programatik SEO — 48 sayfa: 8 liman × 6 rütbe)
+  const portRankPages: MetadataRoute.Sitemap = PORTS.flatMap((p) =>
+    RANK_CONTEXTS.map((r) => ({
+      url: `${baseUrl}/ports/${p.slug}/${r.slug}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.65,
+    }))
+  );
   // Salary Index sayfaları (programatik SEO)
   const salaryPages: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/salary`, lastModified, changeFrequency: "monthly", priority: 0.8 },
@@ -194,5 +205,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     // Supabase erişilemezse dinamik kısımlar atlanır
   }
-  return [...staticPages, ...rankPages, ...comboPages, ...salaryPages, ...blogPages, ...vesselPages, ...companyPages];
+  return [...staticPages, ...rankPages, ...comboPages, ...portRankPages, ...salaryPages, ...blogPages, ...vesselPages, ...companyPages];
 }
