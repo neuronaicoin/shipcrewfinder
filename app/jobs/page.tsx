@@ -78,11 +78,12 @@ export default async function JobsPage({
   let myRank = "";
   if (user && !isCompany) {
     const detailsTable = userType === "yacht" ? "yacht_details" : "seafarer_details";
-    const { data: myDetails } = await supabase
+    const { data: myDetailsRaw } = await supabase
       .from(detailsTable)
       .select(userType === "yacht" ? "position" : "rank")
       .eq("id", user.id)
       .maybeSingle();
+    const myDetails: Record<string, unknown> | null = myDetailsRaw;
     myRank = ((myDetails?.rank as string) || (myDetails?.position as string) || "").toUpperCase();
   }
 
