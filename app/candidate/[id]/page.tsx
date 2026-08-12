@@ -189,9 +189,29 @@ export default async function CandidatePage({
     .eq("month_key", monthKey);
   let used = usedRaw || 0;
 
+  // ── Fleet planına özel, sessiz günlük üst sınır (pazarlamada hiç geçmiyor) ──
+  // Kötüye kullanım / toplu veri çekmeyi engellemek için — normal kullanımda asla tetiklenmez.
+  const isFleetPlan = myPlan === "fleet";
+  const FLEET_DAILY_CAP = 50;
+  let fleetDailyBlocked = false;
+  if (isFleetPlan && !existingView) {
+    const dayStartUtc = new Date();
+    dayStartUtc.setUTCHours(0, 0, 0, 0);
+    const { count: todayCountRaw } = await supabase
+      .from("company_profile_views")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", user.id)
+      .gte("created_at", dayStartUtc.toISOString());
+    if ((todayCountRaw || 0) >= FLEET_DAILY_CAP) {
+      fleetDailyBlocked = true;
+    }
+  }
+
   let unlocked = false;
   if (existingView) {
     unlocked = true;
+  } else if (fleetDailyBlocked) {
+    unlocked = false;
   } else if (limit === null || used < limit) {
     // Spend one credit (unique constraint makes double-insert harmless)
     const { error: insErr } = await supabase.from("company_profile_views").insert({
@@ -441,6 +461,20 @@ export default async function CandidatePage({
                   <a href={"/cv/share/" + scfCvCode} target="_blank" rel="noopener noreferrer" className="btn btn-gold">View SCF CV →</a>
                 </div>
               ) : null}
+            </div>
+          ) : fleetDailyBlocked ? (
+            <div className="lock">
+              <div className="lic">⏳</div>
+              <h2>Daily profile view limit reached</h2>
+              <p>
+                You&apos;ve reached today&apos;s profile viewing limit. This profile shows rank and country only.
+              </p>
+              <p className="fine">
+                Please continue after 24 hours — your limit resets daily.
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                <Link href="/browse" className="btn btn-ghost">Back to Browse</Link>
+              </div>
             </div>
           ) : (
             <div className="lock">
