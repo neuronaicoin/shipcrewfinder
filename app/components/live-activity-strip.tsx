@@ -29,7 +29,6 @@ export default async function LiveActivityStrip() {
     text: `${d.company_total} compan${d.company_total === 1 ? "y is" : "ies are"} actively hiring`,
   };
   const allEvents = [...events, jobEvent];
-  // Kesintisiz döngü için listeyi ikiye katla (CSS marquee deseni)
   const loop = [...allEvents, ...allEvents];
 
   return (
@@ -49,15 +48,8 @@ export default async function LiveActivityStrip() {
   .la-item{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2,#a8bdd2);padding:0 22px;
     border-right:1px solid var(--line2,rgba(255,255,255,.08))}
   .la-item b{color:var(--tx,#eef4fa);font-weight:700}
-  .la-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-  .la-stat{background:rgba(255,255,255,.03);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:12px;
-    padding:12px 10px;text-align:center}
-  .la-stat .n{font-family:var(--disp,var(--font-bricolage),sans-serif);font-weight:800;font-size:22px;color:var(--gold,#fbbf24)}
-  .la-stat .l{font-size:11px;color:var(--tx3,#6b83a0);margin-top:2px}
   @media(max-width:640px){
     .la-item{font-size:12px;padding:0 16px}
-    .la-stat .n{font-size:19px}
-    .la-stat .l{font-size:10px}
   }
 `}</style>
       <div className="la-wrap">
@@ -73,20 +65,6 @@ export default async function LiveActivityStrip() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-        <div className="la-stats">
-          <div className="la-stat">
-            <div className="n">{d.crew_week}</div>
-            <div className="l">seafarers this week</div>
-          </div>
-          <div className="la-stat">
-            <div className="n">🌍</div>
-            <div className="l">Worldwide</div>
-          </div>
-          <div className="la-stat">
-            <div className="n">{d.company_total}</div>
-            <div className="l">companies hiring</div>
           </div>
         </div>
       </div>
