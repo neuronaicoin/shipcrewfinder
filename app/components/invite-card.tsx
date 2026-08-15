@@ -32,9 +32,10 @@ export default function InviteCard({
         background: isPremium
           ? "linear-gradient(165deg,rgba(251,191,36,.1),var(--ink))"
           : "linear-gradient(165deg,var(--navy2),var(--ink))",
-        border: isPremium ? "1.5px solid var(--gold)" : "1.5px solid var(--line)",
+        border: isPremium ? "1.5px solid var(--gold)" : "1.5px solid var(--gold)",
         borderRadius: 18,
         padding: "20px 22px",
+        boxShadow: isPremium ? "none" : "0 0 24px rgba(251,191,36,.15)",
       }}
     >
       {isPremium ? (
@@ -64,23 +65,38 @@ export default function InviteCard({
           <div
             style={{
               fontFamily: "var(--disp)",
-              fontSize: 12.5,
-              fontWeight: 700,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
+              fontSize: 17,
+              fontWeight: 800,
               color: "var(--gold)",
-              marginBottom: 10,
+              marginBottom: 8,
+              lineHeight: 1.3,
             }}
           >
-            🌟 Invite 2 shipmates — unlock Premium
+            🌟 Invite 2 friends — Get Premium
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--tx2)", lineHeight: 1.6, marginBottom: 6 }}>
-            When <b style={{ color: "var(--tx)" }}>2 shipmates</b> join with your link and complete their profile, you unlock <b style={{ color: "var(--gold)" }}>Premium — for free, forever</b>:
+          <p style={{ fontSize: 13, color: "var(--tx2)", lineHeight: 1.6, marginBottom: 12 }}>
+            2 friends join with your link {"&"} finish their profile — you get <b style={{ color: "var(--gold)" }}>Premium, free forever</b>:
           </p>
-          <ul style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.7, marginBottom: 14, paddingLeft: 18 }}>
-            <li><b style={{ color: "var(--tx)" }}>Priority placement</b> in company search results</li>
-            <li><b style={{ color: "var(--tx)" }}>First to know</b> when a matching job is posted</li>
-          </ul>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "var(--tx)" }}>
+              <span style={{ fontSize: 16 }}>🔝</span> Show up first in company searches
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "var(--tx)" }}>
+              <span style={{ fontSize: 16 }}>🔔</span> Get new jobs before anyone else
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              fontWeight: 700,
+              color: "var(--tx3)",
+              textTransform: "uppercase",
+              letterSpacing: ".04em",
+              marginBottom: 8,
+            }}
+          >
+            👇 Copy your link. Send it to a friend.
+          </div>
         </>
       )}
 
@@ -129,7 +145,7 @@ export default function InviteCard({
       <div style={{ display: "grid", gridTemplateColumns: isPremium ? "1fr" : "1fr 1fr", gap: 9 }}>
         <div style={{ border: "1px solid var(--line2)", borderRadius: 12, padding: "10px 12px" }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--tx3)", marginBottom: 3 }}>
-            Shipmates joined
+            Friends joined
           </div>
           <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 21 }}>{joined}</div>
         </div>
