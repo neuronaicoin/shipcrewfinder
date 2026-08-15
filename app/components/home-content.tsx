@@ -469,9 +469,10 @@ if(a2hsBtn){
   .plist li{font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
   .plist li::before{content:'✓';color:var(--grn);font-weight:800;flex-shrink:0}
   .pfoot{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:12px}
-  .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px}
+  .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px;align-items:stretch}
   .cplan{background:linear-gradient(165deg,var(--navy2),var(--navy));border:1px solid var(--line2);
-    border-radius:20px;padding:28px;position:relative}
+    border-radius:20px;padding:28px;position:relative;display:flex;flex-direction:column}
+  .cplan .plist{flex:1}
   .cplan.hot{border:1.5px solid var(--gold);box-shadow:0 20px 50px rgba(0,0,0,.35)}
   .hot-tag{position:absolute;top:-12px;left:24px;background:linear-gradient(135deg,var(--gold),var(--gold2));
     color:var(--ink);font-size:10.5px;font-weight:800;letter-spacing:.08em;border-radius:7px;padding:4px 11px}
@@ -835,24 +836,25 @@ if(a2hsBtn){
     <h2 className="rv">Hire verified crew — without agency fees</h2>
     <p className="sec-sub rv">Every profile is document-checked before it goes live. Try the full platform free for a month, see the crew pool for yourself — then decide.</p>
         <div className="cplans">
-      <div className="cplan hot rv">
-        <div className="hot-tag">MOST POPULAR</div>
+      <div className="cplan rv">
         <h3>Pro</h3>
         <div className="cfor">For active fleets {"&"} crewing departments</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
         <div className="pnum">$199.90 <small>/ month</small></div>
         <div className="pper">after your free month · cancel anytime</div>
         <ul className="plist">
-          <li><b style={{color:"var(--gold)"}}>100 full CV views / month</b></li>
+          <li>100 full CV views / month</li>
           <li>Post up to 10 job listings</li>
+          <li>Fleet Crew Manager — 1 vessel included</li>
           <li>Advanced search — rank, vessel type, availability</li>
           <li>Direct messaging with crew</li>
           <li>Save {"&"} shortlist candidates</li>
           <li>Verified company badge</li>
         </ul>
-        <a className="btn btn-gold" href="/signup/company?plan=pro" style={{width:"100%"}}>Start free month →</a>
+        <a className="btn btn-ghost" href="/signup/company?plan=pro" style={{width:"100%",borderColor:"var(--gold)",color:"var(--gold)"}}>Start free month →</a>
       </div>
-      <div className="cplan rv">
+      <div className="cplan hot rv">
+        <div className="hot-tag">MOST POPULAR</div>
         <h3>Fleet</h3>
         <div className="cfor">For large fleets, managers {"&"} crewing agencies</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
@@ -862,12 +864,13 @@ if(a2hsBtn){
           <li>Everything in Pro</li>
           <li><b style={{color:"var(--gold)"}}>Unlimited full CV views</b></li>
           <li>Unlimited job listings</li>
+          <li><b style={{color:"var(--gold)"}}>Fleet Crew Manager — unlimited vessels</b></li>
           <li>Multiple user seats for your team</li>
           <li>Bulk shortlist {"&"} export</li>
           <li>Priority support {"&"} onboarding</li>
           <li>API / ATS integration</li>
         </ul>
-        <a className="btn btn-ghost" href="/signup/company?plan=fleet" style={{width:"100%",borderColor:"var(--gold)",color:"var(--gold)"}}>Start free month →</a>
+        <a className="btn btn-gold" href="/signup/company?plan=fleet" style={{width:"100%"}}>Start free month →</a>
       </div>
     </div>
   </div>
