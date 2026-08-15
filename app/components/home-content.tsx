@@ -291,15 +291,15 @@ if(a2hsBtn){
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
-  .hero-live{display:inline-flex;align-items:center;gap:9px;background:rgba(52,211,153,.1);
-    border:1.5px solid rgba(52,211,153,.4);border-radius:999px;padding:9px 18px;margin-bottom:22px;
-    animation:hlglow 2.4s ease-in-out infinite}
-  @keyframes hlglow{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.25)}50%{box-shadow:0 0 16px 2px rgba(52,211,153,.25)}}
-  .hero-live .hl-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);flex-shrink:0;
-    box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:hldotpulse 1.6s infinite}
-  @keyframes hldotpulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}}
-  .hero-live span{color:var(--grn);font-weight:800;font-size:13.5px;letter-spacing:.01em}
-  @media(max-width:640px){ .hero-live{padding:7px 14px;margin-bottom:16px} .hero-live span{font-size:12px} }
+  .hero-live{display:inline-flex;align-items:center;gap:10px;background:var(--gold);
+    border:2px solid var(--gold);border-radius:999px;padding:11px 22px;margin-bottom:22px;
+    box-shadow:0 0 20px rgba(251,191,36,.4);animation:hlglow 2.4s ease-in-out infinite}
+  @keyframes hlglow{0%,100%{box-shadow:0 0 20px rgba(251,191,36,.4)}50%{box-shadow:0 0 30px rgba(251,191,36,.65)}}
+  .hero-live .hl-dot{width:8px;height:8px;border-radius:50%;background:#0b0e13;flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(11,14,19,.5);animation:hldotpulse 1.6s infinite}
+  @keyframes hldotpulse{0%,100%{box-shadow:0 0 0 0 rgba(11,14,19,.45)}70%{box-shadow:0 0 0 7px rgba(11,14,19,0)}}
+  .hero-live span{color:#0b0e13;font-weight:800;font-size:15px;letter-spacing:.01em}
+  @media(max-width:640px){ .hero-live{padding:9px 16px;margin-bottom:16px} .hero-live span{font-size:13px} }
 
   .top{position:sticky;top:0;z-index:50;background:rgba(10,37,64,.85);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line2)}
@@ -634,7 +634,7 @@ if(a2hsBtn){
     <div>
       <div className="badge"><span className="d"></span>NEW — BUILD YOUR PROFILE WITH AI</div>
       <h1>Your next contract.<br/><span className="g hero-rot" id="hero-rot">No agency. No cut.</span></h1>
-      <div className="hero-live"><span className="hl-dot"></span><span>New crew join every day</span></div>
+      <div className="hero-live"><span className="hl-dot"></span><span>Join the thousands of seafarers</span></div>
       <p className="sub">ShipCrewFinder connects verified seafarers with shipping companies — directly. No middlemen taking a slice of your salary. No agencies filtering your messages.</p>
       <div className="paths">
         <a className="path" href="/signup/crew">
