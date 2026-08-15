@@ -191,14 +191,24 @@ export default async function RankSalaryPage({
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
+          <div className="jobcta" style={{ marginBottom: 13, borderColor: "var(--gold)" }}>
+            <div>
+              <b>Get found by companies hiring {r.rank}s</b>
+              <p>Create a free, verified profile — companies message you directly, zero commission, always.</p>
+            </div>
+            <Link className="btn btn-gold" href="/signup/crew">
+              ⚓ Create free profile →
+            </Link>
+          </div>
           <div className="jobcta">
             <div>
               <b>Open {r.rank} positions</b>
               <p>Verified companies are hiring on ShipCrewFinder right now — apply directly, zero commission.</p>
             </div>
             <Link
-              className="btn btn-gold"
+              className="btn btn-ghost"
               href={`/jobs?rank=${encodeURIComponent(r.rank.toUpperCase())}`}
+              style={{ borderColor: "var(--gold)", color: "var(--gold)" }}
             >
               View {r.rank} jobs →
             </Link>
@@ -213,6 +223,34 @@ export default async function RankSalaryPage({
             ITF/IBF frameworks, 2026 market data and live ShipCrewFinder listings. Upper bounds
             reflect premium operators and specialist tonnage. Last update: {LAST_UPDATED}.
           </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <Link
+            href="/career-path"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 14,
+              flexWrap: "wrap",
+              background: "rgba(251,191,36,.06)",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              padding: "16px 20px",
+              textDecoration: "none",
+              color: "var(--tx)",
+            }}
+          >
+            <span style={{ fontSize: 13.5 }}>
+              📈 <b>See the full path to {r.rank}</b> — typical years at sea and salary growth at each step
+            </span>
+            <span style={{ color: "var(--gold)", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>
+              View career path →
+            </span>
+          </Link>
         </div>
       </section>
 
