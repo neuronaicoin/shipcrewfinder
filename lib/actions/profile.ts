@@ -290,7 +290,7 @@ export async function uploadCrewCV(formData: FormData): Promise<void> {
 }
 // ============================================
 // CREW: Step 5 - Availability + Contact (FINAL)
-// + Davet ödül motoru (6 ayda 2 limiti)
+// + Davet ödül motoru (2 başarılı davet = kalıcı Premium)
 // ============================================
 export async function completeCrewOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
@@ -384,7 +384,7 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
     }
   }
 
-  // ── Davet ödülü: profil TAMAMLANINCA, bir kez ──
+  // ── Davet ödülü: 2 başarılı davet = kalıcı PREMIUM rozeti ──
   if (profile.referred_by && !profile.referral_rewarded) {
     try {
       const { createAdminClient } = await import("@/lib/supabase/admin");
@@ -400,70 +400,62 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       });
 
       if (!insErr) {
-        // Davetliye +1 ay (her zaman)
-        const { data: meRow } = await admin
-          .from("profiles")
-          .select("bonus_months")
-          .eq("id", user.id)
-          .single();
+        // Davetliye sadece hoş geldin bildirimi (crew zaten $0 sonsuza kadar ücretsiz — bonus ay anlamsız)
         await admin
           .from("profiles")
-          .update({
-            bonus_months: ((meRow?.bonus_months as number) || 0) + 1,
-            referral_rewarded: true,
-          })
+          .update({ referral_rewarded: true })
           .eq("id", user.id);
 
         await admin.from("notifications").insert({
           user_id: user.id,
           type: "referral",
-          title: "🎁 +1 free month earned",
-          message: "Welcome aboard — your shipmate invite bonus is active.",
+          title: "⚓ Welcome aboard!",
+          message: "You joined via a shipmate's invite link — your profile is ready to go.",
           link: "/dashboard",
           read: false,
         });
 
-        // Davet edene +1 ay — son 180 günde en fazla 2 ödül
-        const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 3600 * 1000).toISOString();
-        const { count: recentRewards } = await admin
+        // Davet edenin toplam başarılı davet sayısını say
+        await admin
+          .from("referral_rewards")
+          .update({ referrer_rewarded: true })
+          .eq("referred_id", user.id);
+
+        const { count: totalSuccessfulReferrals } = await admin
           .from("referral_rewards")
           .select("id", { count: "exact", head: true })
           .eq("referrer_id", referrerId)
-          .eq("referrer_rewarded", true)
-          .gte("created_at", sixMonthsAgo);
+          .eq("referrer_rewarded", true);
 
-        if ((recentRewards || 0) < 2) {
-          const { data: refRow } = await admin
-            .from("profiles")
-            .select("bonus_months")
-            .eq("id", referrerId)
-            .single();
+        const { data: referrerRow } = await admin
+          .from("profiles")
+          .select("is_premium")
+          .eq("id", referrerId)
+          .single();
+
+        const alreadyPremium = referrerRow?.is_premium === true;
+
+        if ((totalSuccessfulReferrals || 0) >= 2 && !alreadyPremium) {
+          // Eşik aşıldı — Premium rozetini kalıcı olarak ver
           await admin
             .from("profiles")
-            .update({
-              bonus_months: ((refRow?.bonus_months as number) || 0) + 1,
-            })
+            .update({ is_premium: true })
             .eq("id", referrerId);
-
-          await admin
-            .from("referral_rewards")
-            .update({ referrer_rewarded: true })
-            .eq("referred_id", user.id);
 
           await admin.from("notifications").insert({
             user_id: referrerId,
             type: "referral",
-            title: "🎁 +1 free month earned",
-            message: "A shipmate you invited just completed their profile.",
+            title: "🌟 You're now a Premium member!",
+            message: "2 shipmates joined through your link — you've unlocked Premium: priority placement in search results and first alert on new job posts.",
             link: "/dashboard",
             read: false,
           });
-        } else {
+        } else if (!alreadyPremium) {
           await admin.from("notifications").insert({
             user_id: referrerId,
             type: "referral",
             title: "A shipmate you invited joined",
-            message: "Invite reward limit reached (2 per 6 months) — this one didn't earn a bonus month.",
+            message: `${totalSuccessfulReferrals || 1}/2 successful invites — one more and you unlock Premium (priority search placement + first job alerts).`,
             link: "/dashboard",
             read: false,
           });
