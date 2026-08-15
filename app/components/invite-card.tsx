@@ -5,15 +5,13 @@ import { useState } from "react";
 export default function InviteCard({
   refCode,
   joined,
-  monthsEarned,
+  isPremium,
   invitesLeft,
-  resetInfo,
 }: {
   refCode: string;
   joined: number;
-  monthsEarned: number;
+  isPremium: boolean;
   invitesLeft: number;
-  resetInfo: string | null;
 }) {
   const [copied, setCopied] = useState(false);
   const link = "https://shipcrewfinder.com/signup/crew?ref=" + refCode;
@@ -24,7 +22,6 @@ export default function InviteCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      // Panoya erişilemezse metni seçtirmek için prompt
       window.prompt("Copy your invite link:", link);
     }
   };
@@ -32,28 +29,60 @@ export default function InviteCard({
   return (
     <div
       style={{
-        background: "linear-gradient(165deg,var(--navy2),var(--ink))",
-        border: "1.5px solid var(--line)",
+        background: isPremium
+          ? "linear-gradient(165deg,rgba(251,191,36,.1),var(--ink))"
+          : "linear-gradient(165deg,var(--navy2),var(--ink))",
+        border: isPremium ? "1.5px solid var(--gold)" : "1.5px solid var(--line)",
         borderRadius: 18,
         padding: "20px 22px",
       }}
     >
-      <div
-        style={{
-          fontFamily: "var(--disp)",
-          fontSize: 12.5,
-          fontWeight: 700,
-          letterSpacing: ".12em",
-          textTransform: "uppercase",
-          color: "var(--gold)",
-          marginBottom: 10,
-        }}
-      >
-        🎁 Invite crew — earn free months
-      </div>
-      <p style={{ fontSize: 12.5, color: "var(--tx2)", lineHeight: 1.6, marginBottom: 14 }}>
-        Share your link with shipmates. When they join and complete their profile, <b style={{ color: "var(--tx)" }}>you both get +1 free month</b>.
-      </p>
+      {isPremium ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "linear-gradient(135deg,var(--gold),var(--gold2))",
+            borderRadius: 12,
+            padding: "12px 16px",
+            marginBottom: 16,
+          }}
+        >
+          <span style={{ fontSize: 26 }}>🌟</span>
+          <div>
+            <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 15, color: "#0b0e13" }}>
+              You're a PREMIUM member
+            </div>
+            <div style={{ fontSize: 11.5, color: "#0b0e13", opacity: 0.85 }}>
+              Priority in search results · First alert on new job posts
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              fontFamily: "var(--disp)",
+              fontSize: 12.5,
+              fontWeight: 700,
+              letterSpacing: ".12em",
+              textTransform: "uppercase",
+              color: "var(--gold)",
+              marginBottom: 10,
+            }}
+          >
+            🌟 Invite 2 shipmates — unlock Premium
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--tx2)", lineHeight: 1.6, marginBottom: 6 }}>
+            When <b style={{ color: "var(--tx)" }}>2 shipmates</b> join with your link and complete their profile, you unlock <b style={{ color: "var(--gold)" }}>Premium — for free, forever</b>:
+          </p>
+          <ul style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.7, marginBottom: 14, paddingLeft: 18 }}>
+            <li><b style={{ color: "var(--tx)" }}>Priority placement</b> in company search results</li>
+            <li><b style={{ color: "var(--tx)" }}>First to know</b> when a matching job is posted</li>
+          </ul>
+        </>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
         <div
@@ -97,32 +126,22 @@ export default function InviteCard({
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 9 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isPremium ? "1fr" : "1fr 1fr", gap: 9 }}>
         <div style={{ border: "1px solid var(--line2)", borderRadius: 12, padding: "10px 12px" }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--tx3)", marginBottom: 3 }}>
-            Crew joined
+            Shipmates joined
           </div>
           <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 21 }}>{joined}</div>
         </div>
-        <div style={{ border: "1px solid rgba(52,211,153,.3)", background: "rgba(52,211,153,.06)", borderRadius: 12, padding: "10px 12px" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "#34d399", marginBottom: 3 }}>
-            Months earned
+        {!isPremium && (
+          <div style={{ border: "1px solid rgba(251,191,36,.3)", background: "rgba(251,191,36,.06)", borderRadius: 12, padding: "10px 12px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 3 }}>
+              Until Premium
+            </div>
+            <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 21, color: "var(--gold)" }}>{invitesLeft} left</div>
           </div>
-          <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 21, color: "#34d399" }}>+{monthsEarned}</div>
-        </div>
-        <div style={{ border: "1px solid rgba(251,191,36,.3)", background: "rgba(251,191,36,.06)", borderRadius: 12, padding: "10px 12px" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 3 }}>
-            Invites left
-          </div>
-          <div style={{ fontFamily: "var(--disp)", fontWeight: 800, fontSize: 21, color: "var(--gold)" }}>{invitesLeft}/2</div>
-        </div>
+        )}
       </div>
-
-      {invitesLeft === 0 && resetInfo ? (
-        <p style={{ fontSize: 11, color: "var(--tx3)", marginTop: 10 }}>
-          Reward limit reached — next invite slot opens {resetInfo}.
-        </p>
-      ) : null}
     </div>
   );
 }
