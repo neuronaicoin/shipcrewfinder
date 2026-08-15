@@ -22,7 +22,6 @@ export default async function DashboardPage({
   const sp = await searchParams;
   const supabase = await createClient();
 
-  // getSession: çerezden okur — getUser'ın yaptığı ekstra ağ turunu atlar
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -32,7 +31,6 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  // Zil tıklanınca ?read=1 ile gelir — tüm bildirimleri okundu işaretle
   if (sp.read === "1") {
     await supabase
       .from("notifications")
@@ -88,7 +86,6 @@ export default async function DashboardPage({
       .eq("user_id", user.id),
   ]);
 
-  // ── Mesajlar: okunmamış sayısı ──
   const convIds = (myConvs || []).map((c) => c.id as string);
   let msgUnread = 0;
   if (convIds.length > 0) {
@@ -131,7 +128,6 @@ export default async function DashboardPage({
   completion = Math.min(completion, 100);
   const isComplete = completion === 100;
 
-  // Eksik madde kontrol listesi (sadece crew/yacht) — hangi alan eksik net göster
   const missingItems: string[] = [];
   if (profile?.user_type === "seafarer" || profile?.user_type === "yacht") {
     if (!(detailsData?.rank || detailsData?.position)) missingItems.push("Rank");
@@ -142,7 +138,6 @@ export default async function DashboardPage({
     if (!profile?.phone) missingItems.push("Phone number");
   }
 
-  // Vault özeti: 90 gün içinde bitecek + süresi geçmiş belge sayısı
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dayMs = 24 * 3600 * 1000;
@@ -171,13 +166,11 @@ export default async function DashboardPage({
 
   const isCompany = profile?.user_type === "company";
 
-  // ── Crew Board: kullanıcının aktif CV kartı ──
   const now = Date.now();
   const activeCvPost = (myDeckPosts || []).find(
     (p) => p.post_type === "crew" && new Date(p.expires_at as string).getTime() > now
   ) as { id: string; expires_at: string; boosted_at: string } | undefined;
 
-  // ── Company: başvuru özeti (Applications kartı için) ──
   let appTotal = 0;
   let appNew = 0;
   let appLink = "/jobs/mine";
@@ -195,17 +188,14 @@ export default async function DashboardPage({
     }
   }
 
-  // ── Company: kariyer sayfası slug'ı ──
   const careersSlug = isCompany ? ((detailsData?.careers_slug as string) || "") : "";
 
   const rankLabel =
     (detailsData?.rank as string) || (detailsData?.position as string) || null;
 
-  // ── Crew: kontrat tarihleri (Sign-off Countdown kutusu için) ──
   const contractEnd = isCrew ? ((detailsData?.contract_end_date as string) || null) : null;
   const contractStart = isCrew ? ((detailsData?.contract_start_date as string) || null) : null;
 
-  // ── Sea Service Card istatistikleri (sea_contracts'tan) ──
   let seaYears = "0";
   let seaVessels = 0;
   let seaMaxDwt: string | null = null;
@@ -245,33 +235,20 @@ export default async function DashboardPage({
   const ringR = 42;
   const ringC = 2 * Math.PI * ringR;
   const ringOff = ringC - (completion / 100) * ringC;
-  // Davet kartı verileri (sadece crew)
+  // Davet kartı verileri (sadece crew) — 2 başarılı davet = kalıcı Premium
   let refCode = "";
   let refJoined = 0;
-  let refMonths = 0;
-  let refLeft = 2;
-  let refReset: string | null = null;
+  let refInvitesLeft = 2;
+  const isPremiumMember = isCrew && profile?.is_premium === true;
   if (isCrew) {
     const { data: myRewards } = await supabase
       .from("referral_rewards")
-      .select("referrer_rewarded, created_at")
+      .select("referrer_rewarded")
       .eq("referrer_id", user.id)
-      .order("created_at", { ascending: false });
+      .eq("referrer_rewarded", true);
     refCode = (profile?.referral_code as string) || "";
-    refMonths = (profile?.bonus_months as number) || 0;
-    const rewards = myRewards || [];
-    refJoined = rewards.length;
-    const sixMonthsAgo = Date.now() - 180 * 24 * 3600 * 1000;
-    const recent = rewards.filter(
-      (r) => r.referrer_rewarded && new Date(r.created_at as string).getTime() > sixMonthsAgo
-    );
-    refLeft = Math.max(0, 2 - recent.length);
-    if (refLeft === 0 && recent.length > 0) {
-      const oldest = recent[recent.length - 1];
-      refReset = new Date(
-        new Date(oldest.created_at as string).getTime() + 180 * 24 * 3600 * 1000
-      ).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    }
+    refJoined = (myRewards || []).length;
+    refInvitesLeft = Math.max(0, 2 - refJoined);
   }
 
   const fmtNotifDate = (d: string) =>
@@ -608,9 +585,8 @@ export default async function DashboardPage({
             <InviteCard
               refCode={refCode}
               joined={refJoined}
-              monthsEarned={refMonths}
-              invitesLeft={refLeft}
-              resetInfo={refReset}
+              isPremium={isPremiumMember}
+              invitesLeft={refInvitesLeft}
             />
           </div>
         </section>
