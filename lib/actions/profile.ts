@@ -291,6 +291,7 @@ export async function uploadCrewCV(formData: FormData): Promise<void> {
 // ============================================
 // CREW: Step 5 - Availability + Contact (FINAL)
 // + Davet ödül motoru (2 başarılı davet = kalıcı Premium)
+// + Tüm yeni crew üyelerine hoş geldin/Premium bilgisi maili
 // ============================================
 export async function completeCrewOnboarding(formData: FormData): Promise<void> {
   const supabase = await createClient();
@@ -463,6 +464,65 @@ export async function completeCrewOnboarding(formData: FormData): Promise<void> 
       }
     } catch {
       // Ödül hatası onboarding'i asla bozmasın
+    }
+  }
+
+  // ── Tüm yeni crew üyelerine: hoş geldin + Premium davet sistemi bilgisi maili ──
+  if (profile.user_type === "seafarer" || profile.user_type === "yacht") {
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+
+      const { data: refProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name, referral_code")
+        .eq("id", user.id)
+        .single();
+
+      const { data: secretRow } = await admin
+        .from("app_secrets")
+        .select("value")
+        .eq("key", "resend_api_key")
+        .single();
+      const resendKey = secretRow?.value as string | undefined;
+
+      const email = refProfile?.email as string | null;
+      if (email && resendKey) {
+        const refCode = (refProfile?.referral_code as string) || "";
+        const link = `https://shipcrewfinder.com/signup/crew?ref=${refCode}`;
+        const firstName = ((refProfile?.full_name as string) || "there").split(" ")[0];
+
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${resendKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "ShipCrewFinder <jobs@shipcrewfinder.com>",
+            to: [email],
+            subject: "⚓ Welcome aboard — plus a free way to get Premium",
+            html: `
+<div style="font-family:Arial,sans-serif;max-width:560px">
+  <h2 style="color:#0d1030">⚓ Welcome to ShipCrewFinder</h2>
+  <p>Hi ${firstName},</p>
+  <p>Your profile is live — companies can find and message you directly, zero commission, always.</p>
+  <p>One more thing: invite <b>2 friends</b> with your personal link below. Once they join and finish their profile, you get <b>Premium — free, forever</b>:</p>
+  <ul>
+    <li>Show up first in company searches</li>
+    <li>Get new jobs before anyone else</li>
+  </ul>
+  <p>Your link:</p>
+  <p style="background:#f4f4f4;padding:12px;border-radius:8px;word-break:break-all;font-family:monospace;font-size:13px;">${link}</p>
+  <p><a href="${link}" style="background:#fbbf24;color:#0b0e13;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">Copy your link →</a></p>
+  <p style="color:#888;font-size:12px;margin-top:18px">You're receiving this because you just created a ShipCrewFinder account.</p>
+</div>`,
+            text: `Welcome to ShipCrewFinder! Invite 2 friends with your link to get Premium free forever: ${link}`,
+          }),
+        });
+      }
+    } catch {
+      // Mail hatası onboarding'i asla bozmasın
     }
   }
 
