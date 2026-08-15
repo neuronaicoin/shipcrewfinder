@@ -11,12 +11,10 @@ const _si=window.setInterval.bind(window), _st=window.setTimeout.bind(window);
 const setInterval=(f,t)=>{const h=_si(f,t);__T.push({t:'i',h});return h;};
 const setTimeout=(f,t)=>{const h=_st(f,t);__T.push({t:'t',h});return h;};
 
-// hamburger menü
 const ham=document.getElementById('ham'), mnav=document.getElementById('mnav');
 if(ham){ ham.onclick=()=>mnav.classList.toggle('open');
   mnav.querySelectorAll('a').forEach(a=>a.onclick=()=>mnav.classList.remove('open')); }
 
-// dönen örnek profiller (6 sn'de bir rank değişir)
 const PROFILES=[
   {i:'CE',r:'Chief Engineer',l:'Unlimited · Motor · 12 yrs at sea',a:'● Available from Sep 2026',c:'STCW III/2 · COC ✓',v:'Bulk · Tanker · Container',x:'C/E — 82,000 DWT Bulk'},
   {i:'MK',r:'Master',l:'Unlimited · 15 yrs at sea',a:'● Available from Aug 2026',c:'STCW II/2 · COC ✓',v:'Bulk · General Cargo',x:'Master — 58,000 DWT Bulk'},
@@ -58,13 +56,11 @@ if(pdots){
   setTimeout(()=>{ rotateCard(); setInterval(rotateCard,6000); },3000);
 }
 
-// reveal on scroll
 const io=new IntersectionObserver(es=>{
   es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
 },{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-// tema (GÜNDÜZ varsayılan — 🌙 ile geceye geçilir)
 const tbtn=document.getElementById('theme-btn');
 const applyTheme=t=>{
   document.body.classList.toggle('light', t==='light');
@@ -79,7 +75,6 @@ if(tbtn) tbtn.onclick=()=>{
   applyTheme(scfTheme);
 };
 
-// dönen hero sloganları — platform özellikleri (crew + company)
 const HERO_LINES=[
   'No agency. No cut.',
   'Build your profile with AI.',
@@ -107,7 +102,6 @@ if(hRot){
   },4600);
 }
 
-// ── PWA kurulum ──
 let deferredPrompt=null;
 const pwaBtn=document.getElementById('pwa-install');
 window.addEventListener('beforeinstallprompt',(e)=>{
@@ -141,7 +135,6 @@ if(iosTip && isIOS && !standalone && !iosDis){
   };
 }
 
-// ── Exit-intent: dürüst, çeşitlenen hatırlatma (masaüstü fare + mobil hızlı yukarı kaydırma, oturumda 1 kez) ──
 const EXIT_TIPS=[
   {ic:'💰',t:'Leaving without checking your salary?',s:'Free, 10 seconds, no signup — see if you\'re below or above market rate.',href:'/salary-check',btn:'Check now'},
   {ic:'⏰',t:'Forgot to set up document reminders?',s:'Passport, STCW, medical — free alerts before anything expires.',href:'/signup/crew',btn:'Set up free'},
@@ -189,7 +182,6 @@ if(exitCard && !exitShown){
   if(exitX) exitX.onclick=()=>{ exitCard.style.display='none'; };
 }
 
-// ── Site linkini kopyala kutusu ──
 const linkShareBtn=document.getElementById('link-share-btn');
 if(linkShareBtn){
   linkShareBtn.onclick=async()=>{
@@ -204,7 +196,6 @@ if(linkShareBtn){
   };
 }
 
-// ── Ana sayfa "Install" kutusu ──
 const a2hsBtn=document.getElementById('a2hs-btn');
 const a2hsHint=document.getElementById('a2hs-hint');
 const a2hsWrap=document.getElementById('a2hs');
@@ -300,16 +291,16 @@ if(a2hsBtn){
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
-  /* ── canlı şerit ── */
-  .live-strip{background:linear-gradient(90deg,#0a2540,#143a5e,#0a2540);color:var(--gold);
-    text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:7px 12px;
-    display:flex;align-items:center;justify-content:center;gap:8px}
-  .ls-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0;
-    box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:lsdotpulse 1.6s infinite}
-  @keyframes lsdotpulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 6px rgba(52,211,153,0)}}
-  @media(max-width:640px){ .live-strip{font-size:10.5px;padding:6px 10px} }
+  .hero-live{display:inline-flex;align-items:center;gap:9px;background:rgba(52,211,153,.1);
+    border:1.5px solid rgba(52,211,153,.4);border-radius:999px;padding:9px 18px;margin-bottom:22px;
+    animation:hlglow 2.4s ease-in-out infinite}
+  @keyframes hlglow{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.25)}50%{box-shadow:0 0 16px 2px rgba(52,211,153,.25)}}
+  .hero-live .hl-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:hldotpulse 1.6s infinite}
+  @keyframes hldotpulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 7px rgba(52,211,153,0)}}
+  .hero-live span{color:var(--grn);font-weight:800;font-size:13.5px;letter-spacing:.01em}
+  @media(max-width:640px){ .hero-live{padding:7px 14px;margin-bottom:16px} .hero-live span{font-size:12px} }
 
-  /* ── topbar ── */
   .top{position:sticky;top:0;z-index:50;background:rgba(10,37,64,.85);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line2)}
   .top-in{display:flex;align-items:center;justify-content:space-between;height:66px}
@@ -603,10 +594,6 @@ if(a2hsBtn){
   }
   @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
-      <div className="live-strip">
-        <span className="ls-dot"></span>
-        New crew join every day.
-      </div>
       <header className="top">
   <div className="wrap top-in">
     <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
@@ -646,6 +633,7 @@ if(a2hsBtn){
     <div>
       <div className="badge"><span className="d"></span>NEW — BUILD YOUR PROFILE WITH AI</div>
       <h1>Your next contract.<br/><span className="g hero-rot" id="hero-rot">No agency. No cut.</span></h1>
+      <div className="hero-live"><span className="hl-dot"></span><span>New crew join every day</span></div>
       <p className="sub">ShipCrewFinder connects verified seafarers with shipping companies — directly. No middlemen taking a slice of your salary. No agencies filtering your messages.</p>
       <div className="paths">
         <a className="path" href="/signup/crew">
