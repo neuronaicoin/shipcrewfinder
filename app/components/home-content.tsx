@@ -173,12 +173,10 @@ if(exitCard && !exitShown){
     exitShown=true;
     try{ sessionStorage.setItem('scf_exit_shown','1'); }catch(err){}
   };
-  // masaüstü: fare sekme/kapatma yönüne gidiyor
   if(!isIOS && !/android/i.test(navigator.userAgent)){
     const onMouseLeave=(e)=>{ if(e.clientY <= 0){ trigger(); document.removeEventListener('mouseleave', onMouseLeave); } };
     document.addEventListener('mouseleave', onMouseLeave);
   }
-  // mobil: sayfanın en üstünde hızlı yukarı kaydırma (geri/kapatma niyeti işareti)
   let lastY=window.scrollY, upStreak=0;
   const onScroll=()=>{
     const y=window.scrollY;
@@ -245,7 +243,6 @@ if(a2hsBtn){
     --grn:#34d399;
   }
   html{scroll-behavior:smooth}
-  /* ── GÜNDÜZ MODU ── */
   body.light{
     --navy:#f2f4fb;--navy2:#ffffff;--navy3:#e9edf8;--deep:#e6eaf5;--ink:#ffffff;
     --tx:#0e1730;--tx2:#2e3c5e;--tx3:#57678a;
@@ -292,7 +289,6 @@ if(a2hsBtn){
   body.light .psteps li{color:#33425f}
   body.light .wis-card{background:#ffffff;border-color:rgba(15,25,60,.13)}
   body.light .wis-card p{color:#33425f}
-  /* gündüz: SearchWizard (Tailwind adası) kontrast düzeltmeleri */
   body.light #try [class*="bg-primary"]{background:#ffffff !important}
   body.light #try [class*="text-white"]{color:#1c2a4d !important}
   body.light #try [class*="border-white"]{border-color:rgba(15,25,60,.16) !important}
@@ -303,6 +299,15 @@ if(a2hsBtn){
 
   body{font-family:var(--body);background:var(--navy);color:var(--tx);overflow-x:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* ── canlı şerit ── */
+  .live-strip{background:linear-gradient(90deg,#0a2540,#143a5e,#0a2540);color:var(--gold);
+    text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:7px 12px;
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  .ls-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:lsdotpulse 1.6s infinite}
+  @keyframes lsdotpulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 6px rgba(52,211,153,0)}}
+  @media(max-width:640px){ .live-strip{font-size:10.5px;padding:6px 10px} }
 
   /* ── topbar ── */
   .top{position:sticky;top:0;z-index:50;background:rgba(10,37,64,.85);backdrop-filter:blur(14px);
@@ -337,7 +342,6 @@ if(a2hsBtn){
   .mnav a{color:var(--tx2);text-decoration:none;font-size:14.5px;font-weight:600;
     border:1px solid var(--line2);border-radius:10px;padding:12px 16px;background:rgba(255,255,255,.02)}
   .mnav a:active{color:var(--gold);border-color:var(--gold)}
-  /* ── hero ── */
   .hero{position:relative;padding:72px 0 60px;overflow:hidden}
   .aur{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.55}
   .aur1{width:560px;height:560px;top:-180px;right:-80px;background:radial-gradient(circle,rgba(251,191,36,.30),transparent 65%);animation:drift1 14s ease-in-out infinite alternate}
@@ -360,7 +364,6 @@ if(a2hsBtn){
   .hero-rot{display:inline-block;transition:opacity .35s ease, transform .35s ease}
   .hero-rot.out{opacity:0;transform:translateY(-10px)}
   .hero p.sub{font-size:16.5px;color:var(--tx2);line-height:1.65;max-width:52ch;margin-bottom:30px}
-  /* ── path kartları: ALTIN ÇERÇEVE ── */
   .paths{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:560px}
   .path{display:block;background:linear-gradient(160deg,var(--navy2),var(--navy));
     border:2px solid rgba(251,191,36,.55);border-radius:17px;padding:22px 20px;text-decoration:none;color:var(--tx);
@@ -383,8 +386,6 @@ if(a2hsBtn){
   .psteps em{font-style:normal;color:var(--tx3);font-size:11px}
   .hero-note{margin-top:18px;font-size:12.5px;color:var(--tx3)}
   .hero-note b{color:var(--grn)}
-
-  /* hero visual: profile mock */
   .hero-vis{position:relative;perspective:1100px}
   .pcard{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid rgba(251,191,36,.22);
     border-radius:22px;padding:24px;box-shadow:0 34px 70px rgba(0,0,0,.5);position:relative;max-width:380px;
@@ -422,8 +423,6 @@ if(a2hsBtn){
   .fcard b{display:block;font-size:12px;line-height:1.3}
   .fcard span{color:var(--tx3);font-size:10.5px}
   .pc-cta{width:100%;text-align:center;font-size:13px}
-
-  /* ── rank marquee ── */
   .marq{border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:16px 0;overflow:hidden;
     background:rgba(7,26,48,.5)}
   .marq-in{display:flex;white-space:nowrap;animation:scroll 55s linear infinite;width:max-content;gap:14px}
@@ -432,12 +431,8 @@ if(a2hsBtn){
     display:inline-flex;align-items:center;gap:8px}
   .marq-in span::before{content:'⚓';font-size:11px;opacity:.55}
   @keyframes scroll{to{transform:translateX(-50%)}}
-
-  /* ── search box ── */
   .trybox{border:1.5px solid var(--line);border-radius:20px;padding:26px 24px;background:linear-gradient(160deg,rgba(251,191,36,.07),var(--ink));box-shadow:0 0 22px rgba(251,191,36,.12)}
   .try-sub{font-size:13px;color:var(--tx2);margin-bottom:20px}
-
-  /* ── salary teaser strip ── */
   .salstrip{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
     background:linear-gradient(160deg,var(--navy2),var(--ink));border:1.5px solid var(--line);border-radius:16px;
     padding:16px 22px;margin:34px auto 0;max-width:1140px}
@@ -447,16 +442,12 @@ if(a2hsBtn){
   .salstrip .ss-i b{color:var(--grn);font-weight:700}
   .salstrip a{color:var(--gold);font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap}
   .salstrip a:hover{text-decoration:underline}
-
-  /* ── sections ── */
   section{padding:76px 0}
   .sec-tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     color:var(--gold);margin-bottom:12px}
   h2{font-family:var(--disp);font-size:clamp(1.7rem,3.8vw,2.5rem);font-weight:800;letter-spacing:-.02em;
     line-height:1.12;margin-bottom:14px}
   .sec-sub{font-size:15px;color:var(--tx2);line-height:1.65;max-width:58ch;margin-bottom:40px}
-
-  /* how it works */
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   .step{background:linear-gradient(160deg,var(--navy2),var(--navy));border:1px solid var(--line2);
     border-radius:18px;padding:26px;position:relative}
@@ -465,15 +456,12 @@ if(a2hsBtn){
     display:grid;place-items:center;margin-bottom:16px}
   .step h3{font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:9px}
   .step p{font-size:13.5px;color:var(--tx2);line-height:1.6}
-
-  /* crew section */
   .split{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
   .feats{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:26px}
   .feat{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:14px;padding:17px}
   .feat .fi{font-size:20px;margin-bottom:8px}
   .feat b{display:block;font-size:14px;font-family:var(--disp);font-weight:700;margin-bottom:5px}
   .feat p{font-size:12.5px;color:var(--tx2);line-height:1.55}
-
   .price{background:linear-gradient(165deg,var(--navy2),var(--ink));border:1.5px solid var(--line);
     border-radius:22px;padding:30px;position:relative;overflow:hidden}
   .price::before{content:'';position:absolute;inset:0;pointer-events:none;
@@ -490,8 +478,6 @@ if(a2hsBtn){
   .plist li{font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
   .plist li::before{content:'✓';color:var(--grn);font-weight:800;flex-shrink:0}
   .pfoot{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:12px}
-
-  /* companies */
   .cplans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px}
   .cplan{background:linear-gradient(165deg,var(--navy2),var(--navy));border:1px solid var(--line2);
     border-radius:20px;padding:28px;position:relative}
@@ -500,16 +486,12 @@ if(a2hsBtn){
     color:var(--ink);font-size:10.5px;font-weight:800;letter-spacing:.08em;border-radius:7px;padding:4px 11px}
   .cplan h3{font-family:var(--disp);font-size:20px;font-weight:800;margin-bottom:4px}
   .cplan .cfor{font-size:12.5px;color:var(--tx3);margin-bottom:16px}
-
-  /* why */
   .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
   .founder{margin-top:34px;background:rgba(251,191,36,.06);border:1px solid var(--line);border-radius:16px;
     padding:22px 26px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
   .founder .fi{font-size:28px}
   .founder b{font-family:var(--disp);font-size:16px;display:block;margin-bottom:4px}
   .founder p{font-size:13px;color:var(--tx2);line-height:1.6;max-width:64ch}
-
-  /* FAQ */
   .faq{max-width:760px}
   details{background:rgba(255,255,255,.03);border:1px solid var(--line2);border-radius:14px;
     margin-bottom:11px;overflow:hidden}
@@ -519,16 +501,12 @@ if(a2hsBtn){
   summary::after{content:'+';font-family:var(--disp);color:var(--gold);font-size:20px;font-weight:700;transition:.2s}
   details[open] summary::after{transform:rotate(45deg)}
   details p{padding:0 20px 17px;font-size:13.5px;color:var(--tx2);line-height:1.65}
-
-  /* final CTA */
   .final{background:linear-gradient(160deg,var(--navy3),var(--navy));border-top:1px solid var(--line2);
     text-align:center;padding:84px 0}
   .final h2{margin-bottom:12px}
   .final .sec-sub{margin:0 auto 32px}
   .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
   .final .note{margin-top:18px;font-size:12.5px;color:var(--tx3)}
-
-  /* footer */
   footer{border-top:1px solid var(--line2);padding:52px 0;background:var(--ink)}
   .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px}
   .foot-brand p{font-size:13px;color:var(--tx3);line-height:1.6;margin-top:12px;max-width:32ch}
@@ -538,8 +516,6 @@ if(a2hsBtn){
   footer ul a:hover{color:var(--gold)}
   .foot-btm{margin-top:38px;padding-top:20px;border-top:1px solid var(--line2);font-size:12px;color:var(--tx3);
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
-
-  /* ── PWA install ── */
   .pwa-chip{position:fixed;z-index:90;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));
     display:none;align-items:center;gap:12px;background:var(--navy2);border:1.5px solid var(--line);
     border-radius:16px;padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,.5);max-width:440px;margin:0 auto}
@@ -549,8 +525,6 @@ if(a2hsBtn){
   .pwa-chip span{font-size:11px;color:var(--tx3);line-height:1.4}
   .pwa-chip .px{margin-left:auto;background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0}
   #pwa-install{cursor:pointer}
-
-  /* ── exit-intent kartı ── */
   .exit-card{position:fixed;z-index:95;left:20px;right:20px;bottom:calc(76px + env(safe-area-inset-bottom));
     display:none;align-items:center;gap:14px;background:linear-gradient(160deg,var(--navy2),var(--ink));
     border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:0 22px 50px rgba(0,0,0,.55);
@@ -563,8 +537,6 @@ if(a2hsBtn){
     border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:12.5px;cursor:pointer;
     text-decoration:none;white-space:nowrap;font-family:var(--body)}
   .exit-card .ec-x{background:none;border:none;color:var(--tx3);font-size:17px;cursor:pointer;padding:2px;flex-shrink:0}
-
-  /* ── what is scf ── */
   .wis{padding:38px 0 4px}
   .wis h2{margin-bottom:8px}
   .wis .sec-sub{margin-bottom:22px}
@@ -578,8 +550,6 @@ if(a2hsBtn){
   .wis-link:hover{transform:translateY(-3px);border-color:rgba(251,191,36,.5);box-shadow:0 10px 28px rgba(251,191,36,.15)}
   .wis-go{display:inline-block;margin-top:12px;font-family:var(--disp);font-weight:800;font-size:12.5px;color:var(--gold)}
   .wis-go.wis-static{color:var(--grn)}
-
-  /* ── add-to-home-screen kutusu ── */
   .a2hs{margin:22px 0 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:1.5px solid var(--line);border-radius:16px;padding:14px 18px;background:linear-gradient(160deg,rgba(251,191,36,.08),var(--ink));box-shadow:0 0 18px rgba(251,191,36,.12);max-width:560px}
   .a2hs .ai{display:flex;gap:12px;align-items:center;min-width:0;flex:1}
   .a2hs .aic{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,var(--gold),var(--gold2));display:grid;place-items:center;font-size:19px;flex-shrink:0}
@@ -589,12 +559,8 @@ if(a2hsBtn){
   .a2hs-btn:hover{transform:translateY(-1px)}
   .a2hs-hint{display:none;width:100%;font-size:11px;color:var(--gold);background:rgba(251,191,36,.07);border:1px dashed rgba(251,191,36,.35);border-radius:9px;padding:8px 11px;line-height:1.5}
   body.light .a2hs{background:#ffffff}
-
-  /* reveal */
   .rv{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
   .rv.in{opacity:1;transform:none}
-
-  /* ══ MOBİL PASS ══ */
   @media(max-width:960px){
     .hero-in{grid-template-columns:1fr;gap:32px}
     .hero-vis{max-width:380px;width:100%;margin:0 auto}
@@ -637,6 +603,10 @@ if(a2hsBtn){
   }
   @media(max-width:560px){ .feats{grid-template-columns:1fr} .why-grid{grid-template-columns:1fr} }
 `}</style>
+      <div className="live-strip">
+        <span className="ls-dot"></span>
+        New crew join every day.
+      </div>
       <header className="top">
   <div className="wrap top-in">
     <a className="logo" href="/"><span className="logo-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2.4"/><line x1="12" y1="7.4" x2="12" y2="20.5"/><line x1="7.5" y1="10.4" x2="16.5" y2="10.4"/><path d="M4.5 14.8c0 3.7 3.3 5.7 7.5 5.7s7.5-2 7.5-5.7"/><path d="M4.5 14.8l-1.6-1.2M4.5 14.8l2-.4"/><path d="M19.5 14.8l1.6-1.2M19.5 14.8l-2-.4"/></svg></span><b>Ship<span>Crew</span>Finder</b></a>
@@ -866,7 +836,7 @@ if(a2hsBtn){
         <li>Block specific companies</li>
       </ul>
       <a className="btn btn-gold btn-lg" href="/signup/crew" style={{width:"100%"}}>Start free month →</a>
-      <div className="pfoot">Cancel anytime during the free month — pay nothing.</div>
+      <div className="pfoot">Always free for crew — no trial, no expiry, no card required.</div>
     </div>
   </div>
 </section>
@@ -882,7 +852,7 @@ if(a2hsBtn){
         <h3>Pro</h3>
         <div className="cfor">For active fleets {"&"} crewing departments</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
-        <div className="pnum">$299.90 <small>/ month</small></div>
+        <div className="pnum">$199.90 <small>/ month</small></div>
         <div className="pper">after your free month · cancel anytime</div>
         <ul className="plist">
           <li><b style={{color:"var(--gold)"}}>100 full CV views / month</b></li>
@@ -898,7 +868,7 @@ if(a2hsBtn){
         <h3>Fleet</h3>
         <div className="cfor">For large fleets, managers {"&"} crewing agencies</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
-        <div className="pnum">$499.90 <small>/ month</small></div>
+        <div className="pnum">$249.90 <small>/ month</small></div>
         <div className="pper">after your free month · cancel anytime</div>
         <ul className="plist">
           <li>Everything in Pro</li>
@@ -944,11 +914,11 @@ if(a2hsBtn){
     <h2 className="rv">Questions, answered straight</h2>
     <p className="sec-sub rv">No fine print surprises. Here's how it actually works.</p>
     <div className="faq">
-      <details className="rv"><summary>Is the first month really free?</summary><p>Yes — both crew and companies get a full month with all features unlocked, no charge. Cancel any time during the free month and you pay nothing at all.</p></details>
+      <details className="rv"><summary>Is the first month really free for companies?</summary><p>Yes — companies get a full month with all Pro/Fleet features unlocked, no charge. Cancel any time during the free month and you pay nothing at all. Crew membership works differently — it's free forever, not just for a trial month (see below).</p></details>
       <details className="rv"><summary>Is crew membership really free — no hidden cost later?</summary><p>Yes. Right now, while we build the crew pool, every feature is free for seafarers — no trial period, no card required, no surprise charge. We may introduce paid tiers in the future once the platform has scaled, but any account created now keeps its free access.</p></details>
       <details className="rv"><summary>How does profile verification work?</summary><p>After you upload your CV and certificates (STCW, COC, medical), our team manually reviews the documents before your profile goes live. Verified profiles carry a visible badge that companies can trust.</p></details>
       <details className="rv"><summary>Can my current employer see that I'm looking?</summary><p>Not if you don't want them to. Stealth Mode hides your profile from specific companies you choose — including your current employer. You stay invisible to them while staying visible to everyone else.</p></details>
-      <details className="rv"><summary>Do you take any commission from my salary or the placement?</summary><p>Never. Zero commission, from either side, ever. Companies pay a flat subscription; crew pay a symbolic membership. Your salary is between you and your employer — as it should be.</p></details>
+      <details className="rv"><summary>Do you take any commission from my salary or the placement?</summary><p>Never. Zero commission, from either side, ever. Companies pay a flat subscription; crew pay nothing at all. Your salary is between you and your employer — as it should be.</p></details>
       <details className="rv"><summary>How do companies contact crew?</summary><p>Directly, through the platform's messaging. No agency relaying messages, no delays, no filtering. You negotiate your own contract, face to face.</p></details>
       <details className="rv"><summary>Can I cancel anytime?</summary><p>Yes — one click, no questions, no retention calls. If you cancel during a free month you pay nothing; if you cancel later, your access simply runs to the end of the paid period.</p></details>
     </div>
