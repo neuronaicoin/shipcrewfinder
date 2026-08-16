@@ -196,6 +196,19 @@ export default async function BlogPostPage({
                   </p>
                 ))}
               </div>
+              {section.links && section.links.length > 0 && (
+                <div className="mt-5 grid sm:grid-cols-2 gap-2.5">
+                  {section.links.map((l, k) => (
+                    <Link
+                      key={k}
+                      href={l.href}
+                      className="block bg-primary-dark border border-white/10 hover:border-accent/50 rounded-lg px-4 py-2.5 text-sm text-accent hover:text-accent-light transition"
+                    >
+                      {l.text} →
+                    </Link>
+                  ))}
+                </div>
+              )}
             </section>
           ))}
         </div>
