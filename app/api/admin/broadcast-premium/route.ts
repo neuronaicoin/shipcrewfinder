@@ -64,21 +64,18 @@ export async function GET(req: NextRequest) {
             from: "ShipCrewFinder <jobs@shipcrewfinder.com>",
             to: [email],
             subject: "🌟 New: Invite 2 friends, get Premium — free, forever",
-            html: `
-<div style="font-family:Arial,sans-serif;max-width:560px">
-  <h2 style="color:#0d1030">⚓ New — get Premium for free</h2>
-  <p>Hi ${firstName},</p>
-  <p>We just launched something new: invite <b>2 friends</b> to ShipCrewFinder with your personal link. Once they join and finish their profile, you get <b>Premium — free, forever</b>:</p>
-  <ul>
-    <li>Show up first in company searches</li>
-    <li>Get new jobs before anyone else</li>
-  </ul>
-  <p>Your link:</p>
-  <p style="background:#f4f4f4;padding:12px;border-radius:8px;word-break:break-all;font-family:monospace;font-size:13px;">${link}</p>
-  <p><a href="${link}" style="background:#fbbf24;color:#0b0e13;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">Copy your link →</a></p>
-  <p style="color:#888;font-size:12px;margin-top:18px">You're receiving this because you're a ShipCrewFinder crew member. This is a one-time announcement about a new feature.</p>
-</div>`,
-            text: `Invite 2 friends with your link, get Premium free forever. Your link: ${link}`,
+            html:
+              '<div style="font-family:Arial,sans-serif;max-width:560px">' +
+              "<h2 style=\"color:#0d1030\">⚓ New — get Premium for free</h2>" +
+              "<p>Hi " + firstName + ",</p>" +
+              "<p>We just launched something new: invite <b>2 friends</b> to ShipCrewFinder with your personal link. Once they join and finish their profile, you get <b>Premium — free, forever</b>:</p>" +
+              "<ul><li>Show up first in company searches</li><li>Get new jobs before anyone else</li></ul>" +
+              "<p>Your link:</p>" +
+              "<p style=\"background:#f4f4f4;padding:12px;border-radius:8px;word-break:break-all;font-family:monospace;font-size:13px;\">" + link + "</p>" +
+              "<p><a href=\"" + link + "\" style=\"background:#fbbf24;color:#0b0e13;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold;\">Copy your link →</a></p>" +
+              "<p style=\"color:#888;font-size:12px;margin-top:18px\">You're receiving this because you're a ShipCrewFinder crew member. This is a one-time announcement about a new feature.</p>" +
+              "</div>",
+            text: "Invite 2 friends with your link, get Premium free forever. Your link: " + link,
           }),
         });
       } catch {
