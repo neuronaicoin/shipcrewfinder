@@ -43,10 +43,11 @@ export async function GET(req: NextRequest) {
 
     const { data: details } = await supabase
       .from(table)
-      .select(rankCol)
+      .select("*")
       .eq("id", p.id)
       .maybeSingle();
-    const rank = (details?.[rankCol] as string) || "";
+    const detailsRec = details as Record<string, unknown> | null;
+    const rank = (detailsRec?.[rankCol] as string) || "";
 
     const { count: viewCount } = await supabase
       .from("company_profile_views")
