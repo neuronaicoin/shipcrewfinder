@@ -75,8 +75,10 @@ import seafarerSalaryByRank from "./seafarer-salary-by-rank";
 import seafarerContractLengthRotation from "./seafarer-contract-length-rotation";
 import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
+import completeGuideSeafarerCareer2026 from "./complete-guide-seafarer-career-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  completeGuideSeafarerCareer2026,
   piInjuryCompensationClaimProcess,
   overstayedContractMlcRights,
   itfComplaintStepsGuide,
