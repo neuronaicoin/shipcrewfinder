@@ -3,9 +3,15 @@ export interface FAQItem {
   answer: string;
 }
 
+export interface BlogSectionLink {
+  text: string;
+  href: string;
+}
+
 export interface BlogSection {
   heading?: string;        // H2 başlık (opsiyonel — giriş paragrafları için boş bırakılır)
   paragraphs: string[];    // bu bölümün paragrafları
+  links?: BlogSectionLink[]; // opsiyonel: bu bölümün altında gösterilen tıklanabilir link listesi
 }
 
 export interface BlogPost {
