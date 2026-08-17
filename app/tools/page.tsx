@@ -37,7 +37,7 @@ const CATEGORIES: Category[] = [
   {
     title: 'Reference Guides',
     tools: [
-      { name: 'PSC Preparation', desc: 'Port State Control readiness and common deficiency codes.', icon: '🔍' },
+      { name: 'PSC Preparation', desc: 'Deficiency code database, MoU portals, CIC campaigns, action codes.', href: '/tools/psc', icon: '🔍' },
       { name: 'MLC 2006 Guide', desc: 'Your rights — accommodation, food, repatriation, complaints.', icon: '⚖️' },
       { name: 'ITF Guide', desc: 'What the ITF does and how to contact them.', icon: '🤝' },
       { name: 'SOLAS Guide', desc: 'Safety equipment and drill requirements by vessel type.', icon: '🛟' },
