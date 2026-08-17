@@ -142,6 +142,7 @@ export default function DocumentsPage() {
         .dg-label{font-size:11px;color:#6b83a0;text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:block;margin-bottom:10px}
         .dg-field-label{font-size:11px;color:#6b83a0;display:block;margin-bottom:4px}
         .dg-inp,.dg-sel,.dg-txt{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 11px;color:#eef4fa;font-size:13px;font-family:inherit}
+        .dg-sel option{background:#141845;color:#eef4fa}
         .dg-txt{resize:vertical;min-height:80px;font-family:monospace;font-size:12px}
         .dg-inp:focus,.dg-sel:focus,.dg-txt:focus{outline:none;border-color:#fbbf24}
         .dg-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
