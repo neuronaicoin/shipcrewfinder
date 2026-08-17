@@ -24,7 +24,7 @@ const CATEGORIES: Category[] = [
   {
     title: 'Tracking Tools',
     tools: [
-      { name: 'Cargo', desc: 'Track cargo operations, quantities and documentation.', icon: '📦' },
+      { name: 'Cargo Database', desc: 'Stowage factors, IMSBC groups, hazards for 68+ cargoes, plus hold volume calculator.', href: '/tools/cargo', icon: '📦' },
       { name: 'Documents', desc: 'Generate NOR, SOF, LOI and other standard forms.', icon: '📄' },
       { name: 'Maintenance', desc: 'Planned maintenance and job tracking.', icon: '🔧' },
       { name: 'Ports Database', desc: 'Facilities, contacts and requirements by port.', icon: '⚓' },
@@ -37,7 +37,7 @@ const CATEGORIES: Category[] = [
   {
     title: 'Reference Guides',
     tools: [
-      { name: 'PSC Preparation', desc: 'Deficiency code database, MoU portals, CIC campaigns, action codes.', href: '/tools/psc', icon: '🔍' },
+      { name: 'PSC Preparation', desc: 'Port State Control readiness and common deficiency codes.', icon: '🔍' },
       { name: 'MLC 2006 Guide', desc: 'Your rights — accommodation, food, repatriation, complaints.', icon: '⚖️' },
       { name: 'ITF Guide', desc: 'What the ITF does and how to contact them.', icon: '🤝' },
       { name: 'SOLAS Guide', desc: 'Safety equipment and drill requirements by vessel type.', icon: '🛟' },
