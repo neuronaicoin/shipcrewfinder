@@ -13,7 +13,7 @@ const CATEGORIES: Category[] = [
   {
     title: 'Calculators',
     tools: [
-      { name: 'Trim Interpolation', desc: 'Interpolate sounding table values between two known trims.', href: '/tools/interpolation-table', icon: '📐' },
+      { name: 'Interpolation Calculator', desc: 'Fuel, oil, ballast, sounding tables and more — interpolate any two-point table.', href: '/tools/interpolation-table', icon: '📐' },
       { name: 'Unit Converter', desc: 'Power, speed, volume, weight, length, temperature, pressure.', href: '/tools/unit-converter', icon: '🔄' },
       { name: 'Port-to-Port Distance & ETA', desc: 'Distance, speed table, ETA and fuel consumption.', href: '/tools/distance-eta', icon: '🧭' },
       { name: 'CII Calculator', desc: 'Carbon Intensity Indicator rating and projections.', href: '/tools/cii-calculator', icon: '🌍' },
@@ -55,7 +55,7 @@ const CATEGORIES: Category[] = [
       { name: 'Heavy Weather Guide', desc: 'Routing and preparation for storm avoidance.', icon: '🌀' },
       { name: 'Ice Navigation Guide', desc: 'Procedures for transiting ice-affected waters.', icon: '❄️' },
       { name: 'Tanker Vetting Prep', desc: 'SIRE / CDI inspection readiness checklist.', icon: '🛢️' },
-      { name: 'Draft Survey Procedure', desc: 'Step-by-step sounding, density and correction guide.', icon: '📏' },
+      { name: 'Draft Survey Calculator', desc: 'Quadratic mean draft, trim and density correction, cargo quantity.', href: '/tools/draft-survey', icon: '📏' },
       { name: 'Cargo Securing (CSS Code)', desc: 'Lashing standards by cargo type.', icon: '🔗' },
       { name: 'Fatigue Management Guide', desc: 'Rest hour compliance rules explained.', icon: '😴' },
     ],
