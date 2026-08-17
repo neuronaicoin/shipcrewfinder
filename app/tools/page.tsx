@@ -18,6 +18,7 @@ const CATEGORIES: Category[] = [
       { name: 'Port-to-Port Distance & ETA', desc: 'Distance, speed table, ETA and fuel consumption.', href: '/tools/distance-eta', icon: '🧭' },
       { name: 'CII Calculator', desc: 'Carbon Intensity Indicator rating and projections.', href: '/tools/cii-calculator', icon: '🌍' },
       { name: 'Stability Calculator', desc: 'Displacement, GM, list, trim and draft from your stability book figures.', href: '/tools/stability', icon: '⚖️' },
+      { name: 'Cargo Securing / Lashing', desc: 'CSS Code sliding and tipping checks for your lashing arrangement.', href: '/tools/lashing', icon: '🔗' },
     ],
   },
   {
