@@ -48,7 +48,7 @@ const CATEGORIES: Category[] = [
       { name: 'Flag State Comparison', desc: 'Endorsement differences across major flags.', icon: '🏴' },
       { name: 'Enclosed Space Entry', desc: 'Gas testing sequence and permit requirements.', icon: '🚪' },
       { name: 'Emergency Procedures', desc: 'Step-by-step: Fire, Flooding, Man Overboard, Abandon Ship.', href: '/tools/emergency', icon: '🚨' },
-      { name: 'BMP5 / Piracy Risk Guide', desc: 'Precautions for high-risk area transits.', icon: '🛡️' },
+      { name: 'BMP5 / Piracy Risk Guide', desc: 'Planning, ship protection measures, and citadel procedures for HRA transits.', href: '/tools/bmp5', icon: '🛡️' },
       { name: 'Ballast Water Management', desc: 'D-1/D-2 standards, exchange vs treatment.', icon: '💧' },
       { name: 'Port Entry Documentation', desc: 'Requirements by region — US, EU and more.', icon: '📑' },
       { name: 'Medical Emergency Guide', desc: 'Standard procedure reference for common emergencies.', icon: '🏥' },
