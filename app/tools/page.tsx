@@ -27,7 +27,7 @@ const CATEGORIES: Category[] = [
       { name: 'Cargo Database', desc: 'Stowage factors, IMSBC groups, hazards for 68+ cargoes, plus hold volume calculator.', href: '/tools/cargo', icon: '📦' },
       { name: 'Documents', desc: 'Generate NOR, SOF, LOI and other standard forms.', icon: '📄' },
       { name: 'Maintenance', desc: 'Planned maintenance and job tracking.', icon: '🔧' },
-      { name: 'Ports Database', desc: 'Facilities, contacts and requirements by port.', icon: '⚓' },
+      { name: 'Ports Database', desc: 'Draft, terminals, pilotage, VHF for 26 major ports, plus official PSC history links.', href: '/tools/ports', icon: '⚓' },
       { name: 'Spares', desc: 'Spare parts inventory and reorder tracking.', icon: '🛠️' },
       { name: 'Tide Reference', desc: 'Tide tables and window planning.', icon: '🌊' },
       { name: 'Visa Requirements', desc: 'Shore leave, sign-on/off and transit guidance for 14 major maritime countries.', href: '/tools/visa', icon: '🛂' },
