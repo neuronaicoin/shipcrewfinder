@@ -41,7 +41,7 @@ const CATEGORIES: Category[] = [
       { name: 'MLC 2006 Guide', desc: 'All 5 Titles — employment, wages, rest hours, accommodation, complaints.', href: '/tools/mlc', icon: '⚖️' },
       { name: 'ITF Guide', desc: 'What the ITF does and how to contact them.', icon: '🤝' },
       { name: 'SOLAS Guide', desc: 'Fire safety, life-saving appliances & drills, GMDSS, navigation safety.', href: '/tools/solas', icon: '🛟' },
-      { name: 'COLREGs Quick Reference', desc: 'Collision regulations for watchkeepers.', icon: '🧭' },
+      { name: 'COLREGs Quick Reference', desc: 'Look-out, steering rules, lights & shapes, sound signals for watchkeepers.', href: '/tools/colregs', icon: '🧭' },
       { name: 'ISM Code Guide', desc: 'Safety Management System requirements explained.', icon: '📘' },
       { name: 'IMDG / Dangerous Goods', desc: 'Hazard classes and handling requirements.', icon: '☢️' },
       { name: 'Certificate Requirements by Rank', desc: 'Exactly which certificates you need for your rank.', icon: '🎓' },
