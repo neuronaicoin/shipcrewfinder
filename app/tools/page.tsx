@@ -39,8 +39,8 @@ const CATEGORIES: Category[] = [
     tools: [
       { name: 'PSC Preparation', desc: 'Port State Control readiness and common deficiency codes.', icon: '🔍' },
       { name: 'MLC 2006 Guide', desc: 'All 5 Titles — employment, wages, rest hours, accommodation, complaints.', href: '/tools/mlc', icon: '⚖️' },
-      { name: 'ITF Guide', desc: 'Agreements, inspectors, common scenarios (unpaid wages, abandonment) and how to get help.', href: '/tools/itf', icon: '🤝' },
-      { name: 'SOLAS Guide', desc: 'Safety equipment and drill requirements by vessel type.', icon: '🛟' },
+      { name: 'ITF Guide', desc: 'What the ITF does and how to contact them.', icon: '🤝' },
+      { name: 'SOLAS Guide', desc: 'Fire safety, life-saving appliances & drills, GMDSS, navigation safety.', href: '/tools/solas', icon: '🛟' },
       { name: 'COLREGs Quick Reference', desc: 'Collision regulations for watchkeepers.', icon: '🧭' },
       { name: 'ISM Code Guide', desc: 'Safety Management System requirements explained.', icon: '📘' },
       { name: 'IMDG / Dangerous Goods', desc: 'Hazard classes and handling requirements.', icon: '☢️' },
