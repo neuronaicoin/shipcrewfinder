@@ -16,7 +16,7 @@ const CATEGORIES: Category[] = [
       { name: 'Trim Interpolation', desc: 'Interpolate sounding table values between two known trims.', href: '/tools/interpolation-table', icon: '📐' },
       { name: 'Unit Converter', desc: 'Power, speed, volume, weight, length, temperature, pressure.', href: '/tools/unit-converter', icon: '🔄' },
       { name: 'Port-to-Port Distance & ETA', desc: 'Distance, speed table, ETA and fuel consumption.', href: '/tools/distance-eta', icon: '🧭' },
-      { name: 'CII Calculator', desc: 'Carbon Intensity Indicator rating and projections.', icon: '🌍' },
+      { name: 'CII Calculator', desc: 'Carbon Intensity Indicator rating and projections.', href: '/tools/cii-calculator', icon: '🌍' },
       { name: 'Stability Calculator', desc: 'Quick stability and GM reference calculations.', icon: '⚖️' },
     ],
   },
