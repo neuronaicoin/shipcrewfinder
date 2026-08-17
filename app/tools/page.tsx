@@ -53,7 +53,7 @@ const CATEGORIES: Category[] = [
       { name: 'Port Entry Documentation', desc: 'Requirements by region — US, EU and more.', icon: '📑' },
       { name: 'Medical Emergency Guide', desc: 'What to do first, how to reach TMAS, and warning signs to know.', href: '/tools/medical', icon: '🏥' },
       { name: 'ISPS Code Guide', desc: '3 security levels, SSO/CSO/PFSO roles, DoS, and SSAS explained.', href: '/tools/isps', icon: '🔐' },
-      { name: 'Heavy Weather Guide', desc: 'Routing and preparation for storm avoidance.', icon: '🌀' },
+      { name: 'Heavy Weather Guide', desc: 'Preparation, routing, and key risks — synchronous/parametric rolling, pooping.', href: '/tools/heavy-weather', icon: '🌀' },
       { name: 'Ice Navigation Guide', desc: 'Procedures for transiting ice-affected waters.', icon: '❄️' },
       { name: 'Tanker Vetting Prep', desc: 'SIRE / CDI inspection readiness checklist.', icon: '🛢️' },
       { name: 'Draft Survey Calculator', desc: 'Quadratic mean draft, trim and density correction, cargo quantity.', href: '/tools/draft-survey', icon: '📏' },
