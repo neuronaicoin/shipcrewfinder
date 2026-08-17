@@ -43,7 +43,7 @@ const CATEGORIES: Category[] = [
       { name: 'SOLAS Guide', desc: 'Fire safety, life-saving appliances & drills, GMDSS, navigation safety.', href: '/tools/solas', icon: '🛟' },
       { name: 'COLREGs Quick Reference', desc: 'Collision regulations for watchkeepers.', icon: '🧭' },
       { name: 'ISM Code Guide', desc: 'DPA, Master authority, DOC/SMC certificates, non-conformity reporting.', href: '/tools/ism', icon: '📘' },
-      { name: 'IMDG / Dangerous Goods', desc: 'Hazard classes and handling requirements.', icon: '☢️' },
+      { name: 'IMDG / Dangerous Goods', desc: 'All 9 UN hazard classes, documentation, segregation, EmS/MFAG references.', href: '/tools/imdg', icon: '☢️' },
       { name: 'Certificate Requirements by Rank', desc: 'Exactly which certificates you need for your rank.', icon: '🎓' },
       { name: 'Flag State Comparison', desc: 'Endorsement differences across major flags.', icon: '🏴' },
       { name: 'Enclosed Space Entry', desc: 'Gas testing sequence and permit requirements.', icon: '🚪' },
