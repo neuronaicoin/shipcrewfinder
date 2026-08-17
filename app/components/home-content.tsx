@@ -596,6 +596,7 @@ if(a2hsBtn){
       <a href="#companies">For Companies</a>
       <a href="#how">How it works</a>
       <a href="/salary">Salary Index</a>
+      <a href="/tools">Crew Toolkit</a>
       <a href="#faq">FAQ</a>
       <a href="/blog">Blog</a>
     </nav>
@@ -611,6 +612,7 @@ if(a2hsBtn){
     <a href="#companies">For Companies</a>
     <a href="#how">How it works</a>
     <a href="/salary">Salary Index</a>
+    <a href="/tools">Crew Toolkit</a>
     <a href="/salary-check">Check My Salary</a>
     <a href="/signup/crew">Document Reminders</a>
     <a href="#faq">FAQ</a>
