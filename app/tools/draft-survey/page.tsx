@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function DraftSurveyPage() {
@@ -18,6 +18,34 @@ export default function DraftSurveyPage() {
   const [freshWater, setFreshWater] = useState('');
   const [ballastWater, setBallastWater] = useState('');
   const [otherDeduct, setOtherDeduct] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('scf-draft-survey');
+      if (raw) {
+        const d = JSON.parse(raw);
+        setDFwd(d.dFwd || ''); setDMid(d.dMid || ''); setDAft(d.dAft || '');
+        setLbp(d.lbp || ''); setLcf(d.lcf || ''); setTpc(d.tpc || '');
+        setDispTable(d.dispTable || ''); setActualDensity(d.actualDensity || '1.025');
+        setLightship(d.lightship || ''); setConstant(d.constant || '');
+        setFuelOil(d.fuelOil || ''); setDieselOil(d.dieselOil || '');
+        setFreshWater(d.freshWater || ''); setBallastWater(d.ballastWater || '');
+        setOtherDeduct(d.otherDeduct || '');
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  function handleSave() {
+    try {
+      localStorage.setItem('scf-draft-survey', JSON.stringify({
+        dFwd, dMid, dAft, lbp, lcf, tpc, dispTable, actualDensity,
+        lightship, constant, fuelOil, dieselOil, freshWater, ballastWater, otherDeduct,
+      }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { /* ignore */ }
+  }
 
   const n = (v: string) => parseFloat(v) || 0;
 
@@ -73,7 +101,12 @@ export default function DraftSurveyPage() {
       `}</style>
 
       <div className="ds-wrap">
-        <Link href="/tools" className="ds-back">← All Tools</Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <Link href="/tools" className="ds-back" style={{ marginBottom: 0 }}>← All Tools</Link>
+          <button onClick={handleSave} style={{ background: saved ? 'rgba(52,211,153,.15)' : 'rgba(251,191,36,.12)', border: `1px solid ${saved ? 'rgba(52,211,153,.4)' : 'rgba(251,191,36,.35)'}`, color: saved ? '#34d399' : '#fbbf24', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {saved ? '✓ Saved' : '💾 Save'}
+          </button>
+        </div>
         <div className="ds-title">Draft Survey Calculator</div>
         <p className="ds-sub">
           Standard draft survey method — quadratic mean draft (hog/sag corrected), first trim correction, density correction, and final cargo quantity. Every step shown so you can verify against your vessel&apos;s procedure. Nothing is saved.
