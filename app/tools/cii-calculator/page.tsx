@@ -124,6 +124,7 @@ export default function CIICalculatorPage() {
         .cz-label{font-size:11px;color:#6b83a0;text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:block;margin-bottom:10px}
         .cz-field-label{font-size:11.5px;color:#6b83a0;display:block;margin-bottom:5px}
         .cz-inp,.cz-sel{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;color:#eef4fa;font-size:13.5px;font-family:inherit}
+        .cz-sel option{background:#141845;color:#eef4fa}
         .cz-inp:focus,.cz-sel:focus{outline:none;border-color:#fbbf24}
         .cz-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
         .cz-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
