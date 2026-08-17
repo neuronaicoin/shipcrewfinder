@@ -44,7 +44,7 @@ const CATEGORIES: Category[] = [
       { name: 'COLREGs Quick Reference', desc: 'Look-out, steering rules, lights & shapes, sound signals for watchkeepers.', href: '/tools/colregs', icon: '🧭' },
       { name: 'ISM Code Guide', desc: 'DPA, Master authority, DOC/SMC certificates, non-conformity reporting.', href: '/tools/ism', icon: '📘' },
       { name: 'IMDG / Dangerous Goods', desc: 'All 9 UN hazard classes, documentation, segregation, EmS/MFAG references.', href: '/tools/imdg', icon: '☢️' },
-      { name: 'Certificate Requirements by Rank', desc: 'Exactly which certificates you need for your rank.', icon: '🎓' },
+      { name: 'Certificate Requirements by Rank', desc: 'STCW certificates by rank, plus tanker/gas/passenger ship additions.', href: '/tools/certificates', icon: '🎓' },
       { name: 'Flag State Comparison', desc: 'Endorsement differences across major flags.', icon: '🏴' },
       { name: 'Enclosed Space Entry', desc: 'Gas testing sequence and permit requirements.', icon: '🚪' },
       { name: 'Emergency Procedures', desc: 'Fire, flooding, man overboard, abandon ship.', icon: '🚨' },
