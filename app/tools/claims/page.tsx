@@ -113,6 +113,7 @@ export default function ClaimsPage() {
         .cl-rm:hover{color:#f87171}
         .cl-label{font-size:11px;color:#6b83a0;display:block;margin-bottom:4px}
         .cl-inp,.cl-sel{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;color:#eef4fa;font-size:12.5px;font-family:inherit}
+        .cl-sel option{background:#141845;color:#eef4fa}
         .cl-inp:focus,.cl-sel:focus{outline:none;border-color:#fbbf24}
         .cl-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
         .cl-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
