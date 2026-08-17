@@ -67,6 +67,7 @@ export default function CargoPage() {
         .cg-label{font-size:11px;color:#6b83a0;text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:block;margin-bottom:10px}
         .cg-field-label{font-size:11px;color:#6b83a0;display:block;margin-bottom:4px}
         .cg-inp,.cg-sel{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 11px;color:#eef4fa;font-size:13px;font-family:inherit}
+        .cg-sel option{background:#141845;color:#eef4fa}
         .cg-inp:focus,.cg-sel:focus{outline:none;border-color:#fbbf24}
         .cg-row2{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px}
         .cg-item{background:linear-gradient(165deg,#141845,#050716);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
