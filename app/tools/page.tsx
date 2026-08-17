@@ -26,7 +26,7 @@ const CATEGORIES: Category[] = [
     tools: [
       { name: 'Cargo Database', desc: 'Stowage factors, IMSBC groups, hazards for 68+ cargoes, plus hold volume calculator.', href: '/tools/cargo', icon: '📦' },
       { name: 'Documents Generator', desc: 'NOR, SOF, LOI and 14 Letter of Protest scenarios — delay, damage, short-landed and more.', href: '/tools/documents', icon: '📄' },
-      { name: 'Maintenance', desc: 'Planned maintenance and job tracking.', icon: '🔧' },
+      { name: 'Maintenance Tracker', desc: 'Equipment running hours, task due dates, sorted by urgency.', href: '/tools/maintenance', icon: '🔧' },
       { name: 'Ports Database', desc: 'Draft, terminals, pilotage, VHF for 26 major ports, plus official PSC history links.', href: '/tools/ports', icon: '⚓' },
       { name: 'Spares', desc: 'Spare parts inventory and reorder tracking.', icon: '🛠️' },
       { name: 'Tide Calculator', desc: 'HW/LW interpolation, UKC check, safe window finder, with tide curve chart.', href: '/tools/tide', icon: '🌊' },
@@ -46,7 +46,7 @@ const CATEGORIES: Category[] = [
       { name: 'IMDG / Dangerous Goods', desc: 'All 9 UN hazard classes, documentation, segregation, EmS/MFAG references.', href: '/tools/imdg', icon: '☢️' },
       { name: 'Certificate Requirements by Rank', desc: 'Exactly which certificates you need for your rank.', icon: '🎓' },
       { name: 'Flag State Comparison', desc: 'Endorsement differences across major flags.', icon: '🏴' },
-      { name: 'Enclosed Space Entry', desc: 'Gas testing sequence, permit system, and the #1 rescue rule.', href: '/tools/enclosed-space', icon: '🚪' },
+      { name: 'Enclosed Space Entry', desc: 'Gas testing sequence and permit requirements.', icon: '🚪' },
       { name: 'Emergency Procedures', desc: 'Step-by-step: Fire, Flooding, Man Overboard, Abandon Ship.', href: '/tools/emergency', icon: '🚨' },
       { name: 'BMP5 / Piracy Risk Guide', desc: 'Precautions for high-risk area transits.', icon: '🛡️' },
       { name: 'Ballast Water Management', desc: 'D-1/D-2 standards, exchange vs treatment.', icon: '💧' },
