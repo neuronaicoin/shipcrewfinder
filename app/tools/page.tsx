@@ -25,13 +25,13 @@ const CATEGORIES: Category[] = [
     title: 'Tracking Tools',
     tools: [
       { name: 'Cargo Database', desc: 'Stowage factors, IMSBC groups, hazards for 68+ cargoes, plus hold volume calculator.', href: '/tools/cargo', icon: '📦' },
-      { name: 'Documents Generator', desc: 'NOR, SOF, LOI and 14 Letter of Protest scenarios — delay, damage, short-landed and more.', href: '/tools/documents', icon: '📄' },
+      { name: 'Documents', desc: 'Generate NOR, SOF, LOI and other standard forms.', icon: '📄' },
       { name: 'Maintenance', desc: 'Planned maintenance and job tracking.', icon: '🔧' },
       { name: 'Ports Database', desc: 'Facilities, contacts and requirements by port.', icon: '⚓' },
       { name: 'Spares', desc: 'Spare parts inventory and reorder tracking.', icon: '🛠️' },
       { name: 'Tide Reference', desc: 'Tide tables and window planning.', icon: '🌊' },
       { name: 'Visa Requirements', desc: 'Visa rules by nationality and destination.', icon: '🛂' },
-      { name: 'Claim Center', desc: 'Track and document claims from start to resolution.', icon: '📋' },
+      { name: 'Claim Center', desc: 'Demurrage, off-hire, speed/consumption and other claims with time-bar tracking.', href: '/tools/claims', icon: '📋' },
     ],
   },
   {
