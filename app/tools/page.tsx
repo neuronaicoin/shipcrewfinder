@@ -13,6 +13,7 @@ const CATEGORIES: Category[] = [
   {
     title: 'Calculators',
     tools: [
+      { name: 'Draft Survey Calculator', desc: 'Quadratic mean draft, trim and density correction, cargo quantity.', href: '/tools/draft-survey', icon: '📏' },
       { name: 'Interpolation Calculator', desc: 'Fuel, oil, ballast, sounding tables and more — interpolate any two-point table.', href: '/tools/interpolation-table', icon: '📐' },
       { name: 'Unit Converter', desc: 'Power, speed, volume, weight, length, temperature, pressure.', href: '/tools/unit-converter', icon: '🔄' },
       { name: 'Port-to-Port Distance & ETA', desc: 'Distance, speed table, ETA and fuel consumption.', href: '/tools/distance-eta', icon: '🧭' },
@@ -55,7 +56,6 @@ const CATEGORIES: Category[] = [
       { name: 'Heavy Weather Guide', desc: 'Preparation, routing, and key risks — synchronous/parametric rolling, pooping.', href: '/tools/heavy-weather', icon: '🌀' },
       { name: 'Ice Navigation Guide', desc: 'Polar Code, ice classes (Polar Categories & PC1-PC7), practical navigation.', href: '/tools/ice-navigation', icon: '❄️' },
       { name: 'Tanker Vetting Prep', desc: 'SIRE/CDI explained, inspection areas, prep checklist, observations.', href: '/tools/vetting', icon: '🛢️' },
-      { name: 'Draft Survey Calculator', desc: 'Quadratic mean draft, trim and density correction, cargo quantity.', href: '/tools/draft-survey', icon: '📏' },
       { name: 'Fatigue Management Guide', desc: 'Rest hour rules, recognizing fatigue, what helps, how to report.', href: '/tools/fatigue', icon: '😴' },
     ],
   },
