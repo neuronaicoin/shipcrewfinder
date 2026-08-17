@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 type DocType = 'NOR' | 'SOF' | 'LOP' | 'LOI' | 'NAGO' | 'MR' | 'NOT';
@@ -17,7 +17,8 @@ const DOC_TYPES: { key: DocType; name: string; icon: string; desc: string }[] = 
 type ProtestType =
   | 'general' | 'delay_cargo_ops' | 'weather_delay' | 'short_landed' | 'cargo_damage'
   | 'cargo_contamination' | 'stevedore_damage' | 'unsafe_berth' | 'port_congestion'
-  | 'nor_rejection' | 'bunker_short' | 'document_delay' | 'berth_nomination' | 'bl_delay';
+  | 'nor_rejection' | 'bunker_short' | 'document_delay' | 'berth_nomination' | 'bl_delay'
+  | 'hold_hatch_damage' | 'provisions_short' | 'general_damage';
 
 const PROTEST_TYPES: { key: ProtestType; label: string }[] = [
   { key: 'general', label: 'General / Other' },
@@ -34,6 +35,9 @@ const PROTEST_TYPES: { key: ProtestType; label: string }[] = [
   { key: 'document_delay', label: 'Delay in Document Processing / Customs' },
   { key: 'berth_nomination', label: "Charterer's Failure to Nominate Berth" },
   { key: 'bl_delay', label: 'Delay in Issuing Bills of Lading' },
+  { key: 'hold_hatch_damage', label: 'Hold / Hatch Cover Structural Damage' },
+  { key: 'provisions_short', label: 'Fresh Water / Provisions Short Delivery' },
+  { key: 'general_damage', label: 'General Damage Claim' },
 ];
 
 const PROTEST_TEXT: Record<ProtestType, (details: string) => string> = {
@@ -64,6 +68,12 @@ const PROTEST_TEXT: Record<ProtestType, (details: string) => string> = {
     `The Charterer failed to nominate a berth within the time required under the Charter Party, resulting in delay to the vessel.\n\n${d || '[State when nomination was due and when it was actually made, if at all]'}\n\nThe Master reserves all rights arising from this failure to nominate.`,
   bl_delay: (d) =>
     `Bills of Lading were not issued/presented for signature within a reasonable time following completion of loading.\n\n${d || '[State completion time of loading and time B/Ls were presented]'}\n\nThis delay is protested and all consequential losses, including any resulting delay to the vessel, are reserved.`,
+  hold_hatch_damage: (d) =>
+    `During cargo operations, damage was caused to the vessel's cargo hold(s) and/or hatch cover(s).\n\n${d || '[Describe the damage, hold number, and circumstances of occurrence]'}\n\nOwners reserve the right to claim full repair costs and any resulting delay to the vessel's onward employment or next survey.`,
+  provisions_short: (d) =>
+    `Fresh water and/or provisions ordered for this port call were delivered short of the quantity/quality contracted.\n\n${d || '[State quantity/quality ordered vs. actually delivered]'}\n\nThe Master reserves all rights against the supplier arising from this shortage.`,
+  general_damage: (d) =>
+    `Damage was sustained during this port call/voyage under the following circumstances.\n\n${d || '[Describe the nature, extent and cause of the damage, and when it was discovered]'}\n\nThis protest is issued to preserve the Owners' position pending full survey and investigation, without admission as to cause or liability.`,
 };
 
 export default function DocumentsPage() {
@@ -121,8 +131,101 @@ export default function DocumentsPage() {
 
   const generatedText = generate();
 
+  const [saved, setSaved] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('scf-documents-draft');
+      if (raw) {
+        const d = JSON.parse(raw);
+        setDocType(d.docType || 'NOR'); setProtestType(d.protestType || 'general');
+        setProtestDetails(d.protestDetails || ''); setVesselName(d.vesselName || '');
+        setImo(d.imo || ''); setPort(d.port || ''); setBerth(d.berth || '');
+        setMaster(d.master || ''); setDocDate(d.docDate || ''); setDocTime(d.docTime || '');
+        setRecipient(d.recipient || ''); setReference(d.reference || '');
+        setFreeField1(d.freeField1 || ''); setFreeField2(d.freeField2 || '');
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  function handleSaveDraft() {
+    try {
+      localStorage.setItem('scf-documents-draft', JSON.stringify({
+        docType, protestType, protestDetails, vesselName, imo, port, berth, master,
+        docDate, docTime, recipient, reference, freeField1, freeField2,
+      }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { /* ignore */ }
+  }
+
   function copyText() {
     navigator.clipboard?.writeText(generatedText).catch(() => {});
+  }
+
+  async function loadJsPdf(): Promise<any> {
+    if ((window as any).jspdf) return (window as any).jspdf;
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load PDF library'));
+      document.body.appendChild(script);
+    });
+    return (window as any).jspdf;
+  }
+
+  async function generatePdfBlob(): Promise<Blob> {
+    const { jsPDF } = await loadJsPdf();
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 48;
+    const maxWidth = 595 - margin * 2;
+    const lines = doc.splitTextToSize(generatedText, maxWidth);
+    doc.setFont('Courier', 'normal');
+    doc.setFontSize(10);
+    let y = margin;
+    const lineHeight = 13;
+    for (const line of lines) {
+      if (y > 780) { doc.addPage(); y = margin; }
+      doc.text(line, margin, y);
+      y += lineHeight;
+    }
+    return doc.output('blob');
+  }
+
+  async function handleDownloadPdf() {
+    setPdfBusy(true);
+    try {
+      const blob = await generatePdfBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${docType}-${(vesselName || 'vessel').replace(/\s+/g, '')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+    setPdfBusy(false);
+  }
+
+  async function handleSharePdf() {
+    setPdfBusy(true);
+    try {
+      const blob = await generatePdfBlob();
+      const fileName = `${docType}-${(vesselName || 'vessel').replace(/\s+/g, '')}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
+        await (navigator as any).share({ files: [file], title: fileName });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch { /* ignore */ }
+    setPdfBusy(false);
   }
 
   return (
@@ -256,7 +359,18 @@ export default function DocumentsPage() {
         )}
 
         <div className="dg-card">
-          <button className="dg-copy" onClick={copyText}>📋 Copy to clipboard</button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+            <button className="dg-copy" onClick={copyText}>📋 Copy</button>
+            <button onClick={handleSaveDraft} style={{ background: saved ? 'rgba(52,211,153,.15)' : 'rgba(255,255,255,.06)', border: `1px solid ${saved ? 'rgba(52,211,153,.4)' : 'rgba(255,255,255,.15)'}`, color: saved ? '#34d399' : '#eef4fa', borderRadius: 9, padding: '9px 16px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {saved ? '✓ Saved' : '💾 Save Draft'}
+            </button>
+            <button onClick={handleDownloadPdf} disabled={pdfBusy} style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)', color: '#eef4fa', borderRadius: 9, padding: '9px 16px', fontWeight: 700, fontSize: 12.5, cursor: pdfBusy ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: pdfBusy ? 0.6 : 1 }}>
+              📄 {pdfBusy ? 'Working...' : 'Download PDF'}
+            </button>
+            <button onClick={handleSharePdf} disabled={pdfBusy} style={{ background: 'linear-gradient(135deg,#fbbf24,#e0a010)', color: '#0b0e13', border: 'none', borderRadius: 9, padding: '9px 16px', fontWeight: 700, fontSize: 12.5, cursor: pdfBusy ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: pdfBusy ? 0.6 : 1 }}>
+              📤 {pdfBusy ? 'Working...' : 'Share PDF'}
+            </button>
+          </div>
           <div className="dg-output">{generatedText}</div>
         </div>
 
