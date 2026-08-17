@@ -29,7 +29,7 @@ const CATEGORIES: Category[] = [
       { name: 'Maintenance', desc: 'Planned maintenance and job tracking.', icon: '🔧' },
       { name: 'Ports Database', desc: 'Facilities, contacts and requirements by port.', icon: '⚓' },
       { name: 'Spares', desc: 'Spare parts inventory and reorder tracking.', icon: '🛠️' },
-      { name: 'Tide Reference', desc: 'Tide tables and window planning.', icon: '🌊' },
+      { name: 'Tide Calculator', desc: 'HW/LW interpolation, UKC check, safe window finder, with tide curve chart.', href: '/tools/tide', icon: '🌊' },
       { name: 'Visa Requirements', desc: 'Visa rules by nationality and destination.', icon: '🛂' },
       { name: 'Claim Center', desc: 'Demurrage, off-hire, speed/consumption and other claims with time-bar tracking.', href: '/tools/claims', icon: '📋' },
     ],
