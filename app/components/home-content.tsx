@@ -936,6 +936,7 @@ if(a2hsBtn){
           <li><a href="#companies">Pricing</a></li>
           <li><a href="#how">How it works</a></li>
           <li><a href="/salary">Salary Index</a></li>
+          <li><a href="/blog/complete-guide-seafarer-career-2026">Career Guide 2026</a></li>
         </ul>
       </div>
       <div>
