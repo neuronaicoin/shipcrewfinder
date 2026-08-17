@@ -302,10 +302,11 @@ if(a2hsBtn){
     display:grid;place-items:center;color:var(--ink);font-family:var(--disp);font-weight:800;font-size:19px}
   .logo b{font-family:var(--disp);font-size:18px;font-weight:700}
   .logo b span{color:var(--gold)}
-  nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  @media(max-width:1180px){ nav{gap:4px} nav a{font-size:12.5px;padding:8px 10px} }
-  nav a{color:var(--tx2);text-decoration:none;font-size:13.5px;font-weight:600;transition:.18s;
-    border:1px solid var(--line2);border-radius:10px;padding:8px 15px;background:rgba(255,255,255,.02)}
+  nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  @media(max-width:1440px){ nav{gap:5px} nav a{font-size:12px;padding:6px 10px} }
+  @media(max-width:1180px){ nav{gap:4px} nav a{font-size:11.5px;padding:6px 8px} }
+  nav a{color:var(--tx2);text-decoration:none;font-size:13px;font-weight:600;transition:.18s;
+    border:1px solid var(--line2);border-radius:10px;padding:7px 12px;background:rgba(255,255,255,.02);white-space:nowrap}
   nav a:hover{color:var(--gold);border-color:var(--gold);background:rgba(251,191,36,.07)}
   .top-cta{display:flex;gap:10px;align-items:center}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:11px;
