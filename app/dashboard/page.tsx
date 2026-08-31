@@ -573,6 +573,14 @@ export default async function DashboardPage({
                     <p>MARPOL Annex I compliant logging — 24 operations, auto-generated codes, PDF export.</p>
                   </Link>
                 )}
+                {(rankLabel === "MASTER" || rankLabel === "CHIEF OFFICER") && (
+                  <Link href="/tools/draft-survey-pro" className="qcard gold">
+                    <span className="qbadge grn">Pro</span>
+                    <div className="qi">📐</div>
+                    <b>Draft Survey Pro</b>
+                    <p>Full quadratic-mean cargo calculation — your own hydrostatic table, verified formulas, signable report.</p>
+                  </Link>
+                )}
               </>
             )}
           </div>
