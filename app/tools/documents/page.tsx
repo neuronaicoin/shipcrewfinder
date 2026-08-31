@@ -76,6 +76,10 @@ const PROTEST_TEXT: Record<ProtestType, (details: string) => string> = {
     `Damage was sustained during this port call/voyage under the following circumstances.\n\n${d || '[Describe the nature, extent and cause of the damage, and when it was discovered]'}\n\nThis protest is issued to preserve the Owners' position pending full survey and investigation, without admission as to cause or liability.`,
 };
 
+const DOCS_TRIAL_MAX = 1;
+const DOCS_TRIAL_PRICE = '$9.90 / year';
+const DOCS_TRIAL_STORAGE_KEY = 'scf-documents-trial';
+
 export default function DocumentsPage() {
   const [docType, setDocType] = useState<DocType>('NOR');
   const [protestType, setProtestType] = useState<ProtestType>('general');
@@ -133,6 +137,23 @@ export default function DocumentsPage() {
 
   const [saved, setSaved] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [trialDocCount, setTrialDocCount] = useState(0);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DOCS_TRIAL_STORAGE_KEY);
+      if (raw) setTrialDocCount(Number(raw) || 0);
+    } catch { /* ignore */ }
+  }, []);
+
+  function consumeTrialSlot(): boolean {
+    if (trialDocCount >= DOCS_TRIAL_MAX) { setShowUpgrade(true); return false; }
+    const next = trialDocCount + 1;
+    setTrialDocCount(next);
+    try { localStorage.setItem(DOCS_TRIAL_STORAGE_KEY, String(next)); } catch { /* ignore */ }
+    return true;
+  }
 
   useEffect(() => {
     try {
@@ -195,6 +216,7 @@ export default function DocumentsPage() {
   }
 
   async function handleDownloadPdf() {
+    if (!consumeTrialSlot()) return;
     setPdfBusy(true);
     try {
       const blob = await generatePdfBlob();
@@ -209,6 +231,7 @@ export default function DocumentsPage() {
   }
 
   async function handleSharePdf() {
+    if (!consumeTrialSlot()) return;
     setPdfBusy(true);
     try {
       const blob = await generatePdfBlob();
@@ -261,6 +284,28 @@ export default function DocumentsPage() {
         <p className="dg-sub">
           NOR, SOF, LOI and more — plus 14 Letter of Protest scenarios covering the most common disputes at sea. Fill in details, copy the result. Nothing is saved.
         </p>
+
+        {showUpgrade && (
+          <div style={{ background: 'linear-gradient(160deg,rgba(251,191,36,.12),#050716)', border: '2px solid rgba(251,191,36,.4)', borderRadius: 14, padding: 20, marginBottom: 16, textAlign: 'center' }}>
+            <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>🔒 Free trial limit reached</div>
+            <p style={{ fontSize: 12.5, color: '#a8bdd2', lineHeight: 1.6, marginBottom: 14 }}>
+              You've downloaded/shared your free {DOCS_TRIAL_MAX} document. Upgrade for unlimited PDF exports of every document type.
+            </p>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#fbbf24', marginBottom: 4 }}>{DOCS_TRIAL_PRICE}</div>
+            <button style={{ background: 'linear-gradient(135deg,#fbbf24,#e0a010)', color: '#0b0e13', border: 'none', borderRadius: 9, padding: '11px 22px', fontWeight: 700, fontSize: 13.5, cursor: 'pointer', marginTop: 8 }} onClick={() => { window.location.href = '/upgrade?tool=documents'; }}>
+              Upgrade Now
+            </button>
+            <div style={{ marginTop: 10 }}>
+              <button style={{ background: 'none', border: 'none', color: '#6b83a0', fontSize: 11.5, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setShowUpgrade(false)}>Maybe later</button>
+            </div>
+          </div>
+        )}
+
+        {!showUpgrade && trialDocCount < DOCS_TRIAL_MAX && (
+          <div style={{ background: 'rgba(90,166,232,.08)', border: '1px solid rgba(90,166,232,.25)', borderRadius: 9, padding: '9px 12px', marginBottom: 16, fontSize: 11.5, color: '#7db8ea' }}>
+            🎁 Free trial: {DOCS_TRIAL_MAX - trialDocCount} of {DOCS_TRIAL_MAX} free PDF download/share remaining
+          </div>
+        )}
 
         <div className="dg-doctype-grid">
           {DOC_TYPES.map((d) => (
