@@ -565,6 +565,14 @@ export default async function DashboardPage({
                   <b>My Profile</b>
                   <p>See your profile exactly as companies see it.</p>
                 </Link>
+                {(rankLabel === "CHIEF ENGINEER" || rankLabel === "2ND ENGINEER") && (
+                  <Link href="/tools/oil-record-book" className="qcard gold">
+                    <span className="qbadge grn">Pro</span>
+                    <div className="qi">⚓</div>
+                    <b>Oil Record Book Pro</b>
+                    <p>MARPOL Annex I compliant logging — 24 operations, auto-generated codes, PDF export.</p>
+                  </Link>
+                )}
               </>
             )}
           </div>
