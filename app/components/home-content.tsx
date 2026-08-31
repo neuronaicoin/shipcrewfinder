@@ -708,6 +708,20 @@ if(a2hsBtn){
   </div>
 </section>
 
+<div className="wrap" style={{padding:"0 0 20px"}}>
+  <div style={{background:"linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.04))",border:"1px solid rgba(251,191,36,.3)",borderRadius:"16px",padding:"16px 18px",display:"flex",alignItems:"center",gap:"14px",flexWrap:"wrap"}}>
+    <span style={{background:"var(--gold)",color:"var(--ink)",fontSize:"10.5px",fontWeight:800,padding:"4px 10px",borderRadius:"6px",letterSpacing:".02em",whiteSpace:"nowrap"}}>NEW</span>
+    <div style={{flex:"1 1 220px"}}>
+      <b style={{fontSize:"14px",display:"block",marginBottom:"2px"}}>Oil Record Book &amp; Draft Survey Calculator are live</b>
+      <span style={{fontSize:"12.5px",color:"var(--tx2)"}}>Auto-generated MARPOL codes. Verified cargo formulas. Try both free — no signup.</span>
+    </div>
+    <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
+      <a href="/tools/oil-record-book" style={{background:"var(--gold)",color:"var(--ink)",fontSize:"12.5px",fontWeight:700,padding:"9px 14px",borderRadius:"9px",textDecoration:"none",whiteSpace:"nowrap"}}>⚓ Oil Record Book</a>
+      <a href="/tools/draft-survey-pro" style={{background:"transparent",border:"1px solid rgba(251,191,36,.4)",color:"var(--gold)",fontSize:"12.5px",fontWeight:700,padding:"9px 14px",borderRadius:"9px",textDecoration:"none",whiteSpace:"nowrap"}}>📐 Draft Survey</a>
+    </div>
+  </div>
+</div>
+
 <section id="try" style={{padding:"30px 0 6px"}}>
   <div className="wrap">
     <div className="trybox rv">
