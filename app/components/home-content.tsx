@@ -724,8 +724,8 @@ if(a2hsBtn){
 <section className="wis">
   <div className="wrap">
     <div className="sec-tag rv">Try it right now — no signup needed</div>
-    <h2 className="rv">Three free tools, live today</h2>
-    <p className="sec-sub rv">Not ready to commit? Try these first — completely free, no account required for the first two.</p>
+    <h2 className="rv">Free tools, live today</h2>
+    <p className="sec-sub rv">Not ready to commit? Try these first — no account required.</p>
     <div className="wisg">
       <a href="/salary-check" className="wis-card wis-link rv">
         <div className="wi">💰</div>
@@ -745,6 +745,18 @@ if(a2hsBtn){
         <p>Finish your profile and it appears on our homepage automatically — no extra step. Companies can see you the same day.</p>
         <span className="wis-go wis-static">Included, always</span>
       </div>
+      <a href="/tools/oil-record-book" className="wis-card wis-link rv">
+        <div className="wi">⚓</div>
+        <b>Oil Record Book — Part I</b>
+        <p>MARPOL Annex I compliant logging for Engine Department — 24 operations, auto-generated codes, PDF export. Free trial, no signup.</p>
+        <span className="wis-go">Try it free →</span>
+      </a>
+      <a href="/tools/draft-survey-pro" className="wis-card wis-link rv">
+        <div className="wi">📐</div>
+        <b>Draft Survey Calculator</b>
+        <p>Full quadratic-mean cargo calculation using your own vessel's hydrostatic table — verified formulas, signable report. Free trial, no signup.</p>
+        <span className="wis-go">Try it free →</span>
+      </a>
     </div>
   </div>
 </section>
