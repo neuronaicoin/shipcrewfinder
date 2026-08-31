@@ -581,6 +581,14 @@ export default async function DashboardPage({
                     <p>Full quadratic-mean cargo calculation — your own hydrostatic table, verified formulas, signable report.</p>
                   </Link>
                 )}
+                {(rankLabel === "MASTER" || rankLabel === "CHIEF OFFICER") && (
+                  <Link href="/tools/documents" className="qcard gold">
+                    <span className="qbadge grn">Pro</span>
+                    <div className="qi">📄</div>
+                    <b>Document Generator Pro</b>
+                    <p>NOR, SOF, LOI, Letters of Protest and more — unlimited PDF export and sharing.</p>
+                  </Link>
+                )}
               </>
             )}
           </div>
