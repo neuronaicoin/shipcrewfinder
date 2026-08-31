@@ -278,6 +278,14 @@ export default async function DashboardPage({
   .sub{font-size:14px;color:var(--tx2);margin-top:8px}
   .hero-grid{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
   @media(max-width:640px){.hero-grid{grid-template-columns:1fr}}
+  @media(max-width:520px){
+    .qgrid{grid-template-columns:repeat(3,1fr);gap:6px}
+    .qcard{padding:10px 6px;border-radius:10px}
+    .qcard .qi{font-size:18px;margin-bottom:4px}
+    .qcard b{font-size:10.5px;line-height:1.25}
+    .qcard p{display:none}
+    .qbadge{font-size:8px;padding:1px 5px}
+  }
   .ring-box{display:flex;align-items:center;gap:16px;background:linear-gradient(165deg,var(--navy2),var(--ink));border:1px solid var(--line2);border-radius:18px;padding:18px 22px}
   .ring{width:96px;height:96px;flex-shrink:0}
   .ring circle{fill:none;stroke-width:8}
@@ -570,7 +578,7 @@ export default async function DashboardPage({
                     <span className="qbadge grn">Pro</span>
                     <div className="qi">⚓</div>
                     <b>Oil Record Book Pro</b>
-                    <p>MARPOL Annex I compliant logging — 24 operations, auto-generated codes, PDF export.</p>
+                    <p>Stop losing sleep over PSC remarks — every code and item number auto-generated, every time.</p>
                   </Link>
                 )}
                 {(rankLabel === "MASTER" || rankLabel === "CHIEF OFFICER") && (
@@ -578,7 +586,7 @@ export default async function DashboardPage({
                     <span className="qbadge grn">Pro</span>
                     <div className="qi">📐</div>
                     <b>Draft Survey Pro</b>
-                    <p>Full quadratic-mean cargo calculation — your own hydrostatic table, verified formulas, signable report.</p>
+                    <p>Never miscalculate cargo again — the same verified formulas real surveyors use, done for you.</p>
                   </Link>
                 )}
                 {(rankLabel === "MASTER" || rankLabel === "CHIEF OFFICER") && (
