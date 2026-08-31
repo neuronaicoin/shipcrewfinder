@@ -1,14 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-function parseNum(v) {
+function parseNum(v: any) {
 if (v === undefined || v === null || v === '') return 0;
 const n = parseFloat(String(v).replace(',', '.'));
 return isNaN(n) ? 0 : n;
 }
-function fmt(n) { return (n || 0).toFixed(2); }
-function hoursBetween(t1, t2) {
+function fmt(n: number) { return (n || 0).toFixed(2); }
+function hoursBetween(t1: string, t2: string) {
 if (!t1 || !t2) return 0;
 const [h1, m1] = t1.split(':').map(Number);
 const [h2, m2] = t2.split(':').map(Number);
@@ -16,7 +16,7 @@ let mins = (h2 * 60 + m2) - (h1 * 60 + m1);
 if (mins < 0) mins += 24 * 60;
 return mins / 60;
 }
-function formatDate(d) {
+function formatDate(d: string) {
 if (!d) return '';
 const dt = new Date(d + 'T00:00:00');
 return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase().replace(/ /g, '-');
@@ -26,58 +26,58 @@ const CODE_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
 const OPERATIONS = [
 { key: 'c11_inventory', tankType: 'sludge', code: 'C', label: 'Weekly Inventory of Sludge Tank', tankMode: 'single', extraFields: [],
-buildLines: (v, tanks) => { const t = tanks.find((x) => String(x.id) === String(v.tankId)); if (!t) return null;
+buildLines: (v: any, tanks: any) => { const t = tanks.find((x: any) => String(x.id) === String(v.tankId)); if (!t) return null;
 return [{ item: '11.1', text: t.name }, { item: '11.2', text: `${t.capacity} m³` }, { item: '11.3', text: `${fmt(t.qty)} m³` }]; } },
 { key: 'c122_transfer', tankType: 'sludge', code: 'C', label: 'Transfer Between Sludge Tank', tankMode: 'transfer', extraFields: [],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); const to = tanks.find((x) => String(x.id) === String(v.toTankId)); if (!from || !to) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); const to = tanks.find((x: any) => String(x.id) === String(v.toTankId)); if (!from || !to) return null;
 return [{ item: '12.2', text: `${v.delta || '—'} m³ transferred from ${from.name}, ${fmt(from.qty)} m³ retained,` }, { item: '', text: `to ${to.name} retained in tank(s) ${fmt(to.qty)} m³` }]; } },
 { key: 'c121_shore', tankType: 'sludge', code: 'C', label: 'Disposal of Sludge via Shore Connection', tankMode: 'from-only',
 extraFields: [{ key: 'receiver', label: 'Receiver', kind: 'text', placeholder: 'e.g. barge / tank truck / shore facility' }, { key: 'port', label: 'Port', kind: 'text' }],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); if (!from) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); if (!from) return null;
 return [{ item: '12.1', text: `${v.delta || '—'} m³ sludge from ${from.name}, ${fmt(from.qty)} m³ retained,` }, { item: '', text: `to "${v.receiver || '[RECEIVER]'}" during port stay (${v.port || '[PORT]'})` }]; } },
 { key: 'c123_incinerator', tankType: 'sludge', code: 'C', label: 'Incineration of Sludge', tankMode: 'from-only', extraFields: [{ key: 'hours', label: 'Hours burned' }],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); if (!from) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); if (!from) return null;
 return [{ item: '12.3', text: `${v.delta || '—'} m³ sludge from ${from.name}, ${fmt(from.qty)} m³ retained,` }, { item: '', text: `Burned in Incinerator for ${v.hours || '—'} hours` }]; } },
 { key: 'c124_boiler', tankType: 'sludge', code: 'C', label: 'Burning of Sludge in Boiler', tankMode: 'from-only', extraFields: [{ key: 'hours', label: 'Hours burned' }],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); if (!from) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); if (!from) return null;
 return [{ item: '12.4', text: `${v.delta || '—'} m³ sludge from ${from.name}, ${fmt(from.qty)} m³ retained,` }, { item: '', text: `Burned in Boiler for ${v.hours || '—'} hours` }]; } },
 { key: 'c124_evap', tankType: 'sludge', code: 'C', label: 'Evaporation of Water from', tankMode: 'from-only', extraFields: [],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); if (!from) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); if (!from) return null;
 return [{ item: '12.4', text: `${v.delta || '—'} m³ water evaporated from ${from.name}, ${fmt(from.qty)} m³ retained.` }]; } },
 
 { key: 'd_overboard', tankType: 'bilge', code: 'D', label: 'Pumping Bilge Water Overboard (15ppm equipment)', tankMode: 'from-only',
 extraFields: [{ key: 't1', label: 'Start time', kind: 'time' }, { key: 't2', label: 'Stop time', kind: 'time' }, { key: 'posStart', label: 'Position at start', kind: 'text', placeholder: "e.g. 41°00'N, 029°00'E" }, { key: 'posStop', label: 'Position at stop', kind: 'text', placeholder: "e.g. 41°05'N, 029°10'E" }],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); if (!from) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); if (!from) return null;
 return [{ item: '13', text: `${from.name}, Capacity ${from.capacity} m³, ${fmt(from.qty)} m³ retained` }, { item: '14', text: `Start: ${v.t1 || '—'}, stop: ${v.t2 || '—'}` }, { item: '15.1', text: `Through 15 ppm equipment overboard, ${v.delta || '—'} m³ discharged` }, { item: '', text: `Position start: ${v.posStart || '—'}` }, { item: '', text: `Position stop: ${v.posStop || '—'}` }]; } },
 { key: 'd_to_tank', tankType: 'bilge', code: 'D', label: 'Pumping Bilge Water (from Bilge Wells) to Tank', tankMode: 'to-only',
 extraFields: [{ key: 't1', label: 'Start time', kind: 'time' }, { key: 't2', label: 'Stop time', kind: 'time' }],
-buildLines: (v, tanks) => { const to = tanks.find((x) => String(x.id) === String(v.toTankId)); if (!to) return null;
+buildLines: (v: any, tanks: any) => { const to = tanks.find((x: any) => String(x.id) === String(v.toTankId)); if (!to) return null;
 return [{ item: '13', text: `${v.delta || '—'} m³ bilge water from engine-room bilge wells,` }, { item: '14', text: `Start: ${v.t1 || '—'}, stop: ${v.t2 || '—'}` }, { item: '15.3', text: `To ${to.name}, retained in tank(s) ${fmt(to.qty)} m³` }]; } },
 { key: 'd_slop', tankType: 'bilge', code: 'D', label: 'Transfer of Bilge Water to Deck Slop Tank', tankMode: 'transfer',
 extraFields: [{ key: 't1', label: 'Start time', kind: 'time' }, { key: 't2', label: 'Stop time', kind: 'time' }],
-buildLines: (v, tanks) => { const from = tanks.find((x) => String(x.id) === String(v.fromTankId)); const to = tanks.find((x) => String(x.id) === String(v.toTankId)); if (!from || !to) return null;
+buildLines: (v: any, tanks: any) => { const from = tanks.find((x: any) => String(x.id) === String(v.fromTankId)); const to = tanks.find((x: any) => String(x.id) === String(v.toTankId)); if (!from || !to) return null;
 return [{ item: '13', text: `${from.name}, Capacity ${from.capacity} m³, ${fmt(from.qty)} m³ retained` }, { item: '14', text: `Start: ${v.t1 || '—'}, stop: ${v.t2 || '—'}` }, { item: '15.3', text: `Transferred to ${to.name}, now containing ${fmt(to.qty)} m³` }]; } },
 { key: 'bilge_weekly', tankType: 'bilge', code: 'I', label: 'Weekly Inventory of Bilge Water Tank (voluntary)', tankMode: 'single', extraFields: [],
-buildLines: (v, tanks) => { const t = tanks.find((x) => String(x.id) === String(v.tankId)); if (!t) return null;
+buildLines: (v: any, tanks: any) => { const t = tanks.find((x: any) => String(x.id) === String(v.tankId)); if (!t) return null;
 return [{ item: '', text: 'Weekly Inventory of Bilge Water Tanks (listed under item 3.3)' }, { item: '', text: `${t.name}` }, { item: '', text: `capacity ${t.capacity} m³, ${fmt(t.qty)} m³ retained` }]; } },
 
 { key: 'h_fuel', tankType: 'bunker', code: 'H', label: 'Bunkering of Fuel Oil', tankMode: 'to-only',
 extraFields: [{ key: 'port', label: 'Port', kind: 'text' }, { key: 'd1', label: 'Start date', kind: 'date' }, { key: 'd2', label: 'Stop date', kind: 'date' }, { key: 'grade', label: 'Grade / ISO', kind: 'text', placeholder: 'e.g. ISO-8217 VLSFO' }, { key: 'sulphur', label: 'Sulphur %' }],
-buildLines: (v, tanks) => { const to = tanks.find((x) => String(x.id) === String(v.toTankId)); if (!to) return null;
+buildLines: (v: any, tanks: any) => { const to = tanks.find((x: any) => String(x.id) === String(v.toTankId)); if (!to) return null;
 return [{ item: '26.1', text: v.port || '[PORT]' }, { item: '26.2', text: `Start ${v.d1 ? formatDate(v.d1) : '—'}  Stop ${v.d2 ? formatDate(v.d2) : '—'}` }, { item: '26.3', text: `${v.delta || '—'} MT of ${v.grade || '[GRADE]'} ${v.sulphur || '—'}%S bunkered in tanks:` }, { item: '', text: `${v.delta || '—'} MT added to ${to.name}, now containing ${fmt(to.qty)} MT` }]; } },
 
 { key: 'h_lube', tankType: 'lo', code: 'H', label: 'Bunkering of Bulk Lubricating Oil', tankMode: 'to-only',
 extraFields: [{ key: 'port', label: 'Port', kind: 'text' }, { key: 'd1', label: 'Start date', kind: 'date' }, { key: 'd2', label: 'Stop date', kind: 'date' }, { key: 'type', label: 'Type of oil', kind: 'text', placeholder: 'e.g. SAE 40 System Oil' }],
-buildLines: (v, tanks) => { const to = tanks.find((x) => String(x.id) === String(v.toTankId)); if (!to) return null;
+buildLines: (v: any, tanks: any) => { const to = tanks.find((x: any) => String(x.id) === String(v.toTankId)); if (!to) return null;
 return [{ item: '26.1', text: v.port || '[PORT]' }, { item: '26.2', text: `Start ${v.d1 ? formatDate(v.d1) : '—'}  Stop ${v.d2 ? formatDate(v.d2) : '—'}` }, { item: '26.4', text: `${v.delta || '—'} MT ${v.type || '[TYPE]'} bunkered in tanks:` }, { item: '', text: `${v.delta || '—'} MT added to ${to.name}, now containing ${fmt(to.qty)} MT` }]; } },
 
 { key: 'f_failure', tankType: 'other', code: 'F', label: 'Failure / Restoration of Oil Filtering Equipment (OWS/OCM)', tankMode: 'none',
 extraFields: [{ key: 't1', label: 'Time of failure', kind: 'time' }, { key: 't2', label: 'Time restored (leave blank if still down)', kind: 'time' }, { key: 'reason', label: 'Reason (if known)', kind: 'text', placeholder: 'e.g. spare parts ordered' }],
-buildLines: (v) => [{ item: '19', text: v.t1 || '—' }, { item: '20', text: v.t2 || '(unknown / still pending)' }, { item: '21', text: v.reason || '[REASON, IF KNOWN]' }] },
+buildLines: (v: any) => [{ item: '19', text: v.t1 || '—' }, { item: '20', text: v.t2 || '(unknown / still pending)' }, { item: '21', text: v.reason || '[REASON, IF KNOWN]' }] },
 
 { key: 'g_accidental', tankType: 'other', code: 'G', label: 'Accidental / Exceptional Discharge of Oil', tankMode: 'none',
 extraFields: [{ key: 't1', label: 'Time', kind: 'time' }, { key: 'pos', label: 'Position', kind: 'text', placeholder: "e.g. 41°00'N, 029°00'E" }, { key: 'qty', label: 'Quantity of oily residue (if known)', kind: 'text' }, { key: 'circ', label: 'Circumstances', kind: 'text', placeholder: 'e.g. ruptured bunkering hose/flange' }],
-buildLines: (v) => [{ item: '22', text: v.t1 || '—' }, { item: '23', text: `Position: ${v.pos || '[POSITION]'}` }, { item: '24', text: v.qty || '[QUANTITY IF KNOWN]' }, { item: '25', text: v.circ || '[CIRCUMSTANCES]' }] },
+buildLines: (v: any) => [{ item: '22', text: v.t1 || '—' }, { item: '23', text: `Position: ${v.pos || '[POSITION]'}` }, { item: '24', text: v.qty || '[QUANTITY IF KNOWN]' }, { item: '25', text: v.circ || '[CIRCUMSTANCES]' }] },
 
 { key: 'free_text', tankType: 'other', code: null, label: 'Free Text / Custom Entry', tankMode: 'freetext', extraFields: [], buildLines: null },
 ];
@@ -100,9 +100,9 @@ const CATEGORIES = [
 ];
 
 const LINES_PER_PAGE = 25;
-const selStyle = { width: '100%', boxSizing: 'border-box', background: '#141845', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '9px 11px', color: '#eef4fa', fontSize: 13, fontFamily: 'inherit' };
+const selStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#141845', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '9px 11px', color: '#eef4fa', fontSize: 13, fontFamily: 'inherit' };
 
-function reverseEffect(tanks, entry) {
+function reverseEffect(tanks: any[], entry: any) {
 if (!entry.effect) return tanks;
 const { mode, fromTankId, toTankId, delta } = entry.effect;
 return tanks.map((t) => {
@@ -114,7 +114,7 @@ else if (mode === 'to-only' && String(t.id) === String(toTankId)) return { ...t,
 return t;
 });
 }
-function applyEffect(tanks, mode, fromTankId, toTankId, delta) {
+function applyEffect(tanks: any[], mode: any, fromTankId: any, toTankId: any, delta: number) {
 return tanks.map((t) => {
 if (mode === 'transfer') {
 if (String(t.id) === String(fromTankId)) return { ...t, qty: t.qty - delta };
@@ -134,30 +134,30 @@ export default function OilRecordBookPage() {
 const [step, setStep] = useState('setup');
 const [vessel, setVessel] = useState({ name: '', gt: '', imo: '', official: '' });
 const [equipment, setEquipment] = useState({ incineratorRate: '', owsCapacity: '' });
-const [officers, setOfficers] = useState([]);
-const [tanks, setTanks] = useState([]);
+const [officers, setOfficers] = useState<any[]>([]);
+const [tanks, setTanks] = useState<any[]>([]);
 
 const [newOfficerRank, setNewOfficerRank] = useState('');
 const [newOfficerName, setNewOfficerName] = useState('');
 const [trialTankCount, setTrialTankCount] = useState(0);
 const [trialLogCount, setTrialLogCount] = useState(0);
-const [trialStartedAt, setTrialStartedAt] = useState(null);
+const [trialStartedAt, setTrialStartedAt] = useState<number | null>(null);
 const [showUpgrade, setShowUpgrade] = useState(false);
 const [newTankName, setNewTankName] = useState('');
 const [newTankCap, setNewTankCap] = useState('');
 const [newTankQty, setNewTankQty] = useState('0');
 
-const [entries, setEntries] = useState([]);
+const [entries, setEntries] = useState<any[]>([]);
 const [fDate, setFDate] = useState('');
 const [category, setCategory] = useState('sludge');
 const [opKey, setOpKey] = useState('c11_inventory');
-const [values, setValues] = useState({});
+const [values, setValues] = useState<any>({});
 const [officerId, setOfficerId] = useState('');
 const [saved, setSaved] = useState(false);
 const [pdfBusy, setPdfBusy] = useState(false);
 const [warning, setWarning] = useState('');
 const [page, setPage] = useState(1);
-const [editingId, setEditingId] = useState(null);
+const [editingId, setEditingId] = useState<string | null>(null);
 
 const [otherTime, setOtherTime] = useState('');
 const [otherCode, setOtherCode] = useState('I');
@@ -169,16 +169,16 @@ const op = opsInCategory.find((o) => o.key === opKey) || opsInCategory[0];
 const tanksInCategory = tanks.filter((t) => t.type === category);
 
 function addOfficer() { if (!newOfficerRank.trim() || !newOfficerName.trim()) return; setOfficers([...officers, { id: Date.now(), rank: newOfficerRank.trim(), name: newOfficerName.trim() }]); setNewOfficerRank(''); setNewOfficerName(''); }
-function addTank(type) {
+function addTank(type: any) {
   if (!newTankName.trim() || !newTankCap) return;
   if (!canAddTank()) { setShowUpgrade(true); return; }
   setTanks([...tanks, { id: Date.now(), type, name: newTankName.trim(), capacity: parseNum(newTankCap), qty: parseNum(newTankQty) }]);
   setNewTankName(''); setNewTankCap(''); setNewTankQty('0');
   registerTrialTankUse();
 }
-function removeOfficer(id) { setOfficers(officers.filter((o) => o.id !== id)); }
-function removeTank(id) { setTanks(tanks.filter((t) => t.id !== id)); }
-function setVal(k, v) { setValues((prev) => ({ ...prev, [k]: v })); }
+function removeOfficer(id: any) { setOfficers(officers.filter((o: any) => o.id !== id)); }
+function removeTank(id: any) { setTanks(tanks.filter((t: any) => t.id !== id)); }
+function setVal(k: string, v: any) { setValues((prev: any) => ({ ...prev, [k]: v })); }
 
 useEffect(() => {
   try {
@@ -192,7 +192,7 @@ useEffect(() => {
   } catch { /* ignore */ }
 }, []);
 
-function persistTrial(tankCount, logCount, startedAt) {
+function persistTrial(tankCount: number, logCount: number, startedAt: number | null) {
   try {
     localStorage.setItem(TRIAL_STORAGE_KEY, JSON.stringify({ tankCount, logCount, startedAt }));
   } catch { /* ignore */ }
@@ -231,7 +231,7 @@ function registerTrialLogUse() {
   persistTrial(trialTankCount, nextCount, startedAt);
 }
 
-function changeCategory(cat) {
+function changeCategory(cat: any) {
 setCategory(cat);
 const firstOp = OPERATIONS.find((o) => o.tankType === cat);
 setOpKey(firstOp ? firstOp.key : '');
@@ -308,7 +308,7 @@ if (op.key === 'd_overboard' && equipment.owsCapacity) {
 const newTanks = applyEffect(tanks, op.tankMode, values.fromTankId, values.toTankId, delta);
 setTanks(newTanks);
 
-const lines = op.buildLines(values, newTanks);
+const lines = op.buildLines!(values, newTanks);
 const officer = officers.find((o) => String(o.id) === String(officerId));
 const officerLabel = officer ? `${officer.rank} ${officer.name}` : '';
 const effect = (op.tankMode === 'from-only' || op.tankMode === 'to-only' || op.tankMode === 'transfer') ? { mode: op.tankMode, fromTankId: values.fromTankId, toTankId: values.toTankId, delta } : null;
@@ -323,14 +323,14 @@ registerTrialLogUse();
 setSaved(true); setTimeout(() => setSaved(false), 1200);
 }
 
-function deleteEntry(entry) {
+function deleteEntry(entry: any) {
 setTanks((prev) => reverseEffect(prev, entry));
 setEntries((prev) => prev.filter((e) => e.id !== entry.id));
 }
 
-const logRows = [];
+const logRows: any[] = [];
 entries.forEach((e) => {
-(e.lines || []).forEach((ln, i) => { logRows.push({ entryId: e.id, date: i === 0 ? formatDate(e.date) : '', code: i === 0 ? e.code : '', item: ln.item, text: ln.text }); });
+(e.lines || []).forEach((ln: any, i: number) => { logRows.push({ entryId: e.id, date: i === 0 ? formatDate(e.date) : '', code: i === 0 ? e.code : '', item: ln.item, text: ln.text }); });
 if (e.officer) logRows.push({ entryId: e.id, date: '', code: '', item: '', text: `signed: ${e.officer}, ${formatDate(e.date)}`, isSign: true });
 });
 
@@ -342,15 +342,15 @@ const totalBilge = tanks.filter((t) => t.type === 'bilge').reduce((s, t) => s + 
 function printLog() { window.print(); }
 
 async function loadJsPdf() {
-  if (window.jspdf) return window.jspdf;
-  await new Promise((resolve, reject) => {
+  if ((window as any).jspdf) return (window as any).jspdf;
+  await new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load PDF library'));
     document.body.appendChild(script);
   });
-  return window.jspdf;
+  return (window as any).jspdf;
 }
 
 async function generatePdfBlob() {
@@ -363,7 +363,7 @@ async function generatePdfBlob() {
   let y = margin;
   const lineHeight = 12;
 
-  function addLine(text) {
+  function addLine(text: string) {
     const wrapped = doc.splitTextToSize(text, maxWidth);
     for (const w of wrapped) {
       if (y > 800) { doc.addPage(); y = margin; }
@@ -380,7 +380,7 @@ async function generatePdfBlob() {
 
   entries.forEach((e) => {
     addLine(`${formatDate(e.date)}   Code ${e.code}`);
-    (e.lines || []).forEach((ln) => {
+    (e.lines || []).forEach((ln: any) => {
       addLine(`${ln.item ? ln.item + '  ' : ''}${ln.text}`);
     });
     if (e.officer) addLine(`signed: ${e.officer}, ${formatDate(e.date)}`);
@@ -390,7 +390,7 @@ async function generatePdfBlob() {
   return doc.output('blob');
 }
 
-async function handleDownloadPdf(setBusy, vesselName) {
+async function handleDownloadPdf(setBusy: any, vesselName: string) {
   setBusy(true);
   try {
     const blob = await generatePdfBlob();
@@ -404,7 +404,7 @@ async function handleDownloadPdf(setBusy, vesselName) {
   setBusy(false);
 }
 
-async function handleSharePdf(setBusy, vesselName) {
+async function handleSharePdf(setBusy: any, vesselName: string) {
   setBusy(true);
   try {
     const blob = await generatePdfBlob();
@@ -424,7 +424,7 @@ async function handleSharePdf(setBusy, vesselName) {
   setBusy(false);
 }
 
-const previewLines = op && op.tankMode !== 'freetext' ? op.buildLines(values, tanks) : null;
+const previewLines = op && op.tankMode !== 'freetext' ? op.buildLines!(values, tanks) : null;
 
 const dateTimeIconFix = (
   <style>{`
@@ -745,7 +745,7 @@ return (
 );
 }
 
-function TankAddForm({ onAdd, name, setName, cap, setCap, qty, setQty, label }) {
+function TankAddForm({ onAdd, name, setName, cap, setCap, qty, setQty, label }: { onAdd: any; name: any; setName: any; cap: any; setCap: any; qty: any; setQty: any; label: any }) {
 return (
 <div style={{ marginTop: 8 }}>
 <div className="orb-g21" style={{ gap: 8, marginBottom: 8 }}>
@@ -760,16 +760,16 @@ return (
 );
 }
 
-const outerStyle = { minHeight: '100vh', background: '#0d1030', color: '#eef4fa', fontFamily: 'system-ui, sans-serif' };
-const cardStyle = { background: 'linear-gradient(165deg,#141845,#050716)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, padding: 18, marginBottom: 14 };
-const labelStyle = { fontSize: 11, color: '#6b83a0', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700, display: 'block', marginBottom: 10 };
-const fieldLabelStyle = { fontSize: 12, color: '#c5d3e8', fontWeight: 700, display: 'block', marginBottom: 5, letterSpacing: '.01em' };
-const inpStyle = { width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '9px 11px', color: '#eef4fa', fontSize: 13, fontFamily: 'inherit' };
-const addBtnStyle = { background: 'linear-gradient(135deg,#fbbf24,#e0a010)', color: '#0b0e13', border: 'none', borderRadius: 9, padding: '9px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' };
-const delBtnStyle = { background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)', color: '#eef4fa', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 11.5, cursor: 'pointer' };
-const miniBtnStyle = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, padding: 2 };
-const thStyle = { padding: '8px 6px', textAlign: 'center', borderBottom: '1px solid #ccc', fontWeight: 700 };
-const tdStyle = { padding: '5px 6px', verticalAlign: 'top' };
-const rowChipStyle = { display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 8, marginBottom: 6, fontSize: 12.5 };
-const catBtnStyle = { background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)', color: '#a8bdd2', borderRadius: 9, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
-const catBtnActiveStyle = { background: '#fbbf24', color: '#0b0e13', borderColor: '#fbbf24' };
+const outerStyle: React.CSSProperties = { minHeight: '100vh', background: '#0d1030', color: '#eef4fa', fontFamily: 'system-ui, sans-serif' };
+const cardStyle: React.CSSProperties = { background: 'linear-gradient(165deg,#141845,#050716)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, padding: 18, marginBottom: 14 };
+const labelStyle: React.CSSProperties = { fontSize: 11, color: '#6b83a0', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700, display: 'block', marginBottom: 10 };
+const fieldLabelStyle: React.CSSProperties = { fontSize: 12, color: '#c5d3e8', fontWeight: 700, display: 'block', marginBottom: 5, letterSpacing: '.01em' };
+const inpStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '9px 11px', color: '#eef4fa', fontSize: 13, fontFamily: 'inherit' };
+const addBtnStyle: React.CSSProperties = { background: 'linear-gradient(135deg,#fbbf24,#e0a010)', color: '#0b0e13', border: 'none', borderRadius: 9, padding: '9px 14px', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' };
+const delBtnStyle: React.CSSProperties = { background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.15)', color: '#eef4fa', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 11.5, cursor: 'pointer' };
+const miniBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, padding: 2 };
+const thStyle: React.CSSProperties = { padding: '8px 6px', textAlign: 'center', borderBottom: '1px solid #ccc', fontWeight: 700 };
+const tdStyle: React.CSSProperties = { padding: '5px 6px', verticalAlign: 'top' };
+const rowChipStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 8, marginBottom: 6, fontSize: 12.5 };
+const catBtnStyle: React.CSSProperties = { background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)', color: '#a8bdd2', borderRadius: 9, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' };
+const catBtnActiveStyle: React.CSSProperties = { background: '#fbbf24', color: '#0b0e13', borderColor: '#fbbf24' };
