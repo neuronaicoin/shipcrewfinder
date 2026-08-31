@@ -4,9 +4,48 @@ import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
 import { getPlanAccess } from "@/lib/plan-access";
 import { requestUpgrade } from "@/lib/actions/upgrade-request";
+import { requestToolUpgrade } from "@/lib/actions/upgrade-tool-request";
 
 export const metadata = {
   title: "Upgrade Your Plan — ShipCrewFinder",
+};
+
+const TOOL_INFO: Record<string, { name: string; price: string; period: string; desc: string; features: string[] }> = {
+  orb: {
+    name: "Oil Record Book Pro",
+    price: "$29.90",
+    period: "/ year",
+    desc: "MARPOL Annex I compliant logging for Engine Department",
+    features: [
+      "24 official operations — auto-generated codes & item numbers",
+      "Sludge, bilge, bunkering, equipment failure, accidental discharge",
+      "Tank registry with running balances",
+      "PDF export & share",
+    ],
+  },
+  "draft-survey": {
+    name: "Draft Survey Calculator Pro",
+    price: "$29.90",
+    period: "/ year",
+    desc: "Full quadratic-mean cargo calculation, Deck Department",
+    features: [
+      "Your own vessel's hydrostatic table",
+      "Verified formulas — matched to a real ship's certified worksheet",
+      "Multiple saved vessel profiles",
+      "Signable report, PDF export",
+    ],
+  },
+  documents: {
+    name: "Document Generator Pro",
+    price: "$9.90",
+    period: "/ year",
+    desc: "NOR, SOF, LOI & Letters of Protest, ready in minutes",
+    features: [
+      "7 document types + 14 Letter of Protest scenarios",
+      "Unlimited PDF export & share",
+      "Fill once, reuse the format",
+    ],
+  },
 };
 
 export default async function UpgradePage({
@@ -16,6 +55,7 @@ export default async function UpgradePage({
 }) {
   const sp = await searchParams;
   const requested = sp.requested;
+  const toolParam = sp.tool;
 
   const supabase = await createClient();
   const {
@@ -33,14 +73,9 @@ export default async function UpgradePage({
       .eq("read", false),
   ]);
 
-  if (!me || me.user_type !== "company") redirect("/dashboard");
+  if (!me) redirect("/dashboard");
 
-  const currentPlan = (me.plan as string) || "free";
-  const access = getPlanAccess(currentPlan as never);
-
-  return (
-    <>
-      <style>{`
+  const sharedStyle = `
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
     --navy:#0d1030;--navy2:#141845;--ink:#050716;
@@ -83,7 +118,92 @@ export default async function UpgradePage({
   .note{text-align:center;font-size:12px;color:var(--tx3);margin-top:26px;line-height:1.6}
   footer{border-top:1px solid var(--line2);padding:30px 0;background:var(--ink);text-align:center;font-size:12.5px;color:var(--tx3)}
   footer a{color:var(--gold);text-decoration:none}
-`}</style>
+  `;
+
+  if (me.user_type !== "company") {
+    const order = toolParam && TOOL_INFO[toolParam]
+      ? [toolParam, ...Object.keys(TOOL_INFO).filter((k) => k !== toolParam)]
+      : Object.keys(TOOL_INFO);
+
+    return (
+      <>
+        <style>{sharedStyle}</style>
+        <SiteHeader isLoggedIn={true} userType="seafarer" unreadCount={unreadCount || 0} active={null} />
+        <div className="up-hero">
+          <div className="aur"></div>
+          <div className="wrap" style={{ position: "relative" }}>
+            <Link href="/dashboard" className="back">← Back to dashboard</Link>
+            <h1>Pro tools built for <span style={{ color: "var(--gold)" }}>your rank</span></h1>
+            <p className="sub">
+              Your free trial has ended, or you&apos;re ready for unlimited access. Pick a tool below.
+            </p>
+          </div>
+        </div>
+
+        <section style={{ paddingTop: 0 }}>
+          <div className="wrap">
+            {requested === "1" && toolParam ? (
+              <div className="banner ok">
+                ✅ <b>Request received.</b> We&apos;ll send payment details (bank transfer) to your
+                account email within 24 hours. Once payment is confirmed, {TOOL_INFO[toolParam]?.name} activates the same day.
+              </div>
+            ) : null}
+
+            <div className="cplans" style={{ gridTemplateColumns: "1fr" }}>
+              {order.map((key) => {
+                const info = TOOL_INFO[key];
+                if (!info) return null;
+                const isHighlighted = key === toolParam;
+                const justRequested = requested === "1" && toolParam === key;
+                return (
+                  <div className={`cplan ${isHighlighted ? "hot" : ""}`} key={key} style={{ maxWidth: 460 }}>
+                    {isHighlighted ? <div className="hot-tag">YOUR TOOL</div> : null}
+                    <h2>{info.name}</h2>
+                    <div className="cfor">{info.desc}</div>
+                    <div className="pnum">{info.price} <small>{info.period}</small></div>
+                    <div className="pper">billed annually · cancel anytime</div>
+                    <ul className="plist">
+                      {info.features.map((f) => (
+                        <li key={f}>{f}</li>
+                      ))}
+                    </ul>
+                    {justRequested ? (
+                      <span className="btn btn-done">✓ Request sent — check your email</span>
+                    ) : (
+                      <form action={requestToolUpgrade}>
+                        <input type="hidden" name="tool" value={key} />
+                        <button type="submit" className={isHighlighted ? "btn btn-gold" : "btn btn-ghost"}>
+                          Request payment details →
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="note">
+              We use secure bank transfer for payments. After requesting, our team sends transfer
+              details to your registered email — access activates within 24 hours of confirmed payment.
+            </p>
+          </div>
+        </section>
+
+        <footer>
+          <div className="wrap">
+            © 2026 ShipCrewFinder · <Link href="/dashboard">Dashboard</Link> · <Link href="/contact">Contact</Link>
+          </div>
+        </footer>
+      </>
+    );
+  }
+
+  const currentPlan = (me.plan as string) || "free";
+  const access = getPlanAccess(currentPlan as never);
+
+  return (
+    <>
+      <style>{sharedStyle}</style>
 
       <SiteHeader
         isLoggedIn={true}
@@ -105,7 +225,7 @@ export default async function UpgradePage({
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
-          {requested ? (
+          {requested === "pro" || requested === "fleet" ? (
             <div className="banner ok">
               ✅ <b>Request received.</b> We&apos;ll send payment details (bank transfer) to your
               account email within 24 hours. Once payment is confirmed, your{" "}
