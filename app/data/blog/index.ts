@@ -84,6 +84,13 @@ import ciiEexiExplainedGuide2026 from "./cii-eexi-explained-carbon-intensity-gui
 import sire20Viq7Guide2026 from "./sire-2-0-viq7-inspection-guide-2026";
 import pscInspectionGuide2026 from "./psc-inspection-preparation-complete-guide-2026";
 import ballastWaterD1D2Guide2026 from "./ballast-water-management-d1-d2-compliance-guide-2026";
+import stcwCertificateByRankGuide2026 from "./stcw-certificate-requirements-by-rank-guide-2026";
+import colregsMostConfusedGuide2026 from "./colregs-most-confused-rules-explained-2026";
+import ismCodeExplainedGuide2026 from "./ism-code-explained-what-it-actually-requires-2026";
+import imdgDangerousGoodsGuide2026 from "./imdg-dangerous-goods-common-mistakes-2026";
+import heavyWeatherDecisionGuide2026 from "./heavy-weather-decision-guide-masters-officers-2026";
+import iceNavigationDecisionGuide2026 from "./ice-navigation-decision-guide-masters-officers-2026";
+import worldsLargestShippingCompanies2026 from "./worlds-largest-shipping-companies-fleet-guide-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
   oilRecordBookGuide2026,
@@ -94,6 +101,13 @@ export const allPosts: BlogPost[] = [
   sire20Viq7Guide2026,
   pscInspectionGuide2026,
   ballastWaterD1D2Guide2026,
+  stcwCertificateByRankGuide2026,
+  colregsMostConfusedGuide2026,
+  ismCodeExplainedGuide2026,
+  imdgDangerousGoodsGuide2026,
+  heavyWeatherDecisionGuide2026,
+  iceNavigationDecisionGuide2026,
+  worldsLargestShippingCompanies2026,
   completeGuideSeafarerCareer2026,
   piInjuryCompensationClaimProcess,
   overstayedContractMlcRights,
