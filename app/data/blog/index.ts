@@ -76,8 +76,14 @@ import seafarerContractLengthRotation from "./seafarer-contract-length-rotation"
 import howToBecomeYachtCrew from "./how-to-become-yacht-crew";
 import tankerVsCargoShipJobs from "./tanker-vs-cargo-ship-jobs";
 import completeGuideSeafarerCareer2026 from "./complete-guide-seafarer-career-2026";
+import oilRecordBookGuide2026 from "./oil-record-book-part-1-complete-guide-2026";
+import draftSurveyCalculationGuide2026 from "./draft-survey-calculation-complete-guide-2026";
+import letterOfProtestNorSofGuide2026 from "./letter-of-protest-nor-sof-guide-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  oilRecordBookGuide2026,
+  draftSurveyCalculationGuide2026,
+  letterOfProtestNorSofGuide2026,
   completeGuideSeafarerCareer2026,
   piInjuryCompensationClaimProcess,
   overstayedContractMlcRights,
