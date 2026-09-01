@@ -91,6 +91,16 @@ import imdgDangerousGoodsGuide2026 from "./imdg-dangerous-goods-common-mistakes-
 import heavyWeatherDecisionGuide2026 from "./heavy-weather-decision-guide-masters-officers-2026";
 import iceNavigationDecisionGuide2026 from "./ice-navigation-decision-guide-masters-officers-2026";
 import worldsLargestShippingCompanies2026 from "./worlds-largest-shipping-companies-fleet-guide-2026";
+import howCompaniesSearchCrewGuide2026 from "./how-shipping-companies-search-for-crew-online-2026";
+import profileNotNoticedGuide2026 from "./why-your-seafarer-profile-isnt-getting-noticed-2026";
+import cadetToMasterTimelineGuide2026 from "./cadet-to-master-chief-engineer-career-timeline-2026";
+import multiRankJobSearchGuide2026 from "./multi-rank-job-search-strategy-seafarers-2026";
+import verificationGapGuide2026 from "./verification-gap-why-companies-ignore-unverified-cvs-2026";
+import agencyFeesVsDirectGuide2026 from "./recruitment-agency-fees-vs-direct-hiring-cost-comparison-2026";
+import verifyCertificatesSeaTimeGuide2026 from "./how-to-verify-seafarer-certificates-sea-time-2026";
+import crewPipelineWithoutAgencyGuide2026 from "./building-reliable-crew-pipeline-without-agency-2026";
+import slowResponseTimesGuide2026 from "./slow-response-times-cost-shipping-companies-best-candidates-2026";
+import smallMidSizeFleetsGuide2026 from "./crewing-small-mid-size-fleets-guide-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
   oilRecordBookGuide2026,
@@ -108,6 +118,16 @@ export const allPosts: BlogPost[] = [
   heavyWeatherDecisionGuide2026,
   iceNavigationDecisionGuide2026,
   worldsLargestShippingCompanies2026,
+  howCompaniesSearchCrewGuide2026,
+  profileNotNoticedGuide2026,
+  cadetToMasterTimelineGuide2026,
+  multiRankJobSearchGuide2026,
+  verificationGapGuide2026,
+  agencyFeesVsDirectGuide2026,
+  verifyCertificatesSeaTimeGuide2026,
+  crewPipelineWithoutAgencyGuide2026,
+  slowResponseTimesGuide2026,
+  smallMidSizeFleetsGuide2026,
   completeGuideSeafarerCareer2026,
   piInjuryCompensationClaimProcess,
   overstayedContractMlcRights,
