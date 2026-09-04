@@ -97,6 +97,7 @@ import cadetToMasterTimelineGuide2026 from "./cadet-to-master-chief-engineer-car
 import multiRankJobSearchGuide2026 from "./multi-rank-job-search-strategy-seafarers-2026";
 import verificationGapGuide2026 from "./verification-gap-why-companies-ignore-unverified-cvs-2026";
 import redFlagsHiringCrewGuide2026 from "./red-flags-hiring-crew-warning-signs-employers-2026";
+import starlinkSatelliteInternetGuide2026 from "./starlink-satellite-internet-at-sea-guide-crew-2026";
 import agencyFeesVsDirectGuide2026 from "./recruitment-agency-fees-vs-direct-hiring-cost-comparison-2026";
 import verifyCertificatesSeaTimeGuide2026 from "./how-to-verify-seafarer-certificates-sea-time-2026";
 import crewPipelineWithoutAgencyGuide2026 from "./building-reliable-crew-pipeline-without-agency-2026";
@@ -125,6 +126,7 @@ export const allPosts: BlogPost[] = [
   multiRankJobSearchGuide2026,
   verificationGapGuide2026,
   redFlagsHiringCrewGuide2026,
+  starlinkSatelliteInternetGuide2026,
   agencyFeesVsDirectGuide2026,
   verifyCertificatesSeaTimeGuide2026,
   crewPipelineWithoutAgencyGuide2026,
