@@ -101,6 +101,7 @@ import starlinkSatelliteInternetGuide2026 from "./starlink-satellite-internet-at
 import howToGetPromotedFasterGuide2026 from "./how-to-get-promoted-faster-seafarer-career-2026";
 import costOfNotHavingProfileGuide2026 from "./cost-of-not-having-verified-seafarer-profile-2026";
 import yachtCrewCompleteGuide2026 from "./yacht-crew-complete-guide-jobs-salary-certificates-2026";
+import tankerContainerBulkLngLpgGuide2026 from "./tanker-container-bulk-carrier-lng-lpg-crew-complete-guide-2026";
 import agencyFeesVsDirectGuide2026 from "./recruitment-agency-fees-vs-direct-hiring-cost-comparison-2026";
 import verifyCertificatesSeaTimeGuide2026 from "./how-to-verify-seafarer-certificates-sea-time-2026";
 import crewPipelineWithoutAgencyGuide2026 from "./building-reliable-crew-pipeline-without-agency-2026";
@@ -133,6 +134,7 @@ export const allPosts: BlogPost[] = [
   howToGetPromotedFasterGuide2026,
   costOfNotHavingProfileGuide2026,
   yachtCrewCompleteGuide2026,
+  tankerContainerBulkLngLpgGuide2026,
   agencyFeesVsDirectGuide2026,
   verifyCertificatesSeaTimeGuide2026,
   crewPipelineWithoutAgencyGuide2026,
