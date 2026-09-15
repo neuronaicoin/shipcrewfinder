@@ -1,3 +1,8 @@
+import maintainingRelationshipsSeafarers from "./maintaining-relationships-family-long-sea-contracts-seafarers";
+import maritimeEnglishLearningGuide from "./maritime-english-learning-guide-non-native-seafarers-2026";
+import financialPlanningIrregularIncome from "./financial-planning-irregular-income-seafarers-2026";
+import oralExamPreparationGuide from "./how-to-prepare-oral-exam-certificate-competency-seafarers-2026";
+import fitnessExerciseGuideSeafarers from "./fitness-exercise-guide-seafarers-limited-space-2026";
 import type { BlogIndexEntry, BlogPost } from "./types";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
@@ -114,6 +119,11 @@ import seafarerJobSearchTips2026 from "./seafarer-job-search-tips-2026";
 import seafarerBenefitsBeyondSalary2026 from "./seafarer-benefits-beyond-salary-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  maintainingRelationshipsSeafarers,
+  maritimeEnglishLearningGuide,
+  financialPlanningIrregularIncome,
+  oralExamPreparationGuide,
+  fitnessExerciseGuideSeafarers,
   seafarerBenefitsBeyondSalary2026,
   seafarerJobSearchTips2026,
   oilRecordBookGuide2026,
