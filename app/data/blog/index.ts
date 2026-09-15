@@ -111,8 +111,10 @@ import crewPipelineWithoutAgencyGuide2026 from "./building-reliable-crew-pipelin
 import slowResponseTimesGuide2026 from "./slow-response-times-cost-shipping-companies-best-candidates-2026";
 import smallMidSizeFleetsGuide2026 from "./crewing-small-mid-size-fleets-guide-2026";
 import seafarerJobSearchTips2026 from "./seafarer-job-search-tips-2026";
+import seafarerBenefitsBeyondSalary2026 from "./seafarer-benefits-beyond-salary-2026";
 // Tüm yazıların tam içeriği (tek yazı sayfası bundan okur)
 export const allPosts: BlogPost[] = [
+  seafarerBenefitsBeyondSalary2026,
   seafarerJobSearchTips2026,
   oilRecordBookGuide2026,
   draftSurveyCalculationGuide2026,
