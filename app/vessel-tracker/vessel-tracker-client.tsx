@@ -15,14 +15,17 @@ function PortInput({
   label,
   value,
   onSelect,
+  onClear,
 }: {
   label: string;
   value: PortOption | null;
   onSelect: (p: PortOption) => void;
+  onClear: () => void;
 }) {
   const [text, setText] = useState("");
   const [options, setOptions] = useState<PortOption[]>([]);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleChange(v: string) {
@@ -44,20 +47,46 @@ function PortInput({
     }, 250);
   }
 
+  function startEditing() {
+    // Bir liman seçiliyken tekrar odaklanınca alanı temizle, yeniden aranabilsin.
+    if (value) {
+      onClear();
+      setText("");
+      setEditing(true);
+    }
+  }
+
+  const showingSelected = value && !editing;
+
   return (
     <div className="vt-portwrap">
       <label className="vt-portlabel">{label}</label>
-      <input
-        className="vt-input"
-        type="text"
-        placeholder="Port name or UN/LOCODE"
-        value={value ? `${value.name} (${value.code})` : text}
-        onChange={(e) => {
-          handleChange(e.target.value);
-        }}
-        onFocus={() => options.length > 0 && setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-      />
+      <div className="vt-portinputrow">
+        <input
+          className="vt-input"
+          type="text"
+          placeholder="Port name or UN/LOCODE"
+          value={showingSelected ? `${value!.name} (${value!.code})` : text}
+          onChange={(e) => handleChange(e.target.value)}
+          onFocus={startEditing}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+        />
+        {value && (
+          <button
+            type="button"
+            className="vt-portclear"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onClear();
+              setText("");
+              setEditing(true);
+            }}
+            aria-label={`Clear ${label}`}
+          >
+            ✕
+          </button>
+        )}
+      </div>
       {open && options.length > 0 && (
         <div className="vt-dropdown">
           {options.map((p) => (
@@ -68,6 +97,7 @@ function PortInput({
                 onSelect(p);
                 setText("");
                 setOpen(false);
+                setEditing(false);
               }}
             >
               <strong>{p.name}</strong> <span className="vt-dropcode">{p.code}</span>
@@ -102,6 +132,8 @@ export default function VesselTrackerClient() {
   } | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
+  const [viaPoint, setViaPoint] = useState<[number, number] | null>(null); // [lon, lat]
+  const [fitTrigger, setFitTrigger] = useState(0);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -121,18 +153,18 @@ export default function VesselTrackerClient() {
     }
   }
 
-  async function handleCalculateRoute() {
+  async function fetchRoute(via: [number, number] | null) {
     if (!origin || !destination) return;
     setRouteLoading(true);
     setRouteError(null);
-    setRoute(null);
-    setRouteInfo(null);
     try {
       const params = new URLSearchParams({
         from: origin.code,
         to: destination.code,
         speed,
       });
+      if (via) params.set("via", `${via[0]},${via[1]}`);
+
       const res = await fetch(`/api/route?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) {
@@ -152,6 +184,20 @@ export default function VesselTrackerClient() {
     }
   }
 
+  async function handleCalculateRoute() {
+    setViaPoint(null);
+    setRoute(null);
+    setRouteInfo(null);
+    setFitTrigger((n) => n + 1); // yeni rota hesaplanınca haritayı ona odakla
+    await fetchRoute(null);
+  }
+
+  async function handleDragRoute(lat: number, lon: number) {
+    const via: [number, number] = [lon, lat];
+    setViaPoint(via);
+    await fetchRoute(via); // fitTrigger artmıyor — harita sürükleme sırasında zıplamasın
+  }
+
   return (
     <div className="vt-wrap">
       <style>{`
@@ -168,6 +214,7 @@ export default function VesselTrackerClient() {
   .vt-btn{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));
     color:#0b0e13;border:none;border-radius:12px;padding:0 20px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
   .vt-btn:disabled{opacity:.6}
+  .vt-btn-ghost{background:transparent;border:1.5px solid var(--line2,rgba(255,255,255,.15));color:var(--tx2,#a8bdd2)}
   .vt-hint{font-size:11.5px;color:var(--tx3,#6b83a0);text-align:center;margin-top:8px;max-width:640px;margin-left:auto;margin-right:auto}
   .vt-results{max-width:640px;margin:10px auto 0;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
   .vt-rescard{flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));
@@ -186,6 +233,10 @@ export default function VesselTrackerClient() {
   .vt-planrow{display:flex;gap:8px;flex-wrap:wrap}
   .vt-portwrap{position:relative;flex:1;min-width:180px}
   .vt-portlabel{font-size:11px;color:var(--tx3,#6b83a0);margin-bottom:4px;display:block}
+  .vt-portinputrow{position:relative;display:flex;align-items:center}
+  .vt-portclear{position:absolute;right:10px;background:none;border:none;color:var(--tx3,#6b83a0);
+    cursor:pointer;font-size:13px;padding:4px}
+  .vt-portclear:hover{color:var(--gold,#fbbf24)}
   .vt-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--navy2,#141845);
     border:1px solid var(--line2,rgba(255,255,255,.12));border-radius:10px;margin-top:4px;
     max-height:220px;overflow-y:auto;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.4)}
@@ -250,8 +301,18 @@ export default function VesselTrackerClient() {
         ) : (
           <div className="vt-plan">
             <div className="vt-planrow">
-              <PortInput label="From" value={origin} onSelect={setOrigin} />
-              <PortInput label="To" value={destination} onSelect={setDestination} />
+              <PortInput
+                label="From"
+                value={origin}
+                onSelect={setOrigin}
+                onClear={() => setOrigin(null)}
+              />
+              <PortInput
+                label="To"
+                value={destination}
+                onSelect={setDestination}
+                onClear={() => setDestination(null)}
+              />
             </div>
             <div className="vt-planrow vt-plancta">
               <div className="vt-speedwrap">
@@ -270,6 +331,17 @@ export default function VesselTrackerClient() {
               >
                 {routeLoading ? "Calculating..." : "Calculate Route"}
               </button>
+              {viaPoint && (
+                <button
+                  className="vt-btn vt-btn-ghost"
+                  onClick={() => {
+                    setViaPoint(null);
+                    fetchRoute(null);
+                  }}
+                >
+                  Reset to shortest
+                </button>
+              )}
             </div>
             {routeError && <p className="vt-routeerr">{routeError}</p>}
             {routeInfo && (
@@ -288,6 +360,7 @@ export default function VesselTrackerClient() {
             )}
             <p className="vt-hint">
               Sea-only route avoiding land, based on major shipping lanes — not for navigation.
+              {route && " Drag the white circle on the route to route it through a custom point."}
             </p>
           </div>
         )}
@@ -327,6 +400,8 @@ export default function VesselTrackerClient() {
           showEcaSeca={showEcaSeca}
           showMarpolSpecial={showMarpolSpecial}
           route={route}
+          fitTrigger={fitTrigger}
+          onDragRoute={handleDragRoute}
         />
       </div>
     </div>
