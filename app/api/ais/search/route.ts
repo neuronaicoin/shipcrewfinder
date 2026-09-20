@@ -18,13 +18,13 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
   const { data, error } = await supabase
     .from("vessel_positions")
     .select("*")
     .ilike("ship_name", `%${q}%`)
-    .gte("updated_at", fifteenMinAgo)
+    .gte("updated_at", cutoff)
     .order("updated_at", { ascending: false })
     .limit(20);
 
