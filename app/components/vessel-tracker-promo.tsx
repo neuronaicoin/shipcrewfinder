@@ -34,16 +34,15 @@ export default function VesselTrackerPromo() {
         <div className="vtp-box">
           <div className="vtp-in">
             <div className="vtp-txt">
-              <div className="vtp-badge"><span className="vtp-dot"></span>LIVE AIS</div>
+              <div className="vtp-badge"><span className="vtp-dot"></span>VOYAGE PLANNER</div>
               <h2 className="vtp-h2">
-                Track any vessel <span>live</span> — real-time on the map
+                Plan a <span>Voyage</span> — sea route, ETA & fuel
               </h2>
               <p className="vtp-p">
-                Search a ship by name and see its current position, speed and course, updating
-                in real time. Free, no login needed.
+                Get a sea-only route between any two ports, with distance, ETA and fuel burn — or track any vessel live on the map. Free, no login needed.
               </p>
             </div>
-            <Link href="/vessel-tracker" className="vtp-cta">🚢 Track a Vessel →</Link>
+            <Link href="/vessel-tracker" className="vtp-cta">🧭 Plan a Voyage →</Link>
           </div>
         </div>
       </div>
