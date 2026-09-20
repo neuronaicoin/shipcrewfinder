@@ -48,7 +48,6 @@ function PortInput({
   }
 
   function startEditing() {
-    // Bir liman seçiliyken tekrar odaklanınca alanı temizle, yeniden aranabilsin.
     if (value) {
       onClear();
       setText("");
@@ -120,10 +119,12 @@ export default function VesselTrackerClient() {
   const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
 
   // Voyage planner state
-  const [mode, setMode] = useState<"track" | "plan">("track");
+  const [mode, setMode] = useState<"track" | "plan">("plan");
   const [origin, setOrigin] = useState<PortOption | null>(null);
   const [destination, setDestination] = useState<PortOption | null>(null);
   const [speed, setSpeed] = useState("14");
+  const [dailyConsumption, setDailyConsumption] = useState(""); // tons/day
+  const [rob, setRob] = useState(""); // tons at departure
   const [route, setRoute] = useState<RouteFeature | null>(null);
   const [routeInfo, setRouteInfo] = useState<{
     distanceNm: number;
@@ -132,7 +133,8 @@ export default function VesselTrackerClient() {
   } | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
-  const [viaPoint, setViaPoint] = useState<[number, number] | null>(null); // [lon, lat]
+  // 3 sürüklenebilir nokta — her biri null (henüz taşınmadı) ya da [lon, lat]
+  const [viaPoints, setViaPoints] = useState<([number, number] | null)[]>([null, null, null]);
   const [fitTrigger, setFitTrigger] = useState(0);
 
   async function handleSearch(e: React.FormEvent) {
@@ -153,7 +155,7 @@ export default function VesselTrackerClient() {
     }
   }
 
-  async function fetchRoute(via: [number, number] | null) {
+  async function fetchRoute(via: ([number, number] | null)[]) {
     if (!origin || !destination) return;
     setRouteLoading(true);
     setRouteError(null);
@@ -163,7 +165,10 @@ export default function VesselTrackerClient() {
         to: destination.code,
         speed,
       });
-      if (via) params.set("via", `${via[0]},${via[1]}`);
+      const activeVia = via.filter((v): v is [number, number] => v !== null);
+      if (activeVia.length > 0) {
+        params.set("via", activeVia.map(([lon, lat]) => `${lon},${lat}`).join(";"));
+      }
 
       const res = await fetch(`/api/route?${params.toString()}`);
       const data = await res.json();
@@ -185,18 +190,31 @@ export default function VesselTrackerClient() {
   }
 
   async function handleCalculateRoute() {
-    setViaPoint(null);
+    setViaPoints([null, null, null]);
     setRoute(null);
     setRouteInfo(null);
-    setFitTrigger((n) => n + 1); // yeni rota hesaplanınca haritayı ona odakla
-    await fetchRoute(null);
+    setFitTrigger((n) => n + 1);
+    await fetchRoute([null, null, null]);
   }
 
-  async function handleDragRoute(lat: number, lon: number) {
-    const via: [number, number] = [lon, lat];
-    setViaPoint(via);
-    await fetchRoute(via); // fitTrigger artmıyor — harita sürükleme sırasında zıplamasın
+  async function handleDragRoute(index: number, lat: number, lon: number) {
+    const next = [...viaPoints];
+    next[index] = [lon, lat];
+    setViaPoints(next);
+    await fetchRoute(next); // fitTrigger artmıyor — harita sürüklerken zıplamasın
   }
+
+  const hasCustomRoute = viaPoints.some((v) => v !== null);
+
+  // Yakıt / ROB hesapları
+  const dailyCons = parseFloat(dailyConsumption);
+  const robStart = parseFloat(rob);
+  const voyageDays =
+    routeInfo?.durationHours != null ? routeInfo.durationHours / 24 : null;
+  const totalFuelBurned =
+    voyageDays != null && !Number.isNaN(dailyCons) ? dailyCons * voyageDays : null;
+  const robAtArrival =
+    totalFuelBurned != null && !Number.isNaN(robStart) ? robStart - totalFuelBurned : null;
 
   return (
     <div className="vt-wrap">
@@ -244,21 +262,22 @@ export default function VesselTrackerClient() {
   .vt-dropitem:hover{background:rgba(251,191,36,.08)}
   .vt-dropcode{color:var(--gold,#fbbf24);font-size:11px;margin-left:4px}
   .vt-dropcountry{font-size:11px;color:var(--tx3,#6b83a0)}
-  .vt-speedwrap{width:110px}
-  .vt-plancta{display:flex;gap:8px;align-items:flex-end}
+  .vt-numwrap{width:130px}
+  .vt-plancta{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
   .vt-routeinfo{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--tx2,#a8bdd2);
     background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:10px;padding:10px 14px}
   .vt-routeinfo b{color:var(--gold,#fbbf24)}
+  .vt-routeinfo.warn b{color:#f87171}
   .vt-routeerr{font-size:12.5px;color:#f87171;text-align:center}
       `}</style>
 
       <div className="vt-searchbar">
         <div className="vt-tabs">
-          <div className={"vt-tab" + (mode === "track" ? " on" : "")} onClick={() => setMode("track")}>
-            🚢 Track a Vessel
-          </div>
           <div className={"vt-tab" + (mode === "plan" ? " on" : "")} onClick={() => setMode("plan")}>
             🧭 Plan a Voyage
+          </div>
+          <div className={"vt-tab" + (mode === "track" ? " on" : "")} onClick={() => setMode("track")}>
+            🚢 Track a Vessel
           </div>
         </div>
 
@@ -315,13 +334,33 @@ export default function VesselTrackerClient() {
               />
             </div>
             <div className="vt-planrow vt-plancta">
-              <div className="vt-speedwrap">
+              <div className="vt-numwrap">
                 <label className="vt-portlabel">Speed (kn)</label>
                 <input
                   className="vt-input"
                   type="number"
                   value={speed}
                   onChange={(e) => setSpeed(e.target.value)}
+                />
+              </div>
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">Consumption (t/day)</label>
+                <input
+                  className="vt-input"
+                  type="number"
+                  placeholder="e.g. 24"
+                  value={dailyConsumption}
+                  onChange={(e) => setDailyConsumption(e.target.value)}
+                />
+              </div>
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">ROB at departure (t)</label>
+                <input
+                  className="vt-input"
+                  type="number"
+                  placeholder="optional"
+                  value={rob}
+                  onChange={(e) => setRob(e.target.value)}
                 />
               </div>
               <button
@@ -331,12 +370,13 @@ export default function VesselTrackerClient() {
               >
                 {routeLoading ? "Calculating..." : "Calculate Route"}
               </button>
-              {viaPoint && (
+              {hasCustomRoute && (
                 <button
                   className="vt-btn vt-btn-ghost"
                   onClick={() => {
-                    setViaPoint(null);
-                    fetchRoute(null);
+                    const reset: ([number, number] | null)[] = [null, null, null];
+                    setViaPoints(reset);
+                    fetchRoute(reset);
                   }}
                 >
                   Reset to shortest
@@ -345,7 +385,7 @@ export default function VesselTrackerClient() {
             </div>
             {routeError && <p className="vt-routeerr">{routeError}</p>}
             {routeInfo && (
-              <div className="vt-routeinfo">
+              <div className={"vt-routeinfo" + (robAtArrival !== null && robAtArrival < 0 ? " warn" : "")}>
                 <span>Distance: <b>{routeInfo.distanceNm.toFixed(0)} nm</b></span>
                 {routeInfo.durationHours && (
                   <span>
@@ -356,11 +396,20 @@ export default function VesselTrackerClient() {
                 {routeInfo.passages.length > 0 && (
                   <span>Via: <b>{routeInfo.passages.join(", ")}</b></span>
                 )}
+                {totalFuelBurned !== null && (
+                  <span>Fuel burned: <b>{totalFuelBurned.toFixed(1)} t</b></span>
+                )}
+                {robAtArrival !== null && (
+                  <span>
+                    ROB at arrival:{" "}
+                    <b>{robAtArrival.toFixed(1)} t{robAtArrival < 0 ? " — insufficient!" : ""}</b>
+                  </span>
+                )}
               </div>
             )}
             <p className="vt-hint">
               Sea-only route avoiding land, based on major shipping lanes — not for navigation.
-              {route && " Drag the white circle on the route to route it through a custom point."}
+              {route && " Drag any of the 3 circles on the route to reroute through that point."}
             </p>
           </div>
         )}
