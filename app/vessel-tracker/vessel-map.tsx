@@ -1,9 +1,10 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
+import { ECA_SECA_AREAS, MARPOL_SPECIAL_AREAS } from "@/lib/eca-marpol-areas";
 
 export type Vessel = {
   mmsi: number;
@@ -15,8 +16,6 @@ export type Vessel = {
   updated_at: string;
 };
 
-// Leaflet'in varsayılan marker PNG'leri bundler'larda kırılıyor (bilinen sorun) —
-// bunun yerine gemi temalı, marka renklerine uygun bir divIcon kullanıyoruz.
 function shipIcon() {
   return L.divIcon({
     className: "scf-ship-marker",
@@ -45,9 +44,13 @@ function FlyToVessel({ vessel }: { vessel: Vessel | null }) {
 export default function VesselMap({
   vessels,
   focusedVessel,
+  showEcaSeca,
+  showMarpolSpecial,
 }: {
   vessels: Vessel[];
   focusedVessel: Vessel | null;
+  showEcaSeca: boolean;
+  showMarpolSpecial: boolean;
 }) {
   return (
     <MapContainer
@@ -61,6 +64,41 @@ export default function VesselMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {showEcaSeca && (
+        <GeoJSON
+          data={ECA_SECA_AREAS as any}
+          style={(feature: any) => ({
+            color: feature.properties.color,
+            weight: 1.5,
+            fillOpacity: 0.12,
+            dashArray: "5,4",
+          })}
+          onEachFeature={(feature, layer) => {
+            layer.bindPopup(
+              `<strong>${feature.properties.name}</strong><br/>Sulfur limit: ${feature.properties.sulfurLimit}<br/><em>Approximate boundary — verify with official charts</em>`
+            );
+          }}
+        />
+      )}
+
+      {showMarpolSpecial && (
+        <GeoJSON
+          data={MARPOL_SPECIAL_AREAS as any}
+          style={(feature: any) => ({
+            color: feature.properties.color,
+            weight: 1.5,
+            fillOpacity: 0.1,
+            dashArray: "2,6",
+          })}
+          onEachFeature={(feature, layer) => {
+            layer.bindPopup(
+              `<strong>${feature.properties.name}</strong><br/><em>Approximate boundary — verify with official charts</em>`
+            );
+          }}
+        />
+      )}
+
       {vessels.map((v) => (
         <Marker key={v.mmsi} position={[v.latitude, v.longitude]} icon={shipIcon()}>
           <Popup>
