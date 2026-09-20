@@ -6,6 +6,7 @@ import MessRoomBox from "@/app/components/mess-room-box";
 import PopularSearches from "@/app/components/popular-searches";
 import LiveActivityStrip from "@/app/components/live-activity-strip";
 import AiProfilePromo from "@/app/components/ai-profile-promo";
+import VesselTrackerPromo from "@/app/components/vessel-tracker-promo";
 
 export default async function HomePage({
   searchParams,
@@ -28,6 +29,7 @@ export default async function HomePage({
         <>
           <DeckRail />
           <AiProfilePromo />
+          <VesselTrackerPromo />
           <LiveActivityStrip />
           <MessRoomBox messStatus={sp.mess} />
           <PopularSearches />
