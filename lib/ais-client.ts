@@ -33,6 +33,12 @@ type PendingVessel = {
 // Flush anında bu map'in tamamı tek istekte yazılır, sonra temizlenir.
 const pending = new Map<number, PendingVessel>();
 
+// Bir kere öğrenilen gemi adını process ömrü boyunca saklıyoruz.
+// Bazı AIS PositionReport mesajları isim içermez — isim içermeyen bir
+// mesaj geldiğinde önceden bilinen ismi SIFIRLAMAMAK için bu cache'i
+// kullanıyoruz (aksi halde arama isimle yapıldığı için gemi "kaybolur").
+const knownNames = new Map<number, string>();
+
 export function startAisStream() {
   if (started) return;
   started = true;
@@ -88,10 +94,14 @@ function connect() {
       const report = msg.Message.PositionReport;
       const mmsi = report.UserID;
 
+      const incomingName = msg.MetaData?.ShipName?.trim() || null;
+      if (incomingName) knownNames.set(mmsi, incomingName);
+      const shipName = incomingName || knownNames.get(mmsi) || null;
+
       // Sadece belleğe yaz — Supabase'e gitmiyor, flush loop hallediyor.
       pending.set(mmsi, {
         mmsi,
-        ship_name: msg.MetaData?.ShipName?.trim() || null,
+        ship_name: shipName,
         latitude: report.Latitude,
         longitude: report.Longitude,
         speed: report.Sog,
