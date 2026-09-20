@@ -1,10 +1,20 @@
 // Her deploy'da bir kez çalışır: tüm site URL'lerini IndexNow'a bildirir
 // (Bing + Yandex + IndexNow ortakları — ChatGPT aramasının ana kaynağı Bing'dir)
+// Ayrıca AIS gemi takip bağlantısını başlatır (canlı konum verisi).
 
 export async function register() {
-  // Sadece production sunucusunda çalış
-  if (process.env.NODE_ENV !== "production") return;
   if (process.env.NEXT_RUNTIME && process.env.NEXT_RUNTIME !== "nodejs") return;
+
+  // --- AIS canlı gemi takibi ---
+  try {
+    const { startAisStream } = await import("@/lib/ais-client");
+    startAisStream();
+  } catch (e) {
+    console.log("[AIS] başlatılamadı:", (e as Error).message);
+  }
+
+  // --- IndexNow bildirimi (sadece production'da) ---
+  if (process.env.NODE_ENV !== "production") return;
 
   try {
     const base = "https://shipcrewfinder.com";
