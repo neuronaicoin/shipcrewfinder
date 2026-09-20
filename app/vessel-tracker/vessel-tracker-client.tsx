@@ -1,13 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import type { Vessel } from "./vessel-map";
+import type { Vessel, RouteFeature } from "./vessel-map";
 
 const VesselMap = dynamic(() => import("./vessel-map"), {
   ssr: false,
   loading: () => <div className="vt-maploading">Loading map...</div>,
 });
+
+type PortOption = { code: string; name: string; country: string; coordinates: [number, number] };
+
+function PortInput({
+  label,
+  value,
+  onSelect,
+}: {
+  label: string;
+  value: PortOption | null;
+  onSelect: (p: PortOption) => void;
+}) {
+  const [text, setText] = useState("");
+  const [options, setOptions] = useState<PortOption[]>([]);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleChange(v: string) {
+    setText(v);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (v.trim().length < 2) {
+      setOptions([]);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/ports/search?q=${encodeURIComponent(v.trim())}`);
+        const data = await res.json();
+        setOptions(data.ports || []);
+        setOpen(true);
+      } catch {
+        setOptions([]);
+      }
+    }, 250);
+  }
+
+  return (
+    <div className="vt-portwrap">
+      <label className="vt-portlabel">{label}</label>
+      <input
+        className="vt-input"
+        type="text"
+        placeholder="Port name or UN/LOCODE"
+        value={value ? `${value.name} (${value.code})` : text}
+        onChange={(e) => {
+          handleChange(e.target.value);
+        }}
+        onFocus={() => options.length > 0 && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && options.length > 0 && (
+        <div className="vt-dropdown">
+          {options.map((p) => (
+            <div
+              key={p.code}
+              className="vt-dropitem"
+              onMouseDown={() => {
+                onSelect(p);
+                setText("");
+                setOpen(false);
+              }}
+            >
+              <strong>{p.name}</strong> <span className="vt-dropcode">{p.code}</span>
+              <div className="vt-dropcountry">{p.country}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function VesselTrackerClient() {
   const [query, setQuery] = useState("");
@@ -17,6 +88,20 @@ export default function VesselTrackerClient() {
   const [searched, setSearched] = useState(false);
   const [showEcaSeca, setShowEcaSeca] = useState(false);
   const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
+
+  // Voyage planner state
+  const [mode, setMode] = useState<"track" | "plan">("track");
+  const [origin, setOrigin] = useState<PortOption | null>(null);
+  const [destination, setDestination] = useState<PortOption | null>(null);
+  const [speed, setSpeed] = useState("14");
+  const [route, setRoute] = useState<RouteFeature | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{
+    distanceNm: number;
+    durationHours: number | null;
+    passages: string[];
+  } | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -36,13 +121,48 @@ export default function VesselTrackerClient() {
     }
   }
 
+  async function handleCalculateRoute() {
+    if (!origin || !destination) return;
+    setRouteLoading(true);
+    setRouteError(null);
+    setRoute(null);
+    setRouteInfo(null);
+    try {
+      const params = new URLSearchParams({
+        from: origin.code,
+        to: destination.code,
+        speed,
+      });
+      const res = await fetch(`/api/route?${params.toString()}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setRouteError(data.error || "Route could not be calculated.");
+        return;
+      }
+      setRoute(data.route);
+      setRouteInfo({
+        distanceNm: data.distanceNm,
+        durationHours: data.durationHours,
+        passages: data.passages || [],
+      });
+    } catch {
+      setRouteError("Route could not be calculated.");
+    } finally {
+      setRouteLoading(false);
+    }
+  }
+
   return (
     <div className="vt-wrap">
       <style>{`
   .vt-wrap{display:flex;flex-direction:column;height:calc(100dvh - 60px)}
   .vt-searchbar{padding:14px 16px;background:var(--navy2,#141845);border-bottom:1px solid var(--line2,rgba(255,255,255,.08));flex-shrink:0}
+  .vt-tabs{display:flex;gap:6px;max-width:640px;margin:0 auto 10px}
+  .vt-tab{flex:1;text-align:center;padding:9px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
+    background:rgba(255,255,255,.04);color:var(--tx2,#a8bdd2);border:1px solid var(--line2,rgba(255,255,255,.08))}
+  .vt-tab.on{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));color:#0b0e13;border-color:transparent}
   .vt-form{display:flex;gap:8px;max-width:640px;margin:0 auto}
-  .vt-input{flex:1;background:rgba(255,255,255,.05);border:1.5px solid var(--line2,rgba(255,255,255,.1));
+  .vt-input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--line2,rgba(255,255,255,.1));
     border-radius:12px;padding:12px 16px;color:var(--tx,#eef4fa);font-size:15px;outline:none}
   .vt-input:focus{border-color:var(--gold,#fbbf24)}
   .vt-btn{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));
@@ -61,41 +181,115 @@ export default function VesselTrackerClient() {
   .vt-layernote{font-size:10.5px;color:var(--tx3,#6b83a0);text-align:center;margin-top:4px;max-width:640px;margin-left:auto;margin-right:auto}
   .vt-mapbox{flex:1;position:relative;min-height:0}
   .vt-maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--tx3,#6b83a0);font-size:13px}
+
+  .vt-plan{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  .vt-planrow{display:flex;gap:8px;flex-wrap:wrap}
+  .vt-portwrap{position:relative;flex:1;min-width:180px}
+  .vt-portlabel{font-size:11px;color:var(--tx3,#6b83a0);margin-bottom:4px;display:block}
+  .vt-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--navy2,#141845);
+    border:1px solid var(--line2,rgba(255,255,255,.12));border-radius:10px;margin-top:4px;
+    max-height:220px;overflow-y:auto;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .vt-dropitem{padding:9px 13px;cursor:pointer;font-size:13px;color:var(--tx,#eef4fa);border-bottom:1px solid rgba(255,255,255,.05)}
+  .vt-dropitem:hover{background:rgba(251,191,36,.08)}
+  .vt-dropcode{color:var(--gold,#fbbf24);font-size:11px;margin-left:4px}
+  .vt-dropcountry{font-size:11px;color:var(--tx3,#6b83a0)}
+  .vt-speedwrap{width:110px}
+  .vt-plancta{display:flex;gap:8px;align-items:flex-end}
+  .vt-routeinfo{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--tx2,#a8bdd2);
+    background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:10px;padding:10px 14px}
+  .vt-routeinfo b{color:var(--gold,#fbbf24)}
+  .vt-routeerr{font-size:12.5px;color:#f87171;text-align:center}
       `}</style>
 
       <div className="vt-searchbar">
-        <form className="vt-form" onSubmit={handleSearch}>
-          <input
-            className="vt-input"
-            type="text"
-            placeholder="Enter ship name (e.g. MAERSK KANSAS)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button className="vt-btn" type="submit" disabled={loading}>
-            {loading ? "..." : "Search"}
-          </button>
-        </form>
-        <p className="vt-hint">
-          Only vessels currently transmitting AIS signal (last 30 min) can be found — ships
-          docked in port or with AIS off may not appear.
-        </p>
-
-        {searched && results.length > 0 && (
-          <div className="vt-results">
-            {results.map((v) => (
-              <div
-                key={v.mmsi}
-                className={"vt-rescard" + (focused?.mmsi === v.mmsi ? " on" : "")}
-                onClick={() => setFocused(v)}
-              >
-                🚢 {v.ship_name || v.mmsi} · {v.speed ?? 0} kn
-              </div>
-            ))}
+        <div className="vt-tabs">
+          <div className={"vt-tab" + (mode === "track" ? " on" : "")} onClick={() => setMode("track")}>
+            🚢 Track a Vessel
           </div>
-        )}
-        {searched && !loading && results.length === 0 && (
-          <p className="vt-empty">No vessel currently transmitting matches that name.</p>
+          <div className={"vt-tab" + (mode === "plan" ? " on" : "")} onClick={() => setMode("plan")}>
+            🧭 Plan a Voyage
+          </div>
+        </div>
+
+        {mode === "track" ? (
+          <>
+            <form className="vt-form" onSubmit={handleSearch}>
+              <input
+                className="vt-input"
+                type="text"
+                placeholder="Enter ship name (e.g. MAERSK KANSAS)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button className="vt-btn" type="submit" disabled={loading}>
+                {loading ? "..." : "Search"}
+              </button>
+            </form>
+            <p className="vt-hint">
+              Only vessels currently transmitting AIS signal (last 30 min) can be found — ships
+              docked in port or with AIS off may not appear.
+            </p>
+
+            {searched && results.length > 0 && (
+              <div className="vt-results">
+                {results.map((v) => (
+                  <div
+                    key={v.mmsi}
+                    className={"vt-rescard" + (focused?.mmsi === v.mmsi ? " on" : "")}
+                    onClick={() => setFocused(v)}
+                  >
+                    🚢 {v.ship_name || v.mmsi} · {v.speed ?? 0} kn
+                  </div>
+                ))}
+              </div>
+            )}
+            {searched && !loading && results.length === 0 && (
+              <p className="vt-empty">No vessel currently transmitting matches that name.</p>
+            )}
+          </>
+        ) : (
+          <div className="vt-plan">
+            <div className="vt-planrow">
+              <PortInput label="From" value={origin} onSelect={setOrigin} />
+              <PortInput label="To" value={destination} onSelect={setDestination} />
+            </div>
+            <div className="vt-planrow vt-plancta">
+              <div className="vt-speedwrap">
+                <label className="vt-portlabel">Speed (kn)</label>
+                <input
+                  className="vt-input"
+                  type="number"
+                  value={speed}
+                  onChange={(e) => setSpeed(e.target.value)}
+                />
+              </div>
+              <button
+                className="vt-btn"
+                onClick={handleCalculateRoute}
+                disabled={!origin || !destination || routeLoading}
+              >
+                {routeLoading ? "Calculating..." : "Calculate Route"}
+              </button>
+            </div>
+            {routeError && <p className="vt-routeerr">{routeError}</p>}
+            {routeInfo && (
+              <div className="vt-routeinfo">
+                <span>Distance: <b>{routeInfo.distanceNm.toFixed(0)} nm</b></span>
+                {routeInfo.durationHours && (
+                  <span>
+                    Duration: <b>{(routeInfo.durationHours / 24).toFixed(1)} days</b> (
+                    {routeInfo.durationHours.toFixed(0)} h)
+                  </span>
+                )}
+                {routeInfo.passages.length > 0 && (
+                  <span>Via: <b>{routeInfo.passages.join(", ")}</b></span>
+                )}
+              </div>
+            )}
+            <p className="vt-hint">
+              Sea-only route avoiding land, based on major shipping lanes — not for navigation.
+            </p>
+          </div>
         )}
 
         <div className="vt-layers">
@@ -132,6 +326,7 @@ export default function VesselTrackerClient() {
           focusedVessel={focused}
           showEcaSeca={showEcaSeca}
           showMarpolSpecial={showMarpolSpecial}
+          route={route}
         />
       </div>
     </div>
