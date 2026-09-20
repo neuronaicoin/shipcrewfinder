@@ -3,9 +3,9 @@ import SiteHeader from "@/app/components/site-header";
 import VesselTrackerClient from "./vessel-tracker-client";
 
 export const metadata = {
-  title: "Vessel Tracker — Live AIS Ship Map | ShipCrewFinder",
+  title: "Plan a Voyage — Sea Route Planner & Live AIS Ship Map | ShipCrewFinder",
   description:
-    "Search any vessel by name and see its live position on a real-time AIS map. Free vessel tracking on ShipCrewFinder.",
+    "Plan a sea-only voyage between any two ports with distance, ETA and fuel consumption, or track any vessel live on the AIS map. Free, no login needed.",
 };
 
 export default async function VesselTrackerPage() {
