@@ -64,13 +64,13 @@ export default function VesselMap({
       {vessels.map((v) => (
         <Marker key={v.mmsi} position={[v.latitude, v.longitude]} icon={shipIcon()}>
           <Popup>
-            <strong>{v.ship_name || "İsimsiz gemi"}</strong>
+            <strong>{v.ship_name || "Unknown vessel"}</strong>
             <br />
-            Hız: {v.speed ?? "-"} knot
+            Speed: {v.speed ?? "-"} kn
             <br />
-            Rota: {v.course ?? "-"}°
+            Course: {v.course ?? "-"}°
             <br />
-            Son sinyal: {new Date(v.updated_at).toLocaleTimeString("tr-TR")}
+            Last signal: {new Date(v.updated_at).toLocaleTimeString("en-GB")}
           </Popup>
         </Marker>
       ))}
