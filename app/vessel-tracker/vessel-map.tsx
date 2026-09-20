@@ -62,7 +62,7 @@ function FlyToVessel({ vessel }: { vessel: Vessel | null }) {
   return null;
 }
 
-function FitToRoute({ route }: { route: RouteFeature | null }) {
+function FitToRoute({ route, fitTrigger }: { route: RouteFeature | null; fitTrigger: number }) {
   const map = useMap();
   useEffect(() => {
     if (route) {
@@ -72,8 +72,49 @@ function FitToRoute({ route }: { route: RouteFeature | null }) {
       const bounds = L.latLngBounds(latlngs);
       map.flyToBounds(bounds, { padding: [40, 40], duration: 1.2 });
     }
-  }, [route, map]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitTrigger, map]);
   return null;
+}
+
+function dragHandleIcon() {
+  return L.divIcon({
+    className: "scf-drag-handle",
+    html: `<div style="
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:3px solid #fbbf24;
+      box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
+
+function RouteDragHandle({
+  route,
+  onDrag,
+}: {
+  route: RouteFeature | null;
+  onDrag: (lat: number, lon: number) => void;
+}) {
+  if (!route) return null;
+  const coords = route.geometry.coordinates;
+  const mid = coords[Math.floor(coords.length / 2)];
+
+  return (
+    <Marker
+      position={[mid[1], mid[0]]}
+      icon={dragHandleIcon()}
+      draggable
+      eventHandlers={{
+        dragend: (e) => {
+          const pos = e.target.getLatLng();
+          onDrag(pos.lat, pos.lng);
+        },
+      }}
+    >
+      <Popup>Drag to reroute via this point</Popup>
+    </Marker>
+  );
 }
 
 export default function VesselMap({
@@ -82,12 +123,16 @@ export default function VesselMap({
   showEcaSeca,
   showMarpolSpecial,
   route,
+  fitTrigger,
+  onDragRoute,
 }: {
   vessels: Vessel[];
   focusedVessel: Vessel | null;
   showEcaSeca: boolean;
   showMarpolSpecial: boolean;
   route: RouteFeature | null;
+  fitTrigger: number;
+  onDragRoute: (lat: number, lon: number) => void;
 }) {
   return (
     <MapContainer
@@ -176,6 +221,8 @@ export default function VesselMap({
         </>
       )}
 
+      {route && <RouteDragHandle route={route} onDrag={onDragRoute} />}
+
       {vessels.map((v) => (
         <Marker key={v.mmsi} position={[v.latitude, v.longitude]} icon={shipIcon()}>
           <Popup>
@@ -190,7 +237,7 @@ export default function VesselMap({
         </Marker>
       ))}
       <FlyToVessel vessel={focusedVessel} />
-      <FitToRoute route={route} />
+      <FitToRoute route={route} fitTrigger={fitTrigger} />
     </MapContainer>
   );
 }
