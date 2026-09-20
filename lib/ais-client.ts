@@ -1,32 +1,73 @@
 // lib/ais-client.ts
 // Sürekli çalışan AIS WebSocket bağlantısı. Sunucu ayağa kalkarken
 // instrumentation.ts üzerinden bir kere başlatılır.
+//
+// ÖNEMLİ: Global kapsamda saniyede yüzlerce/binlerce AIS mesajı gelir.
+// Her mesaj için ayrı Supabase isteği atmak (eski yöntem) ücretsiz
+// Supabase katmanını tıkar. Bunun yerine mesajları bellekte biriktirip
+// belirli aralıklarla TEK bir toplu (batch) yazma yapıyoruz.
 
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const AIS_API_KEY = process.env.AISSTREAM_API_KEY!;
 
-// Global kapsam — tüm dünya. aisstream.io'nun ücretsiz katmanı bu yoğunluğu
-// kaldırmazsa loglardan takip et, gerekirse daralt.
-const BOUNDING_BOX = [[[-90, -180], [90, 180]]]; // global kapsam
+// Global kapsam — tüm dünya.
+const BOUNDING_BOX = [[[-90, -180], [90, 180]]];
+
+const FLUSH_INTERVAL_MS = 10000; // 10 saniyede bir toplu yazma
 
 let started = false;
 
-// Aynı gemi için 5 saniyede bir yazma limiti (Supabase'i gereksiz doldurmamak için)
-const lastWrite = new Map<number, number>();
-const WRITE_INTERVAL_MS = 5000;
+type PendingVessel = {
+  mmsi: number;
+  ship_name: string | null;
+  latitude: number;
+  longitude: number;
+  speed: number | null;
+  course: number | null;
+  updated_at: string;
+};
+
+// Her gemi için SADECE en son konumu tutuyoruz (mmsi -> son veri).
+// Flush anında bu map'in tamamı tek istekte yazılır, sonra temizlenir.
+const pending = new Map<number, PendingVessel>();
 
 export function startAisStream() {
-  if (started) return; // aynı process içinde iki kere başlatma
+  if (started) return;
   started = true;
   connect();
+  startFlushLoop();
+}
+
+function startFlushLoop() {
+  setInterval(async () => {
+    if (pending.size === 0) return;
+
+    const batch = Array.from(pending.values());
+    pending.clear();
+
+    try {
+      const supabase = createAdminClient();
+      const CHUNK_SIZE = 500;
+
+      for (let i = 0; i < batch.length; i += CHUNK_SIZE) {
+        const chunk = batch.slice(i, i + CHUNK_SIZE);
+        const { error } = await supabase.from("vessel_positions").upsert(chunk);
+        if (error) {
+          console.error("[AIS] batch upsert error:", error.message, "chunk size:", chunk.length);
+        }
+      }
+      console.log("[AIS] flushed", batch.length, "vessels");
+    } catch (err) {
+      console.error("[AIS] flush exception:", err);
+    }
+  }, FLUSH_INTERVAL_MS);
 }
 
 function connect() {
   const WebSocket = require("ws");
   const ws = new WebSocket("wss://stream.aisstream.io/v0/stream");
-  const supabase = createAdminClient();
 
   ws.on("open", () => {
     console.log("[AIS] Connected, subscribing...");
@@ -39,19 +80,16 @@ function connect() {
     );
   });
 
-  ws.on("message", async (data: Buffer) => {
+  ws.on("message", (data: Buffer) => {
     try {
       const msg = JSON.parse(data.toString());
       if (msg.MessageType !== "PositionReport") return;
 
       const report = msg.Message.PositionReport;
       const mmsi = report.UserID;
-      const now = Date.now();
-      const last = lastWrite.get(mmsi) || 0;
-      if (now - last < WRITE_INTERVAL_MS) return;
-      lastWrite.set(mmsi, now);
 
-      await supabase.from("vessel_positions").upsert({
+      // Sadece belleğe yaz — Supabase'e gitmiyor, flush loop hallediyor.
+      pending.set(mmsi, {
         mmsi,
         ship_name: msg.MetaData?.ShipName?.trim() || null,
         latitude: report.Latitude,
