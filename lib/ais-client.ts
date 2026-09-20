@@ -7,9 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const AIS_API_KEY = process.env.AISSTREAM_API_KEY!;
 
-// Türkiye kıyıları için kaba bir bounding box (istersen genişlet/daraltır).
-// Format: [[minLat, minLon], [maxLat, maxLon]]
-const BOUNDING_BOX = [[[35.0, 25.0], [43.0, 45.0]]];
+// Global kapsam — tüm dünya. aisstream.io'nun ücretsiz katmanı bu yoğunluğu
+// kaldırmazsa loglardan takip et, gerekirse daralt.
+const BOUNDING_BOX = [[[-90, -180], [90, 180]]]; // global kapsam
 
 let started = false;
 
