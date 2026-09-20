@@ -63,17 +63,17 @@ export default function VesselTrackerClient() {
           <input
             className="vt-input"
             type="text"
-            placeholder="Gemi adı gir (örn. MAERSK KANSAS)"
+            placeholder="Enter ship name (e.g. MAERSK KANSAS)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <button className="vt-btn" type="submit" disabled={loading}>
-            {loading ? "..." : "Ara"}
+            {loading ? "..." : "Search"}
           </button>
         </form>
         <p className="vt-hint">
-          Sadece şu an AIS sinyali veren (son 15 dk içinde) gemiler bulunur — limanda kapalı
-          duran veya sinyali olmayan gemiler görünmeyebilir.
+          Only vessels currently transmitting AIS signal (last 30 min) can be found — ships
+          docked in port or with AIS off may not appear.
         </p>
 
         {searched && results.length > 0 && (
@@ -90,7 +90,7 @@ export default function VesselTrackerClient() {
           </div>
         )}
         {searched && !loading && results.length === 0 && (
-          <p className="vt-empty">Şu an sinyal veren böyle bir gemi bulunamadı.</p>
+          <p className="vt-empty">No vessel currently transmitting matches that name.</p>
         )}
       </div>
 
