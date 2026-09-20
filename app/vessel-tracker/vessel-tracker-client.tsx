@@ -6,9 +6,7 @@ import type { Vessel } from "./vessel-map";
 
 const VesselMap = dynamic(() => import("./vessel-map"), {
   ssr: false,
-  loading: () => (
-    <div className="vt-maploading">Harita yükleniyor...</div>
-  ),
+  loading: () => <div className="vt-maploading">Loading map...</div>,
 });
 
 export default function VesselTrackerClient() {
@@ -17,6 +15,8 @@ export default function VesselTrackerClient() {
   const [focused, setFocused] = useState<Vessel | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [showEcaSeca, setShowEcaSeca] = useState(false);
+  const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -54,6 +54,11 @@ export default function VesselTrackerClient() {
     border-radius:10px;padding:8px 13px;font-size:12.5px;color:var(--tx2,#a8bdd2);cursor:pointer;white-space:nowrap}
   .vt-rescard.on{border-color:var(--gold,#fbbf24);color:var(--gold,#fbbf24)}
   .vt-empty{font-size:12.5px;color:var(--tx3,#6b83a0);text-align:center;margin-top:10px}
+  .vt-layers{max-width:640px;margin:10px auto 0;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .vt-layer{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2,#a8bdd2);cursor:pointer;user-select:none}
+  .vt-layer input{accent-color:var(--gold,#fbbf24)}
+  .vt-layer .sw{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+  .vt-layernote{font-size:10.5px;color:var(--tx3,#6b83a0);text-align:center;margin-top:4px;max-width:640px;margin-left:auto;margin-right:auto}
   .vt-mapbox{flex:1;position:relative;min-height:0}
   .vt-maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--tx3,#6b83a0);font-size:13px}
       `}</style>
@@ -92,10 +97,42 @@ export default function VesselTrackerClient() {
         {searched && !loading && results.length === 0 && (
           <p className="vt-empty">No vessel currently transmitting matches that name.</p>
         )}
+
+        <div className="vt-layers">
+          <label className="vt-layer">
+            <input
+              type="checkbox"
+              checked={showEcaSeca}
+              onChange={(e) => setShowEcaSeca(e.target.checked)}
+            />
+            <span className="sw" style={{ background: "#34d399" }} />
+            ECA / SECA zones
+          </label>
+          <label className="vt-layer">
+            <input
+              type="checkbox"
+              checked={showMarpolSpecial}
+              onChange={(e) => setShowMarpolSpecial(e.target.checked)}
+            />
+            <span className="sw" style={{ background: "#f87171" }} />
+            MARPOL Special Areas
+          </label>
+        </div>
+        {(showEcaSeca || showMarpolSpecial) && (
+          <p className="vt-layernote">
+            Boundaries are simplified approximations for reference only — always verify with
+            official charts before making compliance decisions.
+          </p>
+        )}
       </div>
 
       <div className="vt-mapbox">
-        <VesselMap vessels={results} focusedVessel={focused} />
+        <VesselMap
+          vessels={results}
+          focusedVessel={focused}
+          showEcaSeca={showEcaSeca}
+          showMarpolSpecial={showMarpolSpecial}
+        />
       </div>
     </div>
   );
