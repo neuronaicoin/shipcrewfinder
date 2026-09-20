@@ -89,31 +89,40 @@ function dragHandleIcon() {
   });
 }
 
-function RouteDragHandle({
+function RouteDragHandles({
   route,
   onDrag,
 }: {
   route: RouteFeature | null;
-  onDrag: (lat: number, lon: number) => void;
+  onDrag: (index: number, lat: number, lon: number) => void;
 }) {
   if (!route) return null;
   const coords = route.geometry.coordinates;
-  const mid = coords[Math.floor(coords.length / 2)];
+  if (coords.length < 2) return null;
+
+  // Rota boyunca eşit aralıklı 3 nokta — her biri bağımsız sürüklenebilir.
+  const fractions = [0.25, 0.5, 0.75];
+  const handles = fractions.map((f) => coords[Math.min(coords.length - 1, Math.floor(coords.length * f))]);
 
   return (
-    <Marker
-      position={[mid[1], mid[0]]}
-      icon={dragHandleIcon()}
-      draggable
-      eventHandlers={{
-        dragend: (e) => {
-          const pos = e.target.getLatLng();
-          onDrag(pos.lat, pos.lng);
-        },
-      }}
-    >
-      <Popup>Drag to reroute via this point</Popup>
-    </Marker>
+    <>
+      {handles.map((pt, i) => (
+        <Marker
+          key={i}
+          position={[pt[1], pt[0]]}
+          icon={dragHandleIcon()}
+          draggable
+          eventHandlers={{
+            dragend: (e) => {
+              const pos = e.target.getLatLng();
+              onDrag(i, pos.lat, pos.lng);
+            },
+          }}
+        >
+          <Popup>Drag to reroute through this point</Popup>
+        </Marker>
+      ))}
+    </>
   );
 }
 
@@ -132,7 +141,7 @@ export default function VesselMap({
   showMarpolSpecial: boolean;
   route: RouteFeature | null;
   fitTrigger: number;
-  onDragRoute: (lat: number, lon: number) => void;
+  onDragRoute: (index: number, lat: number, lon: number) => void;
 }) {
   return (
     <MapContainer
@@ -221,7 +230,7 @@ export default function VesselMap({
         </>
       )}
 
-      {route && <RouteDragHandle route={route} onDrag={onDragRoute} />}
+      {route && <RouteDragHandles route={route} onDrag={onDragRoute} />}
 
       {vessels.map((v) => (
         <Marker key={v.mmsi} position={[v.latitude, v.longitude]} icon={shipIcon()}>
