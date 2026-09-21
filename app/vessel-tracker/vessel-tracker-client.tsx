@@ -11,8 +11,23 @@ const VesselMap = dynamic(() => import("./vessel-map"), {
 });
 
 type PortOption = { code: string; name: string; country: string; coordinates: [number, number] };
+type SavedVoyage = {
+  id: string;
+  label: string | null;
+  origin_code: string;
+  origin_name: string;
+  destination_code: string;
+  destination_name: string;
+  speed: number | null;
+  draft: number | null;
+  daily_consumption: number | null;
+  rob: number | null;
+  bunker_price: number | null;
+  via_points: { lon: number; lat: number }[] | null;
+  created_at: string;
+};
 
-const CO2_FACTOR = 3.114; // ton CO2 per ton fuel burned (IMO standard HFO factor, approximate)
+const CO2_FACTOR = 3.114;
 
 function ecaZonesFor(lon: number, lat: number): string[] {
   const matches: string[] = [];
@@ -36,6 +51,12 @@ function estimateLocalTime(fromNowHours: number, lon: number): string {
   const dateStr = local.toISOString().slice(0, 10);
   const sign = utcOffsetHours >= 0 ? "+" : "";
   return `${dateStr} ${hh}:${mm} (est. UTC${sign}${utcOffsetHours})`;
+}
+
+async function resolvePort(code: string): Promise<PortOption | null> {
+  const res = await fetch(`/api/ports/search?q=${code}`);
+  const data = await res.json();
+  return data.ports?.find((p: PortOption) => p.code === code) || null;
 }
 
 function PortInput({
@@ -169,13 +190,10 @@ function PortInfoCard({ label, port }: { label: string; port: PortOption }) {
         <h3>{port.name}</h3>
         <span className="vt-portcard-code">{port.code} · {port.country}</span>
       </div>
-
       <div className="vt-portcard-grid">
         <div className="vt-pc-item">
           <span className="vt-pc-label">Coordinates</span>
-          <span className="vt-pc-value">
-            {port.coordinates[1].toFixed(3)}, {port.coordinates[0].toFixed(3)}
-          </span>
+          <span className="vt-pc-value">{port.coordinates[1].toFixed(3)}, {port.coordinates[0].toFixed(3)}</span>
         </div>
         <div className="vt-pc-item">
           <span className="vt-pc-label">Emission control zone</span>
@@ -190,15 +208,10 @@ function PortInfoCard({ label, port }: { label: string; port: PortOption }) {
         <div className="vt-pc-item">
           <span className="vt-pc-label">Sea state</span>
           <span className="vt-pc-value">
-            {loadingWx
-              ? "Loading..."
-              : weather?.marine
-              ? `${weather.marine.wave_height ?? "-"} m waves`
-              : "Inland / N/A"}
+            {loadingWx ? "Loading..." : weather?.marine ? `${weather.marine.wave_height ?? "-"} m waves` : "Inland / N/A"}
           </span>
         </div>
       </div>
-
       <p className="vt-portcard-note">
         Draft restrictions, tidal windows and channel/pilotage requirements are not available
         here — verify with the official port authority or Admiralty Sailing Directions before
@@ -208,7 +221,7 @@ function PortInfoCard({ label, port }: { label: string; port: PortOption }) {
   );
 }
 
-export default function VesselTrackerClient() {
+export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [origin, setOrigin] = useState<PortOption | null>(null);
   const [destination, setDestination] = useState<PortOption | null>(null);
   const [speed, setSpeed] = useState("14");
@@ -230,12 +243,13 @@ export default function VesselTrackerClient() {
   const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
   const [showHighRisk, setShowHighRisk] = useState(false);
   const [weatherMode, setWeatherMode] = useState(false);
-  const [weatherPoint, setWeatherPoint] = useState<{
-    lat: number;
-    lon: number;
-    data: WeatherReading;
-  } | null>(null);
-  const [copyLabel, setCopyLabel] = useState("🔗 Copy voyage link");
+  const [weatherPoint, setWeatherPoint] = useState<{ lat: number; lon: number; data: WeatherReading } | null>(null);
+  const [copyLabel, setCopyLabel] = useState("🔗 Copy link");
+
+  const [savedVoyages, setSavedVoyages] = useState<SavedVoyage[]>([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveLabel, setSaveLabel] = useState("💾 Save this voyage");
 
   const fetchRoute = useCallback(
     async (via: (ViaPoint & { sortKey: number })[], o?: PortOption | null, d?: PortOption | null) => {
@@ -247,9 +261,7 @@ export default function VesselTrackerClient() {
       try {
         const params = new URLSearchParams({ from: org.code, to: dst.code, speed });
         if (draft) params.set("draft", draft);
-        if (via.length > 0) {
-          params.set("via", via.map((v) => `${v.lon},${v.lat}`).join(";"));
-        }
+        if (via.length > 0) params.set("via", via.map((v) => `${v.lon},${v.lat}`).join(";"));
         const res = await fetch(`/api/route?${params.toString()}`);
         const data = await res.json();
         if (!res.ok) {
@@ -271,49 +283,73 @@ export default function VesselTrackerClient() {
     [origin, destination, speed, draft]
   );
 
-  // Sayfa yüklenirken URL'de paylaşılan bir rota var mı diye bak, varsa otomatik kur.
+  const loadVoyageParams = useCallback(
+    async (params: {
+      fromCode: string;
+      toCode: string;
+      speed?: string;
+      draft?: string;
+      cons?: string;
+      rob?: string;
+      price?: string;
+      via?: { lon: number; lat: number }[];
+    }) => {
+      const [fromPort, toPort] = await Promise.all([
+        resolvePort(params.fromCode),
+        resolvePort(params.toCode),
+      ]);
+      if (!fromPort || !toPort) return;
+
+      setOrigin(fromPort);
+      setDestination(toPort);
+      if (params.speed) setSpeed(params.speed);
+      if (params.draft) setDraft(params.draft);
+      if (params.cons) setDailyConsumption(params.cons);
+      if (params.rob) setRob(params.rob);
+      if (params.price) setBunkerPrice(params.price);
+
+      const via = (params.via || []).map((v, i) => ({ ...v, sortKey: i }));
+      setViaPoints(via);
+      setFitTrigger((n) => n + 1);
+      await fetchRoute(via, fromPort, toPort);
+    },
+    [fetchRoute]
+  );
+
+  // URL'de paylaşılan bir rota varsa otomatik yükle
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const fromCode = params.get("from");
     const toCode = params.get("to");
     if (!fromCode || !toCode) return;
-
-    (async () => {
-      try {
-        const [fromRes, toRes] = await Promise.all([
-          fetch(`/api/ports/search?q=${fromCode}`).then((r) => r.json()),
-          fetch(`/api/ports/search?q=${toCode}`).then((r) => r.json()),
-        ]);
-        const fromPort = fromRes.ports?.find((p: PortOption) => p.code === fromCode);
-        const toPort = toRes.ports?.find((p: PortOption) => p.code === toCode);
-        if (!fromPort || !toPort) return;
-
-        setOrigin(fromPort);
-        setDestination(toPort);
-        if (params.get("speed")) setSpeed(params.get("speed")!);
-        if (params.get("draft")) setDraft(params.get("draft")!);
-        if (params.get("cons")) setDailyConsumption(params.get("cons")!);
-        if (params.get("rob")) setRob(params.get("rob")!);
-        if (params.get("price")) setBunkerPrice(params.get("price")!);
-
-        const viaParam = params.get("via");
-        let via: (ViaPoint & { sortKey: number })[] = [];
-        if (viaParam) {
-          via = viaParam.split(";").map((pair, i) => {
-            const [lon, lat] = pair.split(",").map(Number);
-            return { lon, lat, sortKey: i };
-          });
-          setViaPoints(via);
-        }
-
-        setFitTrigger((n) => n + 1);
-        await fetchRoute(via, fromPort, toPort);
-      } catch {
-        // sessizce yoksay — kullanıcı elle kurabilir
-      }
-    })();
+    const viaParam = params.get("via");
+    const via = viaParam
+      ? viaParam.split(";").map((pair) => {
+          const [lon, lat] = pair.split(",").map(Number);
+          return { lon, lat };
+        })
+      : undefined;
+    loadVoyageParams({
+      fromCode,
+      toCode,
+      speed: params.get("speed") || undefined,
+      draft: params.get("draft") || undefined,
+      cons: params.get("cons") || undefined,
+      rob: params.get("rob") || undefined,
+      price: params.get("price") || undefined,
+      via,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Giriş yapmışsa kayıtlı rotaları yükle
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetch("/api/voyages")
+      .then((r) => r.json())
+      .then((d) => setSavedVoyages(d.voyages || []))
+      .catch(() => {});
+  }, [isLoggedIn]);
 
   async function handleCalculateRoute() {
     setViaPoints([]);
@@ -375,14 +411,64 @@ export default function VesselTrackerClient() {
     if (dailyConsumption) params.set("cons", dailyConsumption);
     if (rob) params.set("rob", rob);
     if (bunkerPrice) params.set("price", bunkerPrice);
-    if (viaPoints.length > 0) {
-      params.set("via", viaPoints.map((v) => `${v.lon},${v.lat}`).join(";"));
-    }
+    if (viaPoints.length > 0) params.set("via", viaPoints.map((v) => `${v.lon},${v.lat}`).join(";"));
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(url).then(() => {
-      setCopyLabel("✓ Link copied");
-      setTimeout(() => setCopyLabel("🔗 Copy voyage link"), 2000);
+      setCopyLabel("✓ Copied");
+      setTimeout(() => setCopyLabel("🔗 Copy link"), 2000);
     });
+  }
+
+  async function handleSaveVoyage() {
+    if (!origin || !destination) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/voyages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          originCode: origin.code,
+          originName: origin.name,
+          destinationCode: destination.code,
+          destinationName: destination.name,
+          speed: parseFloat(speed) || null,
+          draft: draft ? parseFloat(draft) : null,
+          dailyConsumption: dailyConsumption ? parseFloat(dailyConsumption) : null,
+          rob: rob ? parseFloat(rob) : null,
+          bunkerPrice: bunkerPrice ? parseFloat(bunkerPrice) : null,
+          viaPoints: viaPoints.length > 0 ? viaPoints.map((v) => ({ lon: v.lon, lat: v.lat })) : null,
+        }),
+      });
+      if (res.ok) {
+        setSaveLabel("✓ Saved");
+        const listRes = await fetch("/api/voyages");
+        const listData = await listRes.json();
+        setSavedVoyages(listData.voyages || []);
+        setTimeout(() => setSaveLabel("💾 Save this voyage"), 2000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleLoadSaved(v: SavedVoyage) {
+    setShowSaved(false);
+    await loadVoyageParams({
+      fromCode: v.origin_code,
+      toCode: v.destination_code,
+      speed: v.speed?.toString(),
+      draft: v.draft?.toString(),
+      cons: v.daily_consumption?.toString(),
+      rob: v.rob?.toString(),
+      price: v.bunker_price?.toString(),
+      via: v.via_points || undefined,
+    });
+  }
+
+  async function handleDeleteSaved(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    await fetch(`/api/voyages/${id}`, { method: "DELETE" });
+    setSavedVoyages((prev) => prev.filter((v) => v.id !== id));
   }
 
   const hasCustomRoute = viaPoints.length > 0;
@@ -390,34 +476,27 @@ export default function VesselTrackerClient() {
   const robStart = parseFloat(rob);
   const price = parseFloat(bunkerPrice);
   const voyageDays = routeInfo?.durationHours != null ? routeInfo.durationHours / 24 : null;
-  const totalFuelBurned =
-    voyageDays != null && !Number.isNaN(dailyCons) ? dailyCons * voyageDays : null;
-  const robAtArrival =
-    totalFuelBurned != null && !Number.isNaN(robStart) ? robStart - totalFuelBurned : null;
+  const totalFuelBurned = voyageDays != null && !Number.isNaN(dailyCons) ? dailyCons * voyageDays : null;
+  const robAtArrival = totalFuelBurned != null && !Number.isNaN(robStart) ? robStart - totalFuelBurned : null;
   const co2Tons = totalFuelBurned != null ? totalFuelBurned * CO2_FACTOR : null;
-  const bunkerCost =
-    totalFuelBurned != null && !Number.isNaN(price) ? totalFuelBurned * price : null;
+  const bunkerCost = totalFuelBurned != null && !Number.isNaN(price) ? totalFuelBurned * price : null;
   const etaLocal =
     routeInfo?.durationHours != null && destination
       ? estimateLocalTime(routeInfo.durationHours, destination.coordinates[0])
       : null;
 
   const speedNum = parseFloat(speed) || 14;
-  const speedOptions = [
-    Math.max(6, speedNum - 2),
-    speedNum,
-    speedNum + 2,
-  ];
+  const speedOptions = [Math.max(6, speedNum - 2), speedNum, speedNum + 2];
 
   return (
     <div className="vt-wrap">
       <style>{`
   .vt-wrap{display:flex;flex-direction:column;height:calc(100dvh - 60px);overflow-y:auto}
-  .vt-searchbar{padding:16px;background:var(--navy2,#141845);border-bottom:1px solid var(--line2,rgba(255,255,255,.08));flex-shrink:0}
-  .vt-title{max-width:800px;margin:0 auto 12px;text-align:center}
-  .vt-title h1{font-family:var(--disp,var(--font-bricolage),sans-serif);font-size:1.3rem;font-weight:800;margin-bottom:2px}
-  .vt-title p{font-size:12px;color:var(--tx3,#6b83a0)}
-  .vt-plan{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .vt-controls{padding:16px 16px 12px;background:var(--navy2,#141845);border-bottom:1px solid var(--line2,rgba(255,255,255,.08));flex-shrink:0}
+  .vt-title{max-width:800px;margin:0 auto 12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .vt-title h1{font-family:var(--disp,var(--font-bricolage),sans-serif);font-size:1.25rem;font-weight:800}
+  .vt-title p{font-size:11.5px;color:var(--tx3,#6b83a0);width:100%}
+  .vt-plan{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
   .vt-planrow{display:flex;gap:8px;flex-wrap:wrap}
   .vt-portwrap{position:relative;flex:1;min-width:200px}
   .vt-portlabel{font-size:11px;color:var(--tx3,#6b83a0);margin-bottom:4px;display:block;font-weight:600;letter-spacing:.02em}
@@ -434,15 +513,33 @@ export default function VesselTrackerClient() {
   .vt-dropitem:hover{background:rgba(251,191,36,.08)}
   .vt-dropcode{color:var(--gold,#fbbf24);font-size:11px;margin-left:4px}
   .vt-dropcountry{font-size:11px;color:var(--tx3,#6b83a0)}
-  .vt-numwrap{width:130px}
+  .vt-numwrap{width:124px}
   .vt-plancta{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
   .vt-btn{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));
-    color:#0b0e13;border:none;border-radius:12px;padding:0 20px;height:44px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+    color:#0b0e13;border:none;border-radius:12px;padding:0 18px;height:42px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
   .vt-btn:disabled{opacity:.6}
   .vt-btn-ghost{background:transparent;border:1.5px solid var(--line2,rgba(255,255,255,.15));color:var(--tx2,#a8bdd2)}
   .vt-btn-weather{background:rgba(96,165,250,.12);border:1.5px solid rgba(96,165,250,.4);color:#93c5fd}
   .vt-btn-weather.on{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#0b0e13;border-color:transparent}
+  .vt-btn-saved{background:rgba(167,139,250,.12);border:1.5px solid rgba(167,139,250,.4);color:#c4b5fd;position:relative}
   .vt-routeerr{font-size:12.5px;color:#f87171;text-align:center}
+
+  .vt-savedpanel{position:absolute;top:100%;right:0;margin-top:6px;width:280px;max-height:320px;overflow-y:auto;
+    background:var(--navy2,#141845);border:1px solid var(--line2,rgba(255,255,255,.12));border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:1100;text-align:left}
+  .vt-savedwrap{position:relative}
+  .vt-saveditem{padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .vt-saveditem:hover{background:rgba(251,191,36,.06)}
+  .vt-saveditem-txt{font-size:12px;color:var(--tx,#eef4fa)}
+  .vt-saveditem-sub{font-size:10.5px;color:var(--tx3,#6b83a0)}
+  .vt-saveditem-del{background:none;border:none;color:var(--tx3,#6b83a0);cursor:pointer;font-size:12px;flex-shrink:0}
+  .vt-saveditem-del:hover{color:#f87171}
+  .vt-savedempty{padding:14px;font-size:12px;color:var(--tx3,#6b83a0);text-align:center}
+
+  .vt-mapbox{flex-shrink:0;position:relative;height:52vh;min-height:360px}
+  .vt-maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--tx3,#6b83a0);font-size:13px}
+
+  .vt-details{padding:16px;max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px;width:100%}
 
   .vt-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
   .vt-stat{background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:12px;padding:12px 14px}
@@ -479,12 +576,9 @@ export default function VesselTrackerClient() {
   .vt-pc-label{font-size:10px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.04em}
   .vt-pc-value{font-size:12.5px;color:var(--tx,#eef4fa);font-weight:600}
   .vt-portcard-note{font-size:10px;color:var(--tx3,#6b83a0);line-height:1.5;border-top:1px solid var(--line2,rgba(255,255,255,.06));padding-top:8px}
-
-  .vt-mapbox{flex-shrink:0;position:relative;height:55vh;min-height:380px}
-  .vt-maploading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--tx3,#6b83a0);font-size:13px}
       `}</style>
 
-      <div className="vt-searchbar">
+      <div className="vt-controls">
         <div className="vt-title">
           <h1>🧭 Voyage Planner</h1>
           <p>Real sea-route distance, ETA, fuel and live conditions between any two ports</p>
@@ -493,12 +587,7 @@ export default function VesselTrackerClient() {
         <div className="vt-plan">
           <div className="vt-planrow">
             <PortInput label="From" value={origin} onSelect={setOrigin} onClear={() => setOrigin(null)} />
-            <PortInput
-              label="To"
-              value={destination}
-              onSelect={setDestination}
-              onClear={() => setDestination(null)}
-            />
+            <PortInput label="To" value={destination} onSelect={setDestination} onClear={() => setDestination(null)} />
           </div>
 
           <div className="vt-planrow">
@@ -508,205 +597,73 @@ export default function VesselTrackerClient() {
             </div>
             <div className="vt-numwrap">
               <label className="vt-portlabel">Draft (m)</label>
-              <input
-                className="vt-input"
-                type="number"
-                placeholder="optional"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-              />
+              <input className="vt-input" type="number" placeholder="optional" value={draft} onChange={(e) => setDraft(e.target.value)} />
             </div>
             <div className="vt-numwrap">
-              <label className="vt-portlabel">Consumption (t/day)</label>
-              <input
-                className="vt-input"
-                type="number"
-                placeholder="optional"
-                value={dailyConsumption}
-                onChange={(e) => setDailyConsumption(e.target.value)}
-              />
+              <label className="vt-portlabel">Cons. (t/day)</label>
+              <input className="vt-input" type="number" placeholder="optional" value={dailyConsumption} onChange={(e) => setDailyConsumption(e.target.value)} />
             </div>
             <div className="vt-numwrap">
-              <label className="vt-portlabel">ROB at departure (t)</label>
-              <input
-                className="vt-input"
-                type="number"
-                placeholder="optional"
-                value={rob}
-                onChange={(e) => setRob(e.target.value)}
-              />
+              <label className="vt-portlabel">ROB depart (t)</label>
+              <input className="vt-input" type="number" placeholder="optional" value={rob} onChange={(e) => setRob(e.target.value)} />
             </div>
             <div className="vt-numwrap">
-              <label className="vt-portlabel">Bunker price ($/t)</label>
-              <input
-                className="vt-input"
-                type="number"
-                placeholder="optional"
-                value={bunkerPrice}
-                onChange={(e) => setBunkerPrice(e.target.value)}
-              />
+              <label className="vt-portlabel">Bunker ($/t)</label>
+              <input className="vt-input" type="number" placeholder="optional" value={bunkerPrice} onChange={(e) => setBunkerPrice(e.target.value)} />
             </div>
           </div>
 
           <div className="vt-planrow vt-plancta">
-            <button
-              className="vt-btn"
-              onClick={handleCalculateRoute}
-              disabled={!origin || !destination || routeLoading}
-            >
+            <button className="vt-btn" onClick={handleCalculateRoute} disabled={!origin || !destination || routeLoading}>
               {routeLoading ? "Calculating..." : "Calculate Route"}
             </button>
             {hasCustomRoute && (
-              <button
-                className="vt-btn vt-btn-ghost"
-                onClick={() => {
-                  setViaPoints([]);
-                  fetchRoute([]);
-                }}
-              >
+              <button className="vt-btn vt-btn-ghost" onClick={() => { setViaPoints([]); fetchRoute([]); }}>
                 Reset to shortest
               </button>
             )}
-            <button
-              className={"vt-btn vt-btn-weather" + (weatherMode ? " on" : "")}
-              onClick={() => setWeatherMode((m) => !m)}
-            >
-              🌦 {weatherMode ? "Weather mode on" : "Check weather"}
+            <button className={"vt-btn vt-btn-weather" + (weatherMode ? " on" : "")} onClick={() => setWeatherMode((m) => !m)}>
+              🌦 {weatherMode ? "Weather on" : "Check weather"}
             </button>
             {route && (
-              <button className="vt-btn vt-btn-ghost" onClick={handleCopyLink}>
-                {copyLabel}
+              <button className="vt-btn vt-btn-ghost" onClick={handleCopyLink}>{copyLabel}</button>
+            )}
+            {isLoggedIn && route && (
+              <button className="vt-btn vt-btn-ghost" onClick={handleSaveVoyage} disabled={saving}>
+                {saveLabel}
               </button>
+            )}
+            {isLoggedIn && (
+              <div className="vt-savedwrap">
+                <button className="vt-btn vt-btn-saved" onClick={() => setShowSaved((s) => !s)}>
+                  ⭐ My Voyages ({savedVoyages.length})
+                </button>
+                {showSaved && (
+                  <div className="vt-savedpanel">
+                    {savedVoyages.length === 0 ? (
+                      <div className="vt-savedempty">No saved voyages yet — calculate a route and save it.</div>
+                    ) : (
+                      savedVoyages.map((v) => (
+                        <div key={v.id} className="vt-saveditem" onClick={() => handleLoadSaved(v)}>
+                          <div>
+                            <div className="vt-saveditem-txt">{v.origin_code} → {v.destination_code}</div>
+                            <div className="vt-saveditem-sub">
+                              {v.origin_name} → {v.destination_name}
+                            </div>
+                          </div>
+                          <button className="vt-saveditem-del" onClick={(e) => handleDeleteSaved(v.id, e)}>✕</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
           {routeError && <p className="vt-routeerr">{routeError}</p>}
-
-          {routeInfo && (
-            <>
-              <div className="vt-stats">
-                <div className="vt-stat gold">
-                  <span className="vt-stat-label">Distance</span>
-                  <span className="vt-stat-value">{routeInfo.distanceNm.toFixed(0)} nm</span>
-                </div>
-                {routeInfo.durationHours != null && (
-                  <div className="vt-stat gold">
-                    <span className="vt-stat-label">Duration</span>
-                    <span className="vt-stat-value">{(routeInfo.durationHours / 24).toFixed(1)} days</span>
-                  </div>
-                )}
-                {etaLocal && (
-                  <div className="vt-stat">
-                    <span className="vt-stat-label">Est. arrival (local)</span>
-                    <span className="vt-stat-value" style={{ fontSize: 13 }}>{etaLocal}</span>
-                  </div>
-                )}
-                {routeInfo.passages.length > 0 && (
-                  <div className="vt-stat">
-                    <span className="vt-stat-label">Passages</span>
-                    <span className="vt-stat-value" style={{ fontSize: 13 }}>{routeInfo.passages.join(", ")}</span>
-                  </div>
-                )}
-                {totalFuelBurned !== null && (
-                  <div className="vt-stat">
-                    <span className="vt-stat-label">Fuel burned</span>
-                    <span className="vt-stat-value">{totalFuelBurned.toFixed(1)} t</span>
-                  </div>
-                )}
-                {co2Tons !== null && (
-                  <div className="vt-stat">
-                    <span className="vt-stat-label">CO₂ emissions</span>
-                    <span className="vt-stat-value">{co2Tons.toFixed(1)} t</span>
-                  </div>
-                )}
-                {bunkerCost !== null && (
-                  <div className="vt-stat">
-                    <span className="vt-stat-label">Bunker cost</span>
-                    <span className="vt-stat-value">${bunkerCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                )}
-                {robAtArrival !== null && (
-                  <div className={"vt-stat" + (robAtArrival < 0 ? " warn" : "")}>
-                    <span className="vt-stat-label">ROB at arrival</span>
-                    <span className="vt-stat-value">{robAtArrival.toFixed(1)} t{robAtArrival < 0 ? " ⚠" : ""}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="vt-speedbox">
-                <div className="vt-speedbox-title">Speed comparison (same route)</div>
-                <table className="vt-speedtable">
-                  <thead>
-                    <tr>
-                      <th>Speed</th>
-                      <th>Duration</th>
-                      <th>ETA date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {speedOptions.map((s) => {
-                      const hours = (routeInfo.distanceNm / s);
-                      const days = hours / 24;
-                      const etaDate = new Date(Date.now() + hours * 3600 * 1000)
-                        .toISOString()
-                        .slice(0, 10);
-                      return (
-                        <tr key={s} className={s === speedNum ? "current" : ""}>
-                          <td>{s.toFixed(0)} kn</td>
-                          <td>{days.toFixed(1)} days</td>
-                          <td>{etaDate}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          <p className="vt-hint">
-            Sea-only route avoiding land, based on major shipping lanes — not for navigation.
-            {route && " Double-click anywhere on the route to add a point, drag it to reshape, double-click a point to remove it."}
-          </p>
-
-          {origin && destination && (
-            <div className="vt-portcards">
-              <PortInfoCard label="Departure" port={origin} />
-              <PortInfoCard label="Arrival" port={destination} />
-            </div>
-          )}
-
-          <div className="vt-layers">
-            <label className="vt-layer">
-              <input type="checkbox" checked={showEcaSeca} onChange={(e) => setShowEcaSeca(e.target.checked)} />
-              <span className="sw" style={{ background: "#34d399" }} />
-              ECA / SECA zones
-            </label>
-            <label className="vt-layer">
-              <input
-                type="checkbox"
-                checked={showMarpolSpecial}
-                onChange={(e) => setShowMarpolSpecial(e.target.checked)}
-              />
-              <span className="sw" style={{ background: "#f87171" }} />
-              MARPOL Special Areas
-            </label>
-            <label className="vt-layer">
-              <input
-                type="checkbox"
-                checked={showHighRisk}
-                onChange={(e) => setShowHighRisk(e.target.checked)}
-              />
-              <span className="sw" style={{ background: "#fb923c" }} />
-              High-risk security areas
-            </label>
-          </div>
-          {(showEcaSeca || showMarpolSpecial || showHighRisk) && (
-            <p className="vt-layernote">
-              Boundaries are simplified approximations for reference only — always verify with
-              official charts and current UKMTO / IMB advisories before making compliance or
-              security decisions.
-            </p>
+          {!isLoggedIn && (
+            <p className="vt-hint">Log in to save voyages and revisit them anytime.</p>
           )}
         </div>
       </div>
@@ -726,6 +683,121 @@ export default function VesselTrackerClient() {
           onMapClickWeather={handleMapClickWeather}
           weatherPoint={weatherPoint}
         />
+      </div>
+
+      <div className="vt-details">
+        {routeInfo && (
+          <>
+            <div className="vt-stats">
+              <div className="vt-stat gold">
+                <span className="vt-stat-label">Distance</span>
+                <span className="vt-stat-value">{routeInfo.distanceNm.toFixed(0)} nm</span>
+              </div>
+              {routeInfo.durationHours != null && (
+                <div className="vt-stat gold">
+                  <span className="vt-stat-label">Duration</span>
+                  <span className="vt-stat-value">{(routeInfo.durationHours / 24).toFixed(1)} days</span>
+                </div>
+              )}
+              {etaLocal && (
+                <div className="vt-stat">
+                  <span className="vt-stat-label">Est. arrival (local)</span>
+                  <span className="vt-stat-value" style={{ fontSize: 13 }}>{etaLocal}</span>
+                </div>
+              )}
+              {routeInfo.passages.length > 0 && (
+                <div className="vt-stat">
+                  <span className="vt-stat-label">Passages</span>
+                  <span className="vt-stat-value" style={{ fontSize: 13 }}>{routeInfo.passages.join(", ")}</span>
+                </div>
+              )}
+              {totalFuelBurned !== null && (
+                <div className="vt-stat">
+                  <span className="vt-stat-label">Fuel burned</span>
+                  <span className="vt-stat-value">{totalFuelBurned.toFixed(1)} t</span>
+                </div>
+              )}
+              {co2Tons !== null && (
+                <div className="vt-stat">
+                  <span className="vt-stat-label">CO₂ emissions</span>
+                  <span className="vt-stat-value">{co2Tons.toFixed(1)} t</span>
+                </div>
+              )}
+              {bunkerCost !== null && (
+                <div className="vt-stat">
+                  <span className="vt-stat-label">Bunker cost</span>
+                  <span className="vt-stat-value">${bunkerCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                </div>
+              )}
+              {robAtArrival !== null && (
+                <div className={"vt-stat" + (robAtArrival < 0 ? " warn" : "")}>
+                  <span className="vt-stat-label">ROB at arrival</span>
+                  <span className="vt-stat-value">{robAtArrival.toFixed(1)} t{robAtArrival < 0 ? " ⚠" : ""}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="vt-speedbox">
+              <div className="vt-speedbox-title">Speed comparison (same route)</div>
+              <table className="vt-speedtable">
+                <thead>
+                  <tr><th>Speed</th><th>Duration</th><th>ETA date</th></tr>
+                </thead>
+                <tbody>
+                  {speedOptions.map((s) => {
+                    const hours = routeInfo.distanceNm / s;
+                    const days = hours / 24;
+                    const etaDate = new Date(Date.now() + hours * 3600 * 1000).toISOString().slice(0, 10);
+                    return (
+                      <tr key={s} className={s === speedNum ? "current" : ""}>
+                        <td>{s.toFixed(0)} kn</td>
+                        <td>{days.toFixed(1)} days</td>
+                        <td>{etaDate}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        <p className="vt-hint">
+          Sea-only route avoiding land, based on major shipping lanes — not for navigation.
+          {route && " Double-click anywhere on the route to add a point, drag it to reshape, double-click a point to remove it."}
+        </p>
+
+        {origin && destination && (
+          <div className="vt-portcards">
+            <PortInfoCard label="Departure" port={origin} />
+            <PortInfoCard label="Arrival" port={destination} />
+          </div>
+        )}
+
+        <div className="vt-layers">
+          <label className="vt-layer">
+            <input type="checkbox" checked={showEcaSeca} onChange={(e) => setShowEcaSeca(e.target.checked)} />
+            <span className="sw" style={{ background: "#34d399" }} />
+            ECA / SECA zones
+          </label>
+          <label className="vt-layer">
+            <input type="checkbox" checked={showMarpolSpecial} onChange={(e) => setShowMarpolSpecial(e.target.checked)} />
+            <span className="sw" style={{ background: "#f87171" }} />
+            MARPOL Special Areas
+          </label>
+          <label className="vt-layer">
+            <input type="checkbox" checked={showHighRisk} onChange={(e) => setShowHighRisk(e.target.checked)} />
+            <span className="sw" style={{ background: "#fb923c" }} />
+            High-risk security areas
+          </label>
+        </div>
+        {(showEcaSeca || showMarpolSpecial || showHighRisk) && (
+          <p className="vt-layernote">
+            Boundaries are simplified approximations for reference only — always verify with
+            official charts and current UKMTO / IMB advisories before making compliance or
+            security decisions.
+          </p>
+        )}
       </div>
     </div>
   );
