@@ -27,9 +27,9 @@ export default async function HomePage({
     <HomeContent
       deckSlot={
         <>
+          <VesselTrackerPromo />
           <DeckRail />
           <AiProfilePromo />
-          <VesselTrackerPromo />
           <LiveActivityStrip />
           <MessRoomBox messStatus={sp.mess} />
           <PopularSearches />
