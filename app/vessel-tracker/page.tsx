@@ -18,7 +18,7 @@ export default async function VesselTrackerPage() {
   return (
     <>
       <SiteHeader isLoggedIn={!!user} active={null} />
-      <VesselTrackerClient />
+      <VesselTrackerClient isLoggedIn={!!user} />
     </>
   );
 }
