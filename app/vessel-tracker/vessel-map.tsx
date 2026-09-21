@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { ECA_ZONES } from "searoute-ts/eca";
 import { MARPOL_SPECIAL_AREAS } from "@/lib/eca-marpol-areas";
+import { HIGH_RISK_AREAS } from "@/lib/high-risk-areas";
 
 export type RouteFeature = {
   type: "Feature";
@@ -212,6 +213,7 @@ function WeatherMarker({
 export default function VesselMap({
   showEcaSeca,
   showMarpolSpecial,
+  showHighRisk,
   route,
   fitTrigger,
   viaPoints,
@@ -224,6 +226,7 @@ export default function VesselMap({
 }: {
   showEcaSeca: boolean;
   showMarpolSpecial: boolean;
+  showHighRisk: boolean;
   route: RouteFeature | null;
   fitTrigger: number;
   viaPoints: ViaPoint[];
@@ -282,6 +285,23 @@ export default function VesselMap({
           onEachFeature={(feature, layer) => {
             layer.bindPopup(
               `<strong>${feature.properties.name}</strong><br/><em>Approximate boundary — verify with official charts</em>`
+            );
+          }}
+        />
+      )}
+
+      {showHighRisk && (
+        <GeoJSON
+          data={HIGH_RISK_AREAS as any}
+          style={(feature: any) => ({
+            color: feature.properties.color,
+            weight: 1.5,
+            fillOpacity: 0.08,
+            dashArray: "1,5",
+          })}
+          onEachFeature={(feature, layer) => {
+            layer.bindPopup(
+              `<strong>⚠ ${feature.properties.name}</strong><br/>${feature.properties.note}<br/><em>Historical awareness only — not real-time. Check UKMTO / IMB PRC for current advisories.</em>`
             );
           }}
         />
