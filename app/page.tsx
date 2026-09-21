@@ -25,9 +25,9 @@ export default async function HomePage({
 
   return (
     <HomeContent
+      topSlot={<VesselTrackerPromo />}
       deckSlot={
         <>
-          <VesselTrackerPromo />
           <DeckRail />
           <AiProfilePromo />
           <LiveActivityStrip />
