@@ -4,6 +4,7 @@ import financialPlanningIrregularIncome from "./financial-planning-irregular-inc
 import oralExamPreparationGuide from "./how-to-prepare-oral-exam-certificate-competency-seafarers-2026";
 import fitnessExerciseGuideSeafarers from "./fitness-exercise-guide-seafarers-limited-space-2026";
 import type { BlogIndexEntry, BlogPost } from "./types";
+import voyagePlanningGuide2026 from "./how-to-plan-a-ship-voyage-route-eta-fuel-calculator-guide-2026";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
 import overstayedContractMlcRights from "./overstayed-contract-mlc-2006-rights-guide-2026";
@@ -236,6 +237,7 @@ export const allPosts: BlogPost[] = [
   stcwCertificatesExplained,
   stealthJobSearchSeafarers,
   shipCrewVsYachtCrew,
+  voyagePlanningGuide2026,
 ];
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(
