@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import SearchWizard from "./search-wizard";
 import LiveRosterFeed from "./LiveRosterFeed";
 
-export default function HomeContent({ deckSlot }: { deckSlot?: React.ReactNode }) {
+export default function HomeContent({ deckSlot, topSlot }: { deckSlot?: React.ReactNode; topSlot?: React.ReactNode }) {
   useEffect(() => {
 const __T=[];
 const _si=window.setInterval.bind(window), _st=window.setTimeout.bind(window);
@@ -622,6 +622,8 @@ if(a2hsBtn){
     <a href="/signup">Sign Up Free</a>
   </div>
 </header>
+
+{topSlot}
 
 <section className="hero">
   <div className="aur aur1"></div>
