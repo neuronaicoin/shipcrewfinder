@@ -8,7 +8,6 @@ const nextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['ws'],
 };
 
 module.exports = nextConfig;
