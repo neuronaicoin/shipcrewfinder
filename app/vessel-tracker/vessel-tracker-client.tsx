@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ECA_ZONES } from "searoute-ts/eca";
 import type { RouteFeature, ViaPoint, WeatherReading } from "./vessel-map";
@@ -11,6 +11,8 @@ const VesselMap = dynamic(() => import("./vessel-map"), {
 });
 
 type PortOption = { code: string; name: string; country: string; coordinates: [number, number] };
+
+const CO2_FACTOR = 3.114; // ton CO2 per ton fuel burned (IMO standard HFO factor, approximate)
 
 function ecaZonesFor(lon: number, lat: number): string[] {
   const matches: string[] = [];
@@ -23,6 +25,17 @@ function ecaZonesFor(lon: number, lat: number): string[] {
     }
   }
   return matches;
+}
+
+function estimateLocalTime(fromNowHours: number, lon: number): string {
+  const utcOffsetHours = Math.round(lon / 15);
+  const arrival = new Date(Date.now() + fromNowHours * 3600 * 1000);
+  const local = new Date(arrival.getTime() + utcOffsetHours * 3600 * 1000);
+  const hh = String(local.getUTCHours()).padStart(2, "0");
+  const mm = String(local.getUTCMinutes()).padStart(2, "0");
+  const dateStr = local.toISOString().slice(0, 10);
+  const sign = utcOffsetHours >= 0 ? "+" : "";
+  return `${dateStr} ${hh}:${mm} (est. UTC${sign}${utcOffsetHours})`;
 }
 
 function PortInput({
@@ -171,11 +184,7 @@ function PortInfoCard({ label, port }: { label: string; port: PortOption }) {
         <div className="vt-pc-item">
           <span className="vt-pc-label">Wind</span>
           <span className="vt-pc-value">
-            {loadingWx
-              ? "Loading..."
-              : weather?.weather
-              ? `${weather.weather.wind_speed_10m ?? "-"} kn`
-              : "N/A"}
+            {loadingWx ? "Loading..." : weather?.weather ? `${weather.weather.wind_speed_10m ?? "-"} kn` : "N/A"}
           </span>
         </div>
         <div className="vt-pc-item">
@@ -203,8 +212,10 @@ export default function VesselTrackerClient() {
   const [origin, setOrigin] = useState<PortOption | null>(null);
   const [destination, setDestination] = useState<PortOption | null>(null);
   const [speed, setSpeed] = useState("14");
+  const [draft, setDraft] = useState("");
   const [dailyConsumption, setDailyConsumption] = useState("");
   const [rob, setRob] = useState("");
+  const [bunkerPrice, setBunkerPrice] = useState("");
   const [route, setRoute] = useState<RouteFeature | null>(null);
   const [routeInfo, setRouteInfo] = useState<{
     distanceNm: number;
@@ -217,40 +228,92 @@ export default function VesselTrackerClient() {
   const [fitTrigger, setFitTrigger] = useState(0);
   const [showEcaSeca, setShowEcaSeca] = useState(false);
   const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
+  const [showHighRisk, setShowHighRisk] = useState(false);
   const [weatherMode, setWeatherMode] = useState(false);
   const [weatherPoint, setWeatherPoint] = useState<{
     lat: number;
     lon: number;
     data: WeatherReading;
   } | null>(null);
+  const [copyLabel, setCopyLabel] = useState("🔗 Copy voyage link");
 
-  async function fetchRoute(via: (ViaPoint & { sortKey: number })[]) {
-    if (!origin || !destination) return;
-    setRouteLoading(true);
-    setRouteError(null);
-    try {
-      const params = new URLSearchParams({ from: origin.code, to: destination.code, speed });
-      if (via.length > 0) {
-        params.set("via", via.map((v) => `${v.lon},${v.lat}`).join(";"));
+  const fetchRoute = useCallback(
+    async (via: (ViaPoint & { sortKey: number })[], o?: PortOption | null, d?: PortOption | null) => {
+      const org = o ?? origin;
+      const dst = d ?? destination;
+      if (!org || !dst) return;
+      setRouteLoading(true);
+      setRouteError(null);
+      try {
+        const params = new URLSearchParams({ from: org.code, to: dst.code, speed });
+        if (draft) params.set("draft", draft);
+        if (via.length > 0) {
+          params.set("via", via.map((v) => `${v.lon},${v.lat}`).join(";"));
+        }
+        const res = await fetch(`/api/route?${params.toString()}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setRouteError(data.error || "Route could not be calculated.");
+          return;
+        }
+        setRoute(data.route);
+        setRouteInfo({
+          distanceNm: data.distanceNm,
+          durationHours: data.durationHours,
+          passages: data.passages || [],
+        });
+      } catch {
+        setRouteError("Route could not be calculated.");
+      } finally {
+        setRouteLoading(false);
       }
-      const res = await fetch(`/api/route?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setRouteError(data.error || "Route could not be calculated.");
-        return;
+    },
+    [origin, destination, speed, draft]
+  );
+
+  // Sayfa yüklenirken URL'de paylaşılan bir rota var mı diye bak, varsa otomatik kur.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromCode = params.get("from");
+    const toCode = params.get("to");
+    if (!fromCode || !toCode) return;
+
+    (async () => {
+      try {
+        const [fromRes, toRes] = await Promise.all([
+          fetch(`/api/ports/search?q=${fromCode}`).then((r) => r.json()),
+          fetch(`/api/ports/search?q=${toCode}`).then((r) => r.json()),
+        ]);
+        const fromPort = fromRes.ports?.find((p: PortOption) => p.code === fromCode);
+        const toPort = toRes.ports?.find((p: PortOption) => p.code === toCode);
+        if (!fromPort || !toPort) return;
+
+        setOrigin(fromPort);
+        setDestination(toPort);
+        if (params.get("speed")) setSpeed(params.get("speed")!);
+        if (params.get("draft")) setDraft(params.get("draft")!);
+        if (params.get("cons")) setDailyConsumption(params.get("cons")!);
+        if (params.get("rob")) setRob(params.get("rob")!);
+        if (params.get("price")) setBunkerPrice(params.get("price")!);
+
+        const viaParam = params.get("via");
+        let via: (ViaPoint & { sortKey: number })[] = [];
+        if (viaParam) {
+          via = viaParam.split(";").map((pair, i) => {
+            const [lon, lat] = pair.split(",").map(Number);
+            return { lon, lat, sortKey: i };
+          });
+          setViaPoints(via);
+        }
+
+        setFitTrigger((n) => n + 1);
+        await fetchRoute(via, fromPort, toPort);
+      } catch {
+        // sessizce yoksay — kullanıcı elle kurabilir
       }
-      setRoute(data.route);
-      setRouteInfo({
-        distanceNm: data.distanceNm,
-        durationHours: data.durationHours,
-        passages: data.passages || [],
-      });
-    } catch {
-      setRouteError("Route could not be calculated.");
-    } finally {
-      setRouteLoading(false);
-    }
-  }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleCalculateRoute() {
     setViaPoints([]);
@@ -305,24 +368,56 @@ export default function VesselTrackerClient() {
     }
   }
 
+  function handleCopyLink() {
+    if (!origin || !destination) return;
+    const params = new URLSearchParams({ from: origin.code, to: destination.code, speed });
+    if (draft) params.set("draft", draft);
+    if (dailyConsumption) params.set("cons", dailyConsumption);
+    if (rob) params.set("rob", rob);
+    if (bunkerPrice) params.set("price", bunkerPrice);
+    if (viaPoints.length > 0) {
+      params.set("via", viaPoints.map((v) => `${v.lon},${v.lat}`).join(";"));
+    }
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyLabel("✓ Link copied");
+      setTimeout(() => setCopyLabel("🔗 Copy voyage link"), 2000);
+    });
+  }
+
   const hasCustomRoute = viaPoints.length > 0;
   const dailyCons = parseFloat(dailyConsumption);
   const robStart = parseFloat(rob);
+  const price = parseFloat(bunkerPrice);
   const voyageDays = routeInfo?.durationHours != null ? routeInfo.durationHours / 24 : null;
   const totalFuelBurned =
     voyageDays != null && !Number.isNaN(dailyCons) ? dailyCons * voyageDays : null;
   const robAtArrival =
     totalFuelBurned != null && !Number.isNaN(robStart) ? robStart - totalFuelBurned : null;
+  const co2Tons = totalFuelBurned != null ? totalFuelBurned * CO2_FACTOR : null;
+  const bunkerCost =
+    totalFuelBurned != null && !Number.isNaN(price) ? totalFuelBurned * price : null;
+  const etaLocal =
+    routeInfo?.durationHours != null && destination
+      ? estimateLocalTime(routeInfo.durationHours, destination.coordinates[0])
+      : null;
+
+  const speedNum = parseFloat(speed) || 14;
+  const speedOptions = [
+    Math.max(6, speedNum - 2),
+    speedNum,
+    speedNum + 2,
+  ];
 
   return (
     <div className="vt-wrap">
       <style>{`
   .vt-wrap{display:flex;flex-direction:column;height:calc(100dvh - 60px);overflow-y:auto}
   .vt-searchbar{padding:16px;background:var(--navy2,#141845);border-bottom:1px solid var(--line2,rgba(255,255,255,.08));flex-shrink:0}
-  .vt-title{max-width:760px;margin:0 auto 12px;text-align:center}
+  .vt-title{max-width:800px;margin:0 auto 12px;text-align:center}
   .vt-title h1{font-family:var(--disp,var(--font-bricolage),sans-serif);font-size:1.3rem;font-weight:800;margin-bottom:2px}
   .vt-title p{font-size:12px;color:var(--tx3,#6b83a0)}
-  .vt-plan{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .vt-plan{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
   .vt-planrow{display:flex;gap:8px;flex-wrap:wrap}
   .vt-portwrap{position:relative;flex:1;min-width:200px}
   .vt-portlabel{font-size:11px;color:var(--tx3,#6b83a0);margin-bottom:4px;display:block;font-weight:600;letter-spacing:.02em}
@@ -339,7 +434,7 @@ export default function VesselTrackerClient() {
   .vt-dropitem:hover{background:rgba(251,191,36,.08)}
   .vt-dropcode{color:var(--gold,#fbbf24);font-size:11px;margin-left:4px}
   .vt-dropcountry{font-size:11px;color:var(--tx3,#6b83a0)}
-  .vt-numwrap{width:132px}
+  .vt-numwrap{width:130px}
   .vt-plancta{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
   .vt-btn{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));
     color:#0b0e13;border:none;border-radius:12px;padding:0 20px;height:44px;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
@@ -350,14 +445,19 @@ export default function VesselTrackerClient() {
   .vt-routeerr{font-size:12.5px;color:#f87171;text-align:center}
 
   .vt-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
-  .vt-stat{background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));
-    border-radius:12px;padding:12px 14px}
-  .vt-stat-label{display:block;font-size:10.5px;color:var(--tx3,#6b83a0);text-transform:uppercase;
-    letter-spacing:.05em;font-weight:700;margin-bottom:4px}
+  .vt-stat{background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:12px;padding:12px 14px}
+  .vt-stat-label{display:block;font-size:10.5px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px}
   .vt-stat-value{display:block;font-size:17px;font-weight:800;color:var(--tx,#eef4fa)}
   .vt-stat.gold .vt-stat-value{color:var(--gold,#fbbf24)}
   .vt-stat.warn{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08)}
   .vt-stat.warn .vt-stat-value{color:#f87171}
+
+  .vt-speedtable{width:100%;border-collapse:collapse;font-size:12.5px}
+  .vt-speedtable th{text-align:left;font-size:10px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line2,rgba(255,255,255,.1))}
+  .vt-speedtable td{padding:7px 8px;color:var(--tx2,#a8bdd2);border-bottom:1px solid rgba(255,255,255,.04)}
+  .vt-speedtable tr.current td{color:var(--gold,#fbbf24);font-weight:700}
+  .vt-speedbox{background:rgba(255,255,255,.03);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:12px;padding:10px 14px}
+  .vt-speedbox-title{font-size:11px;font-weight:700;color:var(--tx2,#a8bdd2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
 
   .vt-hint{font-size:11.5px;color:var(--tx3,#6b83a0);text-align:center}
 
@@ -401,10 +501,20 @@ export default function VesselTrackerClient() {
             />
           </div>
 
-          <div className="vt-planrow vt-plancta">
+          <div className="vt-planrow">
             <div className="vt-numwrap">
               <label className="vt-portlabel">Speed (kn)</label>
               <input className="vt-input" type="number" value={speed} onChange={(e) => setSpeed(e.target.value)} />
+            </div>
+            <div className="vt-numwrap">
+              <label className="vt-portlabel">Draft (m)</label>
+              <input
+                className="vt-input"
+                type="number"
+                placeholder="optional"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+              />
             </div>
             <div className="vt-numwrap">
               <label className="vt-portlabel">Consumption (t/day)</label>
@@ -426,6 +536,19 @@ export default function VesselTrackerClient() {
                 onChange={(e) => setRob(e.target.value)}
               />
             </div>
+            <div className="vt-numwrap">
+              <label className="vt-portlabel">Bunker price ($/t)</label>
+              <input
+                className="vt-input"
+                type="number"
+                placeholder="optional"
+                value={bunkerPrice}
+                onChange={(e) => setBunkerPrice(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="vt-planrow vt-plancta">
             <button
               className="vt-btn"
               onClick={handleCalculateRoute}
@@ -450,45 +573,95 @@ export default function VesselTrackerClient() {
             >
               🌦 {weatherMode ? "Weather mode on" : "Check weather"}
             </button>
+            {route && (
+              <button className="vt-btn vt-btn-ghost" onClick={handleCopyLink}>
+                {copyLabel}
+              </button>
+            )}
           </div>
 
           {routeError && <p className="vt-routeerr">{routeError}</p>}
 
           {routeInfo && (
-            <div className="vt-stats">
-              <div className="vt-stat gold">
-                <span className="vt-stat-label">Distance</span>
-                <span className="vt-stat-value">{routeInfo.distanceNm.toFixed(0)} nm</span>
-              </div>
-              {routeInfo.durationHours != null && (
+            <>
+              <div className="vt-stats">
                 <div className="vt-stat gold">
-                  <span className="vt-stat-label">Duration</span>
-                  <span className="vt-stat-value">{(routeInfo.durationHours / 24).toFixed(1)} days</span>
+                  <span className="vt-stat-label">Distance</span>
+                  <span className="vt-stat-value">{routeInfo.distanceNm.toFixed(0)} nm</span>
                 </div>
-              )}
-              {routeInfo.passages.length > 0 && (
-                <div className="vt-stat">
-                  <span className="vt-stat-label">Passages</span>
-                  <span className="vt-stat-value" style={{ fontSize: 13 }}>
-                    {routeInfo.passages.join(", ")}
-                  </span>
-                </div>
-              )}
-              {totalFuelBurned !== null && (
-                <div className="vt-stat">
-                  <span className="vt-stat-label">Fuel burned</span>
-                  <span className="vt-stat-value">{totalFuelBurned.toFixed(1)} t</span>
-                </div>
-              )}
-              {robAtArrival !== null && (
-                <div className={"vt-stat" + (robAtArrival < 0 ? " warn" : "")}>
-                  <span className="vt-stat-label">ROB at arrival</span>
-                  <span className="vt-stat-value">
-                    {robAtArrival.toFixed(1)} t{robAtArrival < 0 ? " ⚠" : ""}
-                  </span>
-                </div>
-              )}
-            </div>
+                {routeInfo.durationHours != null && (
+                  <div className="vt-stat gold">
+                    <span className="vt-stat-label">Duration</span>
+                    <span className="vt-stat-value">{(routeInfo.durationHours / 24).toFixed(1)} days</span>
+                  </div>
+                )}
+                {etaLocal && (
+                  <div className="vt-stat">
+                    <span className="vt-stat-label">Est. arrival (local)</span>
+                    <span className="vt-stat-value" style={{ fontSize: 13 }}>{etaLocal}</span>
+                  </div>
+                )}
+                {routeInfo.passages.length > 0 && (
+                  <div className="vt-stat">
+                    <span className="vt-stat-label">Passages</span>
+                    <span className="vt-stat-value" style={{ fontSize: 13 }}>{routeInfo.passages.join(", ")}</span>
+                  </div>
+                )}
+                {totalFuelBurned !== null && (
+                  <div className="vt-stat">
+                    <span className="vt-stat-label">Fuel burned</span>
+                    <span className="vt-stat-value">{totalFuelBurned.toFixed(1)} t</span>
+                  </div>
+                )}
+                {co2Tons !== null && (
+                  <div className="vt-stat">
+                    <span className="vt-stat-label">CO₂ emissions</span>
+                    <span className="vt-stat-value">{co2Tons.toFixed(1)} t</span>
+                  </div>
+                )}
+                {bunkerCost !== null && (
+                  <div className="vt-stat">
+                    <span className="vt-stat-label">Bunker cost</span>
+                    <span className="vt-stat-value">${bunkerCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  </div>
+                )}
+                {robAtArrival !== null && (
+                  <div className={"vt-stat" + (robAtArrival < 0 ? " warn" : "")}>
+                    <span className="vt-stat-label">ROB at arrival</span>
+                    <span className="vt-stat-value">{robAtArrival.toFixed(1)} t{robAtArrival < 0 ? " ⚠" : ""}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="vt-speedbox">
+                <div className="vt-speedbox-title">Speed comparison (same route)</div>
+                <table className="vt-speedtable">
+                  <thead>
+                    <tr>
+                      <th>Speed</th>
+                      <th>Duration</th>
+                      <th>ETA date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {speedOptions.map((s) => {
+                      const hours = (routeInfo.distanceNm / s);
+                      const days = hours / 24;
+                      const etaDate = new Date(Date.now() + hours * 3600 * 1000)
+                        .toISOString()
+                        .slice(0, 10);
+                      return (
+                        <tr key={s} className={s === speedNum ? "current" : ""}>
+                          <td>{s.toFixed(0)} kn</td>
+                          <td>{days.toFixed(1)} days</td>
+                          <td>{etaDate}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           <p className="vt-hint">
@@ -518,11 +691,21 @@ export default function VesselTrackerClient() {
               <span className="sw" style={{ background: "#f87171" }} />
               MARPOL Special Areas
             </label>
+            <label className="vt-layer">
+              <input
+                type="checkbox"
+                checked={showHighRisk}
+                onChange={(e) => setShowHighRisk(e.target.checked)}
+              />
+              <span className="sw" style={{ background: "#fb923c" }} />
+              High-risk security areas
+            </label>
           </div>
-          {(showEcaSeca || showMarpolSpecial) && (
+          {(showEcaSeca || showMarpolSpecial || showHighRisk) && (
             <p className="vt-layernote">
               Boundaries are simplified approximations for reference only — always verify with
-              official charts before making compliance decisions.
+              official charts and current UKMTO / IMB advisories before making compliance or
+              security decisions.
             </p>
           )}
         </div>
@@ -532,6 +715,7 @@ export default function VesselTrackerClient() {
         <VesselMap
           showEcaSeca={showEcaSeca}
           showMarpolSpecial={showMarpolSpecial}
+          showHighRisk={showHighRisk}
           route={route}
           fitTrigger={fitTrigger}
           viaPoints={viaPoints}
