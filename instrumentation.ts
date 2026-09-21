@@ -1,19 +1,11 @@
 // Her deploy'da bir kez çalışır: tüm site URL'lerini IndexNow'a bildirir
 // (Bing + Yandex + IndexNow ortakları — ChatGPT aramasının ana kaynağı Bing'dir)
-// Ayrıca AIS gemi takip bağlantısını başlatır (canlı konum verisi).
+//
+// NOT: AIS canlı gemi takibi kaldırıldı (Voyage Planner'a odaklanmak için) —
+// bu dosya artık sadece IndexNow bildirimini yapıyor.
 
 export async function register() {
   if (process.env.NEXT_RUNTIME && process.env.NEXT_RUNTIME !== "nodejs") return;
-
-  // --- AIS canlı gemi takibi ---
-  try {
-    const { startAisStream } = await import("@/lib/ais-client");
-    startAisStream();
-  } catch (e) {
-    console.log("[AIS] başlatılamadı:", (e as Error).message);
-  }
-
-  // --- IndexNow bildirimi (sadece production'da) ---
   if (process.env.NODE_ENV !== "production") return;
 
   try {
@@ -30,23 +22,19 @@ export async function register() {
 
     const urls = new Set<string>();
 
-    // Statik ana sayfalar
     [
       "", "/jobs", "/salary", "/salary/tools", "/blog", "/blog/rss.xml", "/deck", "/messroom",
       "/vessels", "/companies", "/signup", "/signup/crew", "/signup/company",
       "/about", "/contact", "/llms-full.txt",
     ].forEach((p) => urls.add(base + p));
 
-    // Blog yazıları
     blogIndex.forEach((p) => urls.add(base + "/blog/" + p.slug));
 
-    // Rank SEO sayfaları (/crew/[slug])
     const allRanks = Object.values(SHIP_RANKS).flat() as string[];
     allRanks.forEach((r) => {
       urls.add(base + "/crew/" + slugify(r));
     });
 
-    // Rank × gemi tipi kombo sayfaları
     allRanks
       .filter((r) => SALARY_DATA.some((s) => norm(s.rank) === norm(r)))
       .forEach((r) => {
@@ -55,7 +43,6 @@ export async function register() {
         });
       });
 
-    // Salary rank + milliyet sayfaları
     SALARY_DATA.forEach((r) => urls.add(base + "/salary/" + r.slug));
     NATIONALITIES.forEach((n) => urls.add(base + "/salary/for/" + n.slug));
 
@@ -74,7 +61,6 @@ export async function register() {
 
     console.log("[IndexNow] " + urlList.length + " URL bildirildi ✓");
   } catch (e) {
-    // Bildirim hatası siteyi asla etkilemesin
     console.log("[IndexNow] bildirim atlandı:", (e as Error).message);
   }
 }
