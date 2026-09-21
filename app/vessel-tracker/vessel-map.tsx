@@ -1,21 +1,11 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Rectangle, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Rectangle, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import { ECA_ZONES } from "searoute-ts/eca";
 import { MARPOL_SPECIAL_AREAS } from "@/lib/eca-marpol-areas";
-
-export type Vessel = {
-  mmsi: number;
-  ship_name: string | null;
-  latitude: number;
-  longitude: number;
-  speed: number | null;
-  course: number | null;
-  updated_at: string;
-};
 
 export type RouteFeature = {
   type: "Feature";
@@ -23,43 +13,64 @@ export type RouteFeature = {
   geometry: { type: "LineString"; coordinates: [number, number][] };
 };
 
-function shipIcon() {
-  return L.divIcon({
-    className: "scf-ship-marker",
-    html: `<div style="
-      width:30px;height:30px;border-radius:50%;
-      background:linear-gradient(135deg,#fbbf24,#e0a010);
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 2px 10px rgba(0,0,0,.4);border:2px solid #0d1030;
-      font-size:15px;">🚢</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
-  });
-}
+export type ViaPoint = { lon: number; lat: number };
+
+export type WeatherReading = {
+  weather: {
+    temperature_2m?: number;
+    wind_speed_10m?: number;
+    wind_direction_10m?: number;
+    wind_gusts_10m?: number;
+  } | null;
+  marine: {
+    wave_height?: number;
+    wave_direction?: number;
+    wave_period?: number;
+    swell_wave_height?: number;
+    sea_surface_temperature?: number;
+  } | null;
+};
 
 function portIcon(color: string) {
   return L.divIcon({
     className: "scf-port-marker",
     html: `<div style="
-      width:22px;height:22px;border-radius:50%;
+      width:24px;height:24px;border-radius:50%;
       background:${color};display:flex;align-items:center;justify-content:center;
       box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #0d1030;
-      font-size:11px;color:#0b0e13;font-weight:800;">⚓</div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-    popupAnchor: [0, -11],
+      font-size:12px;color:#0b0e13;font-weight:800;">⚓</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
   });
 }
 
-function FlyToVessel({ vessel }: { vessel: Vessel | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (vessel) {
-      map.flyTo([vessel.latitude, vessel.longitude], 8, { duration: 1.2 });
-    }
-  }, [vessel, map]);
-  return null;
+function dragHandleIcon() {
+  return L.divIcon({
+    className: "scf-drag-handle",
+    html: `<div style="
+      width:18px;height:18px;border-radius:50%;
+      background:#fff;border:3px solid #fbbf24;
+      box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;"></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
+function weatherPinIcon() {
+  return L.divIcon({
+    className: "scf-weather-pin",
+    html: `<div style="
+      width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+      background:linear-gradient(135deg,#60a5fa,#3b82f6);
+      box-shadow:0 2px 8px rgba(0,0,0,.5);border:2px solid #0d1030;
+      display:flex;align-items:center;justify-content:center;">
+      <span style="transform:rotate(45deg);font-size:12px;">🌊</span>
+    </div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -26],
+  });
 }
 
 function FitToRoute({ route, fitTrigger }: { route: RouteFeature | null; fitTrigger: number }) {
@@ -77,39 +88,44 @@ function FitToRoute({ route, fitTrigger }: { route: RouteFeature | null; fitTrig
   return null;
 }
 
-function dragHandleIcon() {
-  return L.divIcon({
-    className: "scf-drag-handle",
-    html: `<div style="
-      width:20px;height:20px;border-radius:50%;
-      background:#fff;border:3px solid #fbbf24;
-      box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:grab;"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
+// Rota çizgisinin herhangi bir yerine çift tıklanınca oraya yeni bir
+// sürüklenebilir "via" noktası eklenir.
+function EditableRouteLine({
+  route,
+  onAddViaPoint,
+}: {
+  route: RouteFeature;
+  onAddViaPoint: (lat: number, lon: number) => void;
+}) {
+  return (
+    <GeoJSON
+      data={route as any}
+      style={{ color: "#fbbf24", weight: 4, opacity: 0.9 }}
+      eventHandlers={{
+        dblclick: (e: any) => {
+          L.DomEvent.stop(e);
+          onAddViaPoint(e.latlng.lat, e.latlng.lng);
+        },
+      }}
+    />
+  );
 }
 
-function RouteDragHandles({
-  route,
+function ViaPointHandles({
+  viaPoints,
   onDrag,
+  onRemove,
 }: {
-  route: RouteFeature | null;
+  viaPoints: ViaPoint[];
   onDrag: (index: number, lat: number, lon: number) => void;
+  onRemove: (index: number) => void;
 }) {
-  if (!route) return null;
-  const coords = route.geometry.coordinates;
-  if (coords.length < 2) return null;
-
-  // Rota boyunca eşit aralıklı 3 nokta — her biri bağımsız sürüklenebilir.
-  const fractions = [0.25, 0.5, 0.75];
-  const handles = fractions.map((f) => coords[Math.min(coords.length - 1, Math.floor(coords.length * f))]);
-
   return (
     <>
-      {handles.map((pt, i) => (
+      {viaPoints.map((p, i) => (
         <Marker
           key={i}
-          position={[pt[1], pt[0]]}
+          position={[p.lat, p.lon]}
           icon={dragHandleIcon()}
           draggable
           eventHandlers={{
@@ -117,38 +133,113 @@ function RouteDragHandles({
               const pos = e.target.getLatLng();
               onDrag(i, pos.lat, pos.lng);
             },
+            dblclick: (e: any) => {
+              L.DomEvent.stop(e);
+              onRemove(i);
+            },
           }}
         >
-          <Popup>Drag to reroute through this point</Popup>
+          <Popup>Drag to move · double-click to remove</Popup>
         </Marker>
       ))}
     </>
   );
 }
 
+function WeatherClickHandler({
+  active,
+  onClick,
+}: {
+  active: boolean;
+  onClick: (lat: number, lon: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      if (active) onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function degToCompass(deg?: number) {
+  if (deg === undefined || deg === null) return "-";
+  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+function WeatherMarker({
+  point,
+}: {
+  point: { lat: number; lon: number; data: WeatherReading } | null;
+}) {
+  if (!point) return null;
+  const { data } = point;
+  return (
+    <Marker position={[point.lat, point.lon]} icon={weatherPinIcon()}>
+      <Popup>
+        <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+          <strong>Live conditions</strong>
+          <br />
+          {data.weather && (
+            <>
+              💨 Wind: {data.weather.wind_speed_10m ?? "-"} kn from{" "}
+              {degToCompass(data.weather.wind_direction_10m)} (gusts{" "}
+              {data.weather.wind_gusts_10m ?? "-"} kn)
+              <br />
+              🌡 Air temp: {data.weather.temperature_2m ?? "-"}°C
+              <br />
+            </>
+          )}
+          {data.marine ? (
+            <>
+              🌊 Wave height: {data.marine.wave_height ?? "-"} m from{" "}
+              {degToCompass(data.marine.wave_direction)}
+              <br />
+              〰 Swell: {data.marine.swell_wave_height ?? "-"} m, period{" "}
+              {data.marine.wave_period ?? "-"} s
+              <br />
+              🌊 Sea temp: {data.marine.sea_surface_temperature ?? "-"}°C
+            </>
+          ) : (
+            <em>No marine data at this point (likely inland).</em>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
+}
+
 export default function VesselMap({
-  vessels,
-  focusedVessel,
   showEcaSeca,
   showMarpolSpecial,
   route,
   fitTrigger,
-  onDragRoute,
+  viaPoints,
+  onAddViaPoint,
+  onDragViaPoint,
+  onRemoveViaPoint,
+  weatherMode,
+  onMapClickWeather,
+  weatherPoint,
 }: {
-  vessels: Vessel[];
-  focusedVessel: Vessel | null;
   showEcaSeca: boolean;
   showMarpolSpecial: boolean;
   route: RouteFeature | null;
   fitTrigger: number;
-  onDragRoute: (index: number, lat: number, lon: number) => void;
+  viaPoints: ViaPoint[];
+  onAddViaPoint: (lat: number, lon: number) => void;
+  onDragViaPoint: (index: number, lat: number, lon: number) => void;
+  onRemoveViaPoint: (index: number) => void;
+  weatherMode: boolean;
+  onMapClickWeather: (lat: number, lon: number) => void;
+  weatherPoint: { lat: number; lon: number; data: WeatherReading } | null;
 }) {
   return (
     <MapContainer
       center={[20, 10]}
       zoom={2}
       minZoom={2}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", cursor: weatherMode ? "crosshair" : "" }}
       worldCopyJump
     >
       <TileLayer
@@ -156,8 +247,6 @@ export default function VesselMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* ECA/SECA — searoute-ts'in kendi verisi (bbox yaklaşıklaması,
-          Baltık, Kuzey Denizi, Akdeniz, Kuzey Amerika, ABD Karayipleri) */}
       {showEcaSeca &&
         ECA_ZONES.flatMap((zone) =>
           zone.bboxes.map((bbox, i) => {
@@ -169,12 +258,7 @@ export default function VesselMap({
                   [minLat, minLon],
                   [maxLat, maxLon],
                 ]}
-                pathOptions={{
-                  color: "#34d399",
-                  weight: 1.5,
-                  fillOpacity: 0.1,
-                  dashArray: "5,4",
-                }}
+                pathOptions={{ color: "#34d399", weight: 1.5, fillOpacity: 0.1, dashArray: "5,4" }}
               >
                 <Popup>
                   <strong>{zone.name}</strong>
@@ -205,15 +289,9 @@ export default function VesselMap({
 
       {route && (
         <>
-          <GeoJSON
-            data={route as any}
-            style={{ color: "#fbbf24", weight: 3, opacity: 0.9 }}
-          />
+          <EditableRouteLine route={route} onAddViaPoint={onAddViaPoint} />
           <Marker
-            position={[
-              route.geometry.coordinates[0][1],
-              route.geometry.coordinates[0][0],
-            ]}
+            position={[route.geometry.coordinates[0][1], route.geometry.coordinates[0][0]]}
             icon={portIcon("#34d399")}
           >
             <Popup>Origin</Popup>
@@ -227,25 +305,13 @@ export default function VesselMap({
           >
             <Popup>Destination</Popup>
           </Marker>
+          <ViaPointHandles viaPoints={viaPoints} onDrag={onDragViaPoint} onRemove={onRemoveViaPoint} />
         </>
       )}
 
-      {route && <RouteDragHandles route={route} onDrag={onDragRoute} />}
+      <WeatherClickHandler active={weatherMode} onClick={onMapClickWeather} />
+      <WeatherMarker point={weatherPoint} />
 
-      {vessels.map((v) => (
-        <Marker key={v.mmsi} position={[v.latitude, v.longitude]} icon={shipIcon()}>
-          <Popup>
-            <strong>{v.ship_name || "Unknown vessel"}</strong>
-            <br />
-            Speed: {v.speed ?? "-"} kn
-            <br />
-            Course: {v.course ?? "-"}°
-            <br />
-            Last signal: {new Date(v.updated_at).toLocaleTimeString("en-GB")}
-          </Popup>
-        </Marker>
-      ))}
-      <FlyToVessel vessel={focusedVessel} />
       <FitToRoute route={route} fitTrigger={fitTrigger} />
     </MapContainer>
   );
