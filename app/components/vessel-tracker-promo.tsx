@@ -4,7 +4,7 @@ export default function VesselTrackerPromo() {
   return (
     <section className="vtpsec">
       <style>{`
-  .vtpsec{padding:8px 0 6px}
+  .vtpsec{padding:20px 0 10px}
   .vtp-wrap{max-width:1180px;margin:0 auto;padding:0 20px}
   .vtp-box{position:relative;overflow:hidden;border:1.5px solid var(--line,rgba(251,191,36,.3));
     border-radius:20px;background:linear-gradient(135deg,rgba(251,191,36,.09),var(--ink,#050716) 60%);
