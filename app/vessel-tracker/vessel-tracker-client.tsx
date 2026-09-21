@@ -242,6 +242,7 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
   const [showEcaSeca, setShowEcaSeca] = useState(false);
   const [showMarpolSpecial, setShowMarpolSpecial] = useState(false);
   const [showHighRisk, setShowHighRisk] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [weatherMode, setWeatherMode] = useState(false);
   const [weatherPoint, setWeatherPoint] = useState<{ lat: number; lon: number; data: WeatherReading } | null>(null);
   const [copyLabel, setCopyLabel] = useState("🔗 Copy link");
@@ -307,6 +308,7 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
       if (params.cons) setDailyConsumption(params.cons);
       if (params.rob) setRob(params.rob);
       if (params.price) setBunkerPrice(params.price);
+      if (params.draft || params.cons || params.rob || params.price) setShowAdvanced(true);
 
       const via = (params.via || []).map((v, i) => ({ ...v, sortKey: i }));
       setViaPoints(via);
@@ -514,6 +516,8 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
   .vt-dropcode{color:var(--gold,#fbbf24);font-size:11px;margin-left:4px}
   .vt-dropcountry{font-size:11px;color:var(--tx3,#6b83a0)}
   .vt-numwrap{width:124px}
+  .vt-advtoggle{background:none;border:none;color:var(--gold,#fbbf24);font-size:12.5px;font-weight:700;cursor:pointer;
+    padding:0 4px;align-self:center;white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
   .vt-plancta{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
   .vt-btn{background:linear-gradient(135deg,var(--gold,#fbbf24),var(--gold2,#e0a010));
     color:#0b0e13;border:none;border-radius:12px;padding:0 18px;height:42px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
@@ -530,7 +534,7 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
   .vt-savedwrap{position:relative}
   .vt-saveditem{padding:10px 13px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .vt-saveditem:hover{background:rgba(251,191,36,.06)}
-  .vt-saveditem-txt{font-size:12px;color:var(--tx,#eef4fa)}
+  .vt-saveditem-txt{font-size:12px;color:#eef4fa!important}
   .vt-saveditem-sub{font-size:10.5px;color:var(--tx3,#6b83a0)}
   .vt-saveditem-del{background:none;border:none;color:var(--tx3,#6b83a0);cursor:pointer;font-size:12px;flex-shrink:0}
   .vt-saveditem-del:hover{color:#f87171}
@@ -544,10 +548,10 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
   .vt-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
   .vt-stat{background:rgba(255,255,255,.04);border:1px solid var(--line2,rgba(255,255,255,.08));border-radius:12px;padding:12px 14px}
   .vt-stat-label{display:block;font-size:10.5px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px}
-  .vt-stat-value{display:block;font-size:17px;font-weight:800;color:var(--tx,#eef4fa)}
-  .vt-stat.gold .vt-stat-value{color:var(--gold,#fbbf24)}
+  .vt-stat-value{display:block;font-size:17px;font-weight:800;color:#eef4fa!important}
+  .vt-stat.gold .vt-stat-value{color:#fbbf24!important}
   .vt-stat.warn{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08)}
-  .vt-stat.warn .vt-stat-value{color:#f87171}
+  .vt-stat.warn .vt-stat-value{color:#f87171!important}
 
   .vt-speedtable{width:100%;border-collapse:collapse;font-size:12.5px}
   .vt-speedtable th{text-align:left;font-size:10px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line2,rgba(255,255,255,.1))}
@@ -574,7 +578,7 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
   .vt-portcard-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px}
   .vt-pc-item{display:flex;flex-direction:column}
   .vt-pc-label{font-size:10px;color:var(--tx3,#6b83a0);text-transform:uppercase;letter-spacing:.04em}
-  .vt-pc-value{font-size:12.5px;color:var(--tx,#eef4fa);font-weight:600}
+  .vt-pc-value{font-size:12.5px;color:#eef4fa!important;font-weight:600}
   .vt-portcard-note{font-size:10px;color:var(--tx3,#6b83a0);line-height:1.5;border-top:1px solid var(--line2,rgba(255,255,255,.06));padding-top:8px}
       `}</style>
 
@@ -595,23 +599,35 @@ export default function VesselTrackerClient({ isLoggedIn }: { isLoggedIn: boolea
               <label className="vt-portlabel">Speed (kn)</label>
               <input className="vt-input" type="number" value={speed} onChange={(e) => setSpeed(e.target.value)} />
             </div>
-            <div className="vt-numwrap">
-              <label className="vt-portlabel">Draft (m)</label>
-              <input className="vt-input" type="number" placeholder="optional" value={draft} onChange={(e) => setDraft(e.target.value)} />
-            </div>
-            <div className="vt-numwrap">
-              <label className="vt-portlabel">Cons. (t/day)</label>
-              <input className="vt-input" type="number" placeholder="optional" value={dailyConsumption} onChange={(e) => setDailyConsumption(e.target.value)} />
-            </div>
-            <div className="vt-numwrap">
-              <label className="vt-portlabel">ROB depart (t)</label>
-              <input className="vt-input" type="number" placeholder="optional" value={rob} onChange={(e) => setRob(e.target.value)} />
-            </div>
-            <div className="vt-numwrap">
-              <label className="vt-portlabel">Bunker ($/t)</label>
-              <input className="vt-input" type="number" placeholder="optional" value={bunkerPrice} onChange={(e) => setBunkerPrice(e.target.value)} />
-            </div>
+            <button
+              type="button"
+              className="vt-advtoggle"
+              onClick={() => setShowAdvanced((s) => !s)}
+            >
+              {showAdvanced ? "− Hide" : "+ Draft, fuel & cost options"}
+            </button>
           </div>
+
+          {showAdvanced && (
+            <div className="vt-planrow">
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">Draft (m)</label>
+                <input className="vt-input" type="number" placeholder="optional" value={draft} onChange={(e) => setDraft(e.target.value)} />
+              </div>
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">Cons. (t/day)</label>
+                <input className="vt-input" type="number" placeholder="optional" value={dailyConsumption} onChange={(e) => setDailyConsumption(e.target.value)} />
+              </div>
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">ROB depart (t)</label>
+                <input className="vt-input" type="number" placeholder="optional" value={rob} onChange={(e) => setRob(e.target.value)} />
+              </div>
+              <div className="vt-numwrap">
+                <label className="vt-portlabel">Bunker ($/t)</label>
+                <input className="vt-input" type="number" placeholder="optional" value={bunkerPrice} onChange={(e) => setBunkerPrice(e.target.value)} />
+              </div>
+            </div>
+          )}
 
           <div className="vt-planrow vt-plancta">
             <button className="vt-btn" onClick={handleCalculateRoute} disabled={!origin || !destination || routeLoading}>
