@@ -7,6 +7,11 @@ import type { BlogIndexEntry, BlogPost } from "./types";
 import voyagePlanningGuide2026 from "./how-to-plan-a-ship-voyage-route-eta-fuel-calculator-guide-2026";
 import ecaSecaFuelChangeoverGuide2026 from "./eca-seca-fuel-changeover-procedure-guide-2026";
 import weatherRoutingShipsGuide2026 from "./weather-routing-ships-how-it-works-fuel-savings-2026";
+import seafarerCareerProgressionPath2026 from "./seafarer-career-progression-path-cadet-to-captain-chief-engineer-2026";
+import crewingAgencyVsDirectHire2026 from "./crewing-agency-vs-direct-hire-seafarer-guide-2026";
+import seafarerPensionRetirementGuide2026 from "./seafarer-pension-retirement-planning-guide-2026";
+import seafarerVisaTravelDocsGuide2026 from "./seafarer-visa-travel-documents-guide-c1d-transit-2026";
+import watchkeepingDutiesRestHours2026 from "./watchkeeping-duties-rest-hours-explained-seafarer-guide-2026";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
 import overstayedContractMlcRights from "./overstayed-contract-mlc-2006-rights-guide-2026";
@@ -242,6 +247,11 @@ export const allPosts: BlogPost[] = [
   voyagePlanningGuide2026,
   ecaSecaFuelChangeoverGuide2026,
   weatherRoutingShipsGuide2026,
+  seafarerCareerProgressionPath2026,
+  crewingAgencyVsDirectHire2026,
+  seafarerPensionRetirementGuide2026,
+  seafarerVisaTravelDocsGuide2026,
+  watchkeepingDutiesRestHours2026,
 ];
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(
