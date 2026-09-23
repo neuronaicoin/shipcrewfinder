@@ -17,6 +17,16 @@ import onboardHierarchyExplained2026 from "./onboard-hierarchy-chain-of-command-
 import dailyLifeRoutineAboard2026 from "./daily-life-routine-aboard-a-ship-what-to-expect-2026";
 import safetyDrillsOnboardGuide2026 from "./safety-drills-onboard-ship-what-to-expect-guide-2026";
 import trampVsLinerShipping2026 from "./tramp-vs-liner-shipping-explained-seafarer-guide-2026";
+import seafarerContractTypes2026 from "./seafarer-employment-contract-types-explained-2026";
+import maritimeJobInterviewGuide2026 from "./how-to-prepare-maritime-job-interview-seafarer-2026";
+import seafarerMedicalCertificateEng1_2026 from "./seafarer-medical-certificate-eng1-explained-2026";
+import gmdssCertificateExplained2026 from "./gmdss-certificate-explained-seafarer-guide-2026";
+import dpOfficerCareerPath2026 from "./dynamic-positioning-dp-officer-career-path-guide-2026";
+import onboardInternetConnectivity2026 from "./onboard-internet-connectivity-guide-seafarers-2026";
+import engineResourceManagement2026 from "./engine-resource-management-erm-explained-2026";
+import flagOfConvenienceExplained2026 from "./flag-of-convenience-explained-seafarer-guide-2026";
+import trainingRecordBookExplained2026 from "./training-record-book-trb-explained-cadet-guide-2026";
+import anchorWatchDutiesExplained2026 from "./anchor-watch-duties-explained-seafarer-guide-2026";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
 import overstayedContractMlcRights from "./overstayed-contract-mlc-2006-rights-guide-2026";
@@ -262,6 +272,16 @@ export const allPosts: BlogPost[] = [
   dailyLifeRoutineAboard2026,
   safetyDrillsOnboardGuide2026,
   trampVsLinerShipping2026,
+  seafarerContractTypes2026,
+  maritimeJobInterviewGuide2026,
+  seafarerMedicalCertificateEng1_2026,
+  gmdssCertificateExplained2026,
+  dpOfficerCareerPath2026,
+  onboardInternetConnectivity2026,
+  engineResourceManagement2026,
+  flagOfConvenienceExplained2026,
+  trainingRecordBookExplained2026,
+  anchorWatchDutiesExplained2026,
 ];
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(
