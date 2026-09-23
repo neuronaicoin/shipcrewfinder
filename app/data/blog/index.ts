@@ -12,6 +12,11 @@ import crewingAgencyVsDirectHire2026 from "./crewing-agency-vs-direct-hire-seafa
 import seafarerPensionRetirementGuide2026 from "./seafarer-pension-retirement-planning-guide-2026";
 import seafarerVisaTravelDocsGuide2026 from "./seafarer-visa-travel-documents-guide-c1d-transit-2026";
 import watchkeepingDutiesRestHours2026 from "./watchkeeping-duties-rest-hours-explained-seafarer-guide-2026";
+import vesselTypesExplained2026 from "./vessel-types-explained-bulk-container-tanker-roro-2026";
+import onboardHierarchyExplained2026 from "./onboard-hierarchy-chain-of-command-explained-2026";
+import dailyLifeRoutineAboard2026 from "./daily-life-routine-aboard-a-ship-what-to-expect-2026";
+import safetyDrillsOnboardGuide2026 from "./safety-drills-onboard-ship-what-to-expect-guide-2026";
+import trampVsLinerShipping2026 from "./tramp-vs-liner-shipping-explained-seafarer-guide-2026";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
 import overstayedContractMlcRights from "./overstayed-contract-mlc-2006-rights-guide-2026";
@@ -252,6 +257,11 @@ export const allPosts: BlogPost[] = [
   seafarerPensionRetirementGuide2026,
   seafarerVisaTravelDocsGuide2026,
   watchkeepingDutiesRestHours2026,
+  vesselTypesExplained2026,
+  onboardHierarchyExplained2026,
+  dailyLifeRoutineAboard2026,
+  safetyDrillsOnboardGuide2026,
+  trampVsLinerShipping2026,
 ];
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(
