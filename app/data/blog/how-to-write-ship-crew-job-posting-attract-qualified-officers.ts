@@ -119,7 +119,7 @@ const post: BlogPost = {
       heading: "Where to post so the right people see it",
       paragraphs: [
         "Short answer: post where seafarers already look for work and where you can filter candidates by rank, certificates and availability, then reply quickly to the shortlist.",
-        "ShipCrewFinder is built for direct hiring. Companies can post jobs with full rank, vessel and contract details, search crew profiles by rank, and contact seafarers directly with 0% commission and no agency in the middle. Company accounts are free during the founding period. If you are tired of vague postings that bring the wrong applicants, create a company account and post your next vacancy with the template above.",
+        "ShipCrewFinder is built for direct hiring. Companies can post jobs with full rank, vessel and contract details, search crew profiles by rank, and contact seafarers directly with 0% commission and no agency in the middle. Companies can try the full platform free for the first month. If you are tired of vague postings that bring the wrong applicants, create a company account and post your next vacancy with the template above.",
       ],
       links: [
         { text: "Create a free company account", href: "/signup/company" },

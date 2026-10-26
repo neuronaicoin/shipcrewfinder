@@ -61,7 +61,7 @@ This is the extended version of ${base}/llms.txt. It contains the platform's fea
 
 ## Pricing
 - Seafarers: free to join, build a profile and apply for jobs. A few advanced tools (such as the Oil Record Book and Draft Survey Pro) offer paid upgrades after a free trial.
-- Shipping companies: free during the founding period.
+- Shipping companies: first month free, then Pro at $299.90/month (100 full CV views a month, up to 10 job listings) or Fleet at $499.90/month (unlimited CV views and job listings, multiple user seats). Cancel anytime.
 - No placement fees or commission for either side.
 
 ## Platform features
