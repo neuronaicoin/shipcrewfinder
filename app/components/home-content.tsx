@@ -864,7 +864,7 @@ if(a2hsBtn){
         <h3>Pro</h3>
         <div className="cfor">For active fleets {"&"} crewing departments</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
-        <div className="pnum">$199.90 <small>/ month</small></div>
+        <div className="pnum">$299.90 <small>/ month</small></div>
         <div className="pper">after your free month · cancel anytime</div>
         <ul className="plist">
           <li>100 full CV views / month</li>
@@ -882,7 +882,7 @@ if(a2hsBtn){
         <h3>Fleet</h3>
         <div className="cfor">For large fleets, managers {"&"} crewing agencies</div>
         <div className="free-strip">🎁 FIRST MONTH FREE</div>
-        <div className="pnum">$249.90 <small>/ month</small></div>
+        <div className="pnum">$499.90 <small>/ month</small></div>
         <div className="pper">after your free month · cancel anytime</div>
         <ul className="plist">
           <li>Everything in Pro</li>
