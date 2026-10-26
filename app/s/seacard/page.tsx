@@ -24,6 +24,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }): 
   return {
     title,
     description,
+    // Share-card landing pages: keep out of the index, let crawlers follow through.
+    robots: { index: false, follow: true },
     openGraph: { title, description, images: [{ url: img, width: 1200, height: 630 }], type: "website" },
     twitter: { card: "summary_large_image", title, description, images: [img] },
   };

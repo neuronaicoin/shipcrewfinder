@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { pageMeta, withBrand } from "@/lib/seo";
 import {
   SALARY_DATA,
   VESSELS,
@@ -21,12 +22,13 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const r = getRankBySlug(slug);
-  if (!r) return {};
+  if (!r) return { robots: { index: false, follow: true } };
   const o = overallRange(r);
-  return {
-    title: `${r.rank} Salary 2026 — ${fmtUsd(o.min)} to ${fmtUsd(o.max)}/month | ShipCrewFinder`,
-    description: `How much does a ${r.rank} earn in 2026? Monthly basic wages from ${fmtUsd(o.min)} to ${fmtUsd(o.max)} across bulk carriers, tankers, container ships and LNG. Real market data, no agency spin.`,
-  };
+  return pageMeta({
+    title: withBrand(`${r.rank} Salary 2026: ${fmtUsd(o.min)}–${fmtUsd(o.max)}/mo`),
+    description: `How much does a ${r.rank} earn in 2026? Monthly basic wages from ${fmtUsd(o.min)} to ${fmtUsd(o.max)} across bulk carriers, tankers, container ships and LNG. Real market data.`,
+    path: `/salary/${r.slug}`,
+  });
 }
 
 const anchorSvg = (

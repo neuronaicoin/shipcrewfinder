@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Ship Crew Jobs by Rank — Master to Wiper | ShipCrewFinder",
-  description: "Browse maritime jobs and verified crew by rank: Master, Chief Officer, Chief Engineer, ETO, Bosun, AB, Cook and more. Direct contracts, 0% commission.",
-  alternates: { canonical: "https://shipcrewfinder.com/crew" },
-};
+export const metadata = pageMeta({
+  title: "Ship Crew Jobs by Rank: Master to Wiper | ShipCrewFinder",
+  description:
+    "Browse maritime jobs and verified crew by rank: Master, Chief Officer, Chief Engineer, ETO, Bosun, AB, Cook and more. Direct contracts, 0% commission.",
+  path: "/crew",
+});
 
 const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const prettify = (r: string) =>

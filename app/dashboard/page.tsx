@@ -9,10 +9,12 @@ import PostCvCard from "@/app/components/post-cv-card";
 import SeaCardShare from "@/app/components/sea-card-share";
 import MyApplications from "@/app/components/my-applications";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Your Account — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Your Account \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function DashboardPage({
   searchParams,

@@ -48,11 +48,9 @@ export const metadata: Metadata = {
       "msvalidate.01": "9CB03E8E93C7289160D5677D71AB3ACB",
     },
   },
+  // Page-specific title/description/url are set per page (see lib/seo.ts pageMeta),
+  // so child routes never inherit the homepage's og:title / og:url.
   openGraph: {
-    title: "ShipCrewFinder — Global Maritime Career Platform",
-    description:
-      "Verified seafarers and shipping companies, connected directly. Jobs, CV builder, sea time tracker, live crew chat — 0% commission, ever.",
-    url: "/",
     type: "website",
     locale: "en_US",
     siteName: "ShipCrewFinder",
@@ -68,8 +66,6 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@shipcrewfinder",
-    title: "ShipCrewFinder — Global Maritime Career Platform",
-    description: "Verified seafarers and shipping companies, connected directly. 0% commission, ever.",
     images: ["/opengraph-image?v=2"],
   },
 };
@@ -140,11 +136,11 @@ export default function RootLayout({
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema).replace(/</g, "\\u003c") }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema).replace(/</g, "\\u003c") }}
         />
         {children}
         <MobileTabBar />

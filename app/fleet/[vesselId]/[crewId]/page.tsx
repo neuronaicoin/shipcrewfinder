@@ -4,10 +4,12 @@ import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
 import { updateFleetCrew, signOffCrew, updateCustomValues } from "@/lib/actions/fleet";
 import { uploadFleetDocument, deleteFleetDocument } from "@/lib/actions/fleet-documents";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Crew Member — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Crew Member \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function CrewMemberPage({
   params,

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 
+export const metadata = { robots: { index: false, follow: true } };
+
 const anchorSvg = (
   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="5" r="2.4" />

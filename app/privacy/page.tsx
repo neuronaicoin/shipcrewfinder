@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Privacy Policy — ShipCrewFinder",
-  description: "How ShipCrewFinder collects, uses, and protects your personal data.",
-  alternates: { canonical: "https://shipcrewfinder.com/privacy" },
-};
+export const metadata = pageMeta({
+  title: "Privacy Policy | ShipCrewFinder",
+  description:
+    "How ShipCrewFinder collects, uses, stores and protects the personal data of seafarers and companies, including CVs, certificates and messages, and your choices.",
+  path: "/privacy",
+});
 
 const updated = "June 2026";
 

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Careers — ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Careers at ShipCrewFinder",
   description:
-    "Interested in joining the team behind ShipCrewFinder? Learn about working with us as we build the future of maritime recruitment.",
-  alternates: { canonical: "https://shipcrewfinder.com/careers" },
-};
+    "Want to work on ShipCrewFinder? Learn how we build a direct, commission-free maritime hiring platform and how to get in touch about roles and collaboration.",
+  path: "/careers",
+});
 
 export default function CareersPage() {
   return (

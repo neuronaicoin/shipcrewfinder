@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Cookie Policy — ShipCrewFinder",
-  description: "How ShipCrewFinder uses cookies and similar technologies.",
-  alternates: { canonical: "https://shipcrewfinder.com/cookies" },
-};
+export const metadata = pageMeta({
+  title: "Cookie Policy | ShipCrewFinder",
+  description:
+    "How ShipCrewFinder uses cookies and similar technologies on its maritime career platform, what each type does, and how you can manage or block them.",
+  path: "/cookies",
+});
 
 const updated = "June 2026";
 

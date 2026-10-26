@@ -4,6 +4,7 @@ import Link from "next/link";
 import { RANK_CONTEXTS, getRankContextBySlug } from "@/lib/data/rank-context";
 import { PORTS, getPortBySlug } from "@/lib/data/ports";
 import { SALARY_DATA } from "@/lib/data/salary";
+import { pageMeta, withBrand } from "@/lib/seo";
 
 export function generateStaticParams() {
   const params: { port: string; rank: string }[] = [];
@@ -23,14 +24,14 @@ export async function generateMetadata({
   const { port, rank: slug } = await params;
   const rankCtx = getRankContextBySlug(slug);
   const portCtx = getPortBySlug(port);
-  if (!rankCtx || !portCtx) return { title: "Not Found — ShipCrewFinder" };
+  if (!rankCtx || !portCtx) return { title: "Not Found — ShipCrewFinder", robots: { index: false, follow: true } };
 
   const rankName = rankCtx.rank.split(" ").map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
-  return {
-    title: `${rankName} Jobs in ${portCtx.name} — Salary, Demand & Direct Hire | ShipCrewFinder`,
-    description: `Looking for ${rankName} positions in ${portCtx.name}? Real 2026 salary ranges, live open positions, and direct contact with verified shipping companies — 0% commission.`,
-    alternates: { canonical: `https://shipcrewfinder.com/ports/${port}/${slug}` },
-  };
+  return pageMeta({
+    title: withBrand(`${rankName} Jobs in ${portCtx.name}: Salary & Demand`),
+    description: `Looking for ${rankName} positions in ${portCtx.name}? Real 2026 salary ranges, live open positions, and direct contact with verified shipping companies, 0% commission.`,
+    path: `/ports/${port}/${slug}`,
+  });
 }
 
 export default async function PortRankPage({

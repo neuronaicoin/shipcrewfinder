@@ -4,12 +4,14 @@ import { getSortedCountries } from "@/lib/constants/countries";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import JobAlertBox from "@/app/components/job-alert-box";
 import SiteHeader from "@/app/components/site-header";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Maritime Jobs — ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Maritime Jobs: Direct Seafarer Vacancies | ShipCrewFinder",
   description:
-    "Browse maritime job openings from verified companies. Find seafarer and yacht crew positions by rank and country.",
-};
+    "Open seafarer jobs from verified shipping companies, filtered by rank and country. Apply straight to the employer with no crewing agency and 0% commission.",
+  path: "/jobs",
+});
 
 export default async function JobsPage({
   searchParams,

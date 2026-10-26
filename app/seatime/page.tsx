@@ -4,10 +4,12 @@ import SiteHeader from "@/app/components/site-header";
 import { addSeaContract, deleteSeaContract } from "@/lib/actions/seatime";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Sea Time Tracker — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Sea Time Tracker \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const VESSEL_TYPES = [
   "Bulk Carrier",

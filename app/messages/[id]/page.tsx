@@ -3,10 +3,12 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { sendMessage } from "@/lib/actions/messages";
 import ChatRefresh from "@/app/components/chat-refresh";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Conversation — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Conversation \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function ConversationPage({
   params,

@@ -1,10 +1,63 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { TOOL_SEO, toolPath, SITE_URL } from '@/lib/tool-seo';
 
-export const metadata = {
-  title: 'Crew Toolkit — Free Maritime Calculators & Reference Guides | ShipCrewFinder',
-  description:
-    'Free maritime tools for seafarers — trim interpolation, unit conversion, and in-depth reference guides on MLC, SOLAS, ITF and more. Built for crew, by crew.',
+const TOOLKIT_TITLE = 'Crew Toolkit: Free Maritime Calculators | ShipCrewFinder';
+const TOOLKIT_DESC =
+  'Free tools for seafarers: draft survey, stability, CII, tide and lashing calculators, plus guides to MLC 2006, SOLAS, COLREGs, ISM, ISPS, IMDG and PSC.';
+
+export const metadata: Metadata = {
+  title: TOOLKIT_TITLE,
+  description: TOOLKIT_DESC,
+  alternates: { canonical: '/tools' },
+  openGraph: {
+    title: TOOLKIT_TITLE,
+    description: TOOLKIT_DESC,
+    url: '/tools',
+    type: 'website',
+    siteName: 'ShipCrewFinder',
+    locale: 'en_US',
+    images: [{ url: '/opengraph-image?v=2', width: 1200, height: 630, alt: 'ShipCrewFinder Crew Toolkit' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TOOLKIT_TITLE,
+    description: TOOLKIT_DESC,
+    images: ['/opengraph-image?v=2'],
+  },
 };
+
+const toolkitLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Crew Toolkit',
+    description: TOOLKIT_DESC,
+    url: `${SITE_URL}/tools`,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    mainEntity: {
+      '@type': 'ItemList',
+      name: 'Crew Toolkit tools',
+      numberOfItems: TOOL_SEO.length,
+      itemListElement: TOOL_SEO.map((t, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: t.name,
+        description: t.description,
+        url: `${SITE_URL}${toolPath(t.slug)}`,
+      })),
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Crew Toolkit', item: `${SITE_URL}/tools` },
+    ],
+  },
+];
 
 type Tool = { name: string; desc: string; href?: string; icon: string };
 type Category = { title: string; tools: Tool[] };
@@ -26,7 +79,7 @@ const CATEGORIES: Category[] = [
     title: 'Tracking Tools',
     tools: [
       { name: 'Cargo Database', desc: 'Stowage factors, IMSBC groups, hazards for 68+ cargoes, plus hold volume calculator.', href: '/tools/cargo', icon: '📦' },
-      { name: 'Documents Generator', desc: 'NOR, SOF, LOI and 14 Letter of Protest scenarios — delay, damage, short-landed and more.', href: '/tools/documents', icon: '📄' },
+      { name: 'Documents Generator', desc: 'NOR, SOF, LOI and 17 Letter of Protest scenarios — delay, damage, short-landed and more.', href: '/tools/documents', icon: '📄' },
       { name: 'Maintenance Tracker', desc: 'Equipment running hours, task due dates, sorted by urgency.', href: '/tools/maintenance', icon: '🔧' },
       { name: 'Ports Database', desc: 'Draft, terminals, pilotage, VHF for 26 major ports, plus official PSC history links.', href: '/tools/ports', icon: '⚓' },
       { name: 'Tide Calculator', desc: 'HW/LW interpolation, UKC check, safe window finder, with tide curve chart.', href: '/tools/tide', icon: '🌊' },
@@ -67,6 +120,10 @@ const totalPlanned = CATEGORIES.flatMap((c) => c.tools).length;
 export default function CrewToolkitPage() {
   return (
     <main style={{ minHeight: '100vh', background: '#0d1030', color: '#eef4fa' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolkitLd).replace(/</g, '\\u003c') }}
+      />
       <style>{`
         *{box-sizing:border-box}
         .tk-top{position:sticky;top:0;z-index:50;background:rgba(10,37,64,.85);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08)}

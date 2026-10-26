@@ -109,7 +109,7 @@ export default function DraftSurveyPage() {
         </div>
         <div className="ds-title">Draft Survey Calculator</div>
         <p className="ds-sub">
-          Standard draft survey method — quadratic mean draft (hog/sag corrected), first trim correction, density correction, and final cargo quantity. Every step shown so you can verify against your vessel&apos;s procedure. Nothing is saved.
+          Standard draft survey method — quadratic mean draft (hog/sag corrected), first trim correction, density correction, and final cargo quantity. Every step shown so you can verify against your vessel&apos;s procedure. Saved surveys stay on this device only.
         </p>
 
         <div className="ds-card">

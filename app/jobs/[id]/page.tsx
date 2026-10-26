@@ -5,6 +5,7 @@ import { getSortedCountries } from "@/lib/constants/countries";
 import ApplyForm from "@/app/components/apply-form";
 import SiteHeader from "@/app/components/site-header";
 import CompanyRating from "@/app/components/company-rating";
+import { pageMeta } from "@/lib/seo";
 
 // SEO: sayfa başlığı ilanın gerçek adı olsun (Google Jobs eşleşmesi için önemli)
 export async function generateMetadata({
@@ -16,18 +17,25 @@ export async function generateMetadata({
   const supabase = await createClient();
   const { data: job } = await supabase
     .from("jobs")
-    .select("title, position, description")
+    .select("title, position, description, status")
     .eq("id", id)
     .maybeSingle();
-  if (!job) return { title: "Job Details — ShipCrewFinder" };
+  if (!job) return { title: "Job Details — ShipCrewFinder", robots: { index: false, follow: true } };
+  const position = job.position || "Maritime";
   const desc = (job.description || "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 155);
-  return {
-    title: `${job.title} — ShipCrewFinder`,
-    description: desc || `${job.position || "Maritime"} position on ShipCrewFinder — apply directly, no agency.`,
-  };
+  const rawTitle = String(job.title || `${position} job`).trim();
+  const short = rawTitle.length > 42 ? rawTitle.slice(0, 41).trimEnd() + "…" : rawTitle;
+  return pageMeta({
+    title: `${short} | ShipCrewFinder`,
+    description:
+      desc || `${position} position on ShipCrewFinder. Apply directly to a verified shipping company with no crewing agency and 0% commission.`,
+    path: `/jobs/${id}`,
+    // Closed / draft jobs stay reachable for their owner but are not indexed.
+    noindex: job.status !== "active",
+  });
 }
 
 export default async function JobDetailPage({

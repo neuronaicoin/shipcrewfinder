@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
 type VesselSummary = {
   vessel_name: string | null;
@@ -21,12 +22,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const name = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  return {
-    title: name + " — Vessel Info & Verified Crew | ShipCrewFinder",
+  const clean = (slug || "").trim().toLowerCase();
+  const name = clean.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return pageMeta({
+    title: name + ": Vessel Info & Crew | ShipCrewFinder",
     description:
       "Vessel profile of " + name + ": type, DWT, main engine and verified seafarers who served on board. Maritime crew data on ShipCrewFinder.",
-  };
+    path: "/vessel/" + clean,
+  });
 }
 
 export default async function VesselPage({

@@ -6,10 +6,12 @@ import CvNote from "@/app/components/cv-note";
 import { uploadCvPhoto, removeCvPhoto, toggleCvContact, regenerateCvLink } from "@/lib/actions/cv";
 import { getSortedCountries } from "@/lib/constants/countries";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "CV Builder — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "CV Builder \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function CvPage({
   searchParams,

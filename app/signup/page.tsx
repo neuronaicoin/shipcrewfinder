@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Sign Up — ShipCrewFinder",
-  description: "Create your free ShipCrewFinder account. Join as crew or as a company.",
-};
+export const metadata = pageMeta({
+  title: "Sign Up Free | ShipCrewFinder",
+  description:
+    "Create a free ShipCrewFinder account as a seafarer or as a shipping company. Build a verified profile, post jobs and contact each other directly, 0% commission.",
+  path: "/signup",
+});
 
 const anchorSvg = (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

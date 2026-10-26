@@ -3,12 +3,14 @@ import Link from "next/link";
 import { sendMessRoomMessage } from "@/lib/actions/messroom";
 import { startConversation } from "@/lib/actions/messages";
 import MessRoomClient from "@/app/components/messroom-client";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Chat Room — Live Crew Chat | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "The Mess Room: Live Crew Chat | ShipCrewFinder",
   description:
-    "The ShipCrewFinder Chat Room: live 24/7 chat for verified seafarers and shipping companies. Messages vanish after 24 hours. No links, no spam — just crew talk.",
-};
+    "Live 24/7 chat for verified seafarers and shipping companies. Messages vanish after 24 hours, links and spam are blocked. Just crew talk, from every ocean.",
+  path: "/messroom",
+});
 
 type MessMsg = {
   id: string;

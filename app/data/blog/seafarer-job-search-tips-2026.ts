@@ -95,7 +95,7 @@ const post: BlogPost = {
         "Having a profile on a platform that companies browse directly — not only agency databases — widens the number of people who can find you.",
       ],
       links: [
-        { text: "Create your free ShipCrewFinder profile", href: "/register" },
+        { text: "Create your free ShipCrewFinder profile", href: "/signup/crew" },
       ],
     },
   ],

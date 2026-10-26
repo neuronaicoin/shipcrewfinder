@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { SALARY_DATA, VESSELS, type VesselKey } from "@/lib/data/salary";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "How Does Your Salary Compare? — Free Seafarer Salary Check | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Seafarer Salary Check: Compare Your Pay | ShipCrewFinder",
   description:
-    "Compare your salary against real 2026 market ranges for your rank and vessel type — free, anonymous, instant.",
-};
+    "Compare your monthly wage with 2026 market ranges for your rank and vessel type. A free, anonymous and instant salary check for officers, engineers and ratings.",
+  path: "/salary-check",
+});
 
 export default async function SalaryCheckPage({
   searchParams,

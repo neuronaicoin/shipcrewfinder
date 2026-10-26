@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { pageMeta, withBrand } from "@/lib/seo";
 import { NATIONALITIES, getNationalityBySlug, NATIONALITY_REPORT_NOTE } from "@/lib/data/nationalities";
 import { SALARY_DATA, fmtK, LAST_UPDATED } from "@/lib/data/salary";
 
@@ -14,11 +15,12 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const n = getNationalityBySlug(slug);
-  if (!n) return {};
-  return {
-    title: `${n.nationality} Seafarer Salaries 2026 — Wages, Ranks & Hiring Guide | ShipCrewFinder`,
+  if (!n) return { robots: { index: false, follow: true } };
+  return pageMeta({
+    title: withBrand(`${n.nationality} Seafarer Salaries 2026`),
     description: `${n.nationality} seafarer salaries in 2026 by rank and vessel type. ${n.headline} Wage data, strong ranks, fleet deployment and hiring guidance for companies.`,
-  };
+    path: `/salary/for/${n.slug}`,
+  });
 }
 
 const anchorSvg = (

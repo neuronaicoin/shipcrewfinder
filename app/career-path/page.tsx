@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { SALARY_DATA } from "@/lib/data/salary";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Maritime Career Path: From Cadet to Master or Chief Engineer | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Maritime Career Path: Cadet to Master | ShipCrewFinder",
   description:
-    "See the full deck and engine officer career progression — typical years at each rank, and real 2026 salary ranges. Free, interactive career path visualizer.",
-};
+    "Deck and engine officer career progression from cadet to Master or Chief Engineer, with typical years at each rank and 2026 salary ranges. Free and interactive.",
+  path: "/career-path",
+});
 
 const g = (slug: string) => SALARY_DATA.find((s) => s.slug === slug);
 

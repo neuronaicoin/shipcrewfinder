@@ -1,7 +1,108 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getPostBySlug, getAllSlugs, blogIndex } from "@/app/data/blog";
+import type { ReactNode } from "react";
+import { getPostBySlug, getAllSlugs, blogIndex, allPosts } from "@/app/data/blog";
+import type { BlogPost } from "@/app/data/blog/types";
+import { withBrand, jsonLd, SITE_URL } from "@/lib/seo";
+
+// ---- Inline links -------------------------------------------------------
+// Post text may contain markdown links "[text](/path)" and bare
+// "shipcrewfinder.com/path" mentions. Render both as real <a> elements.
+const INLINE_LINK_RE =
+  /\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)\s]+)\)|(?:https?:\/\/)?(?:www\.)?shipcrewfinder\.com(\/[A-Za-z0-9\-_/#?=&%.]*)?/g;
+
+function linkProps(href: string) {
+  const internal = href.startsWith("/") || /^https?:\/\/(www\.)?shipcrewfinder\.com/i.test(href);
+  const path = internal ? href.replace(/^https?:\/\/(www\.)?shipcrewfinder\.com/i, "") || "/" : href;
+  return { internal, path };
+}
+
+function renderInline(text: string): ReactNode {
+  const out: ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  INLINE_LINK_RE.lastIndex = 0;
+  while ((m = INLINE_LINK_RE.exec(text)) !== null) {
+    let label: string;
+    let href: string;
+    let matched = m[0];
+    if (m[1]) {
+      label = m[1];
+      href = m[2];
+    } else {
+      // Bare domain mention: keep trailing sentence punctuation outside the link.
+      const trail = matched.match(/[.,;:!?]+$/);
+      if (trail) matched = matched.slice(0, -trail[0].length);
+      label = matched;
+      href = "/" + (m[3] || "").replace(/[.,;:!?]+$/, "").replace(/^\/+/, "");
+    }
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const { internal, path } = linkProps(href);
+    const cls = "text-accent hover:text-accent-light underline underline-offset-2";
+    out.push(
+      internal ? (
+        <Link key={m.index} href={path} className={cls}>{label}</Link>
+      ) : (
+        <a key={m.index} href={path} className={cls} target="_blank" rel="noopener noreferrer">{label}</a>
+      )
+    );
+    last = m.index + matched.length;
+    if (matched.length !== m[0].length) INLINE_LINK_RE.lastIndex = last;
+  }
+  if (last === 0) return text;
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+// Plain-text version for structured data (markdown links -> their label).
+const plain = (t: string) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+
+// ---- Related guides -----------------------------------------------------
+const normCat = (c: string) => c.toLowerCase().trim().replace(/s$/, "");
+const STOP = new Set(["the", "and", "for", "a", "of", "to", "in", "on", "how", "what", "guide", "2026", "vs", "your", "with", "at", "is", "explained"]);
+const words = (arr: string[]) =>
+  new Set(
+    arr
+      .join(" ")
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !STOP.has(w))
+  );
+
+function relatedPosts(post: BlogPost, n = 4) {
+  const myCat = normCat(post.category);
+  const myKw = new Set(post.keywords.map((k) => k.toLowerCase()));
+  const myWords = words([...post.keywords, post.title]);
+  const scored = allPosts
+    .filter((p) => p.slug !== post.slug)
+    .map((p) => {
+      const sameCat = normCat(p.category) === myCat ? 1 : 0;
+      const kwHits = p.keywords.filter((k) => myKw.has(k.toLowerCase())).length;
+      let wordHits = 0;
+      words([...p.keywords, p.title]).forEach((w) => {
+        if (myWords.has(w)) wordHits++;
+      });
+      return { p, sameCat, overlap: kwHits * 3 + wordHits };
+    })
+    .sort(
+      (a, b) =>
+        b.sameCat - a.sameCat ||
+        b.overlap - a.overlap ||
+        new Date(b.p.date).getTime() - new Date(a.p.date).getTime()
+    );
+  const bySlug = new Map(blogIndex.map((e) => [e.slug, e]));
+  return scored
+    .slice(0, n)
+    .map((x) => bySlug.get(x.p.slug))
+    .filter((x): x is (typeof blogIndex)[number] => !!x);
+}
+
+const modifiedOf = (post: BlogPost) => {
+  const m = (post as BlogPost & { dateModified?: string; updated?: string }).dateModified ||
+    (post as BlogPost & { updated?: string }).updated;
+  return m && !Number.isNaN(new Date(m).getTime()) ? m : post.date;
+};
 
 export function generateStaticParams() {
   return getAllSlugs().map((slug) => ({ slug }));
@@ -16,22 +117,31 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return { title: "Not Found — ShipCrewFinder" };
 
-  const url = `https://shipcrewfinder.com/blog/${post.slug}`;
+  const path = `/blog/${post.slug}`;
+  const title = withBrand(post.title);
   return {
-    title: `${post.title} — ShipCrewFinder`,
+    title,
     description: post.description,
     keywords: post.keywords,
-    alternates: { canonical: url },
+    authors: [{ name: "ShipCrewFinder", url: SITE_URL }],
+    alternates: { canonical: path },
     openGraph: {
       title: post.title,
       description: post.description,
-      url,
+      url: path,
       type: "article",
+      siteName: "ShipCrewFinder",
+      locale: "en_US",
       publishedTime: post.date,
+      modifiedTime: modifiedOf(post),
+      section: post.category,
+      tags: post.keywords,
+      authors: [SITE_URL],
       images: [{ url: post.heroImage, alt: post.heroAlt }],
     },
     twitter: {
       card: "summary_large_image",
+      site: "@shipcrewfinder",
       title: post.title,
       description: post.description,
       images: [post.heroImage],
@@ -50,13 +160,7 @@ export default async function BlogPostPage({
 
   const url = `https://shipcrewfinder.com/blog/${post.slug}`;
 
-  const sameCategory = blogIndex.filter(
-    (p) => p.slug !== post.slug && p.category === post.category
-  );
-  const otherPosts = blogIndex.filter(
-    (p) => p.slug !== post.slug && p.category !== post.category
-  );
-  const related = [...sameCategory, ...otherPosts].slice(0, 3);
+  const related = relatedPosts(post, 4);
 
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -68,41 +172,71 @@ export default async function BlogPostPage({
   const blogSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
+    "@id": `${url}#article`,
     headline: post.title,
     description: post.description,
-    image: post.heroImage,
+    image: { "@type": "ImageObject", url: post.heroImage, caption: post.heroAlt },
     datePublished: post.date,
-    dateModified: post.date,
-    author: { "@type": "Organization", name: "ShipCrewFinder" },
+    dateModified: modifiedOf(post),
+    inLanguage: "en",
+    articleSection: post.category,
+    author: {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "ShipCrewFinder",
+      url: SITE_URL,
+    },
     publisher: {
       "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
       name: "ShipCrewFinder",
-      url: "https://shipcrewfinder.com",
+      url: SITE_URL,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/apple-icon.png`, width: 180, height: 180 },
     },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    isPartOf: { "@type": "Blog", "@id": `${SITE_URL}/blog#blog`, name: "ShipCrewFinder Blog", url: `${SITE_URL}/blog` },
     keywords: post.keywords.join(", "),
   };
 
-  const faqSchema = {
+  const breadcrumbSchema = {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: post.faqs.map((f) => ({
-      "@type": "Question",
-      name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: f.answer },
-    })),
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: post.title, item: url },
+    ],
   };
+
+  const faqSchema =
+    post.faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: post.faqs.map((f) => ({
+            "@type": "Question",
+            name: plain(f.question),
+            acceptedAnswer: { "@type": "Answer", text: plain(f.answer) },
+          })),
+        }
+      : null;
 
   return (
     <main className="min-h-screen bg-primary relative overflow-hidden">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(blogSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbSchema) }}
       />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd(faqSchema) }}
+        />
+      )}
 
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-light to-primary-dark" />
       <div
@@ -176,7 +310,7 @@ export default async function BlogPostPage({
         <div className="space-y-5 mb-10">
           {post.intro.map((para, i) => (
             <p key={i} className="text-white/80 text-base md:text-lg leading-relaxed">
-              {para}
+              {renderInline(para)}
             </p>
           ))}
         </div>
@@ -192,7 +326,7 @@ export default async function BlogPostPage({
               <div className="space-y-4">
                 {section.paragraphs.map((para, j) => (
                   <p key={j} className="text-white/75 text-base leading-relaxed">
-                    {para}
+                    {renderInline(para)}
                   </p>
                 ))}
               </div>
@@ -224,7 +358,7 @@ export default async function BlogPostPage({
                   <h3 className="font-display text-lg font-bold text-white mb-2">
                     {faq.question}
                   </h3>
-                  <p className="text-white/70 text-sm leading-relaxed">{faq.answer}</p>
+                  <p className="text-white/70 text-sm leading-relaxed">{renderInline(faq.answer)}</p>
                 </div>
               ))}
             </div>
@@ -234,7 +368,7 @@ export default async function BlogPostPage({
         {related.length > 0 && (
           <section className="mt-14">
             <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-6 tracking-tight">
-              Related reading
+              Related guides
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {related.map((r) => (

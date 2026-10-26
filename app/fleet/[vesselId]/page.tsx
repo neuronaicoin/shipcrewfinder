@@ -5,10 +5,12 @@ import SiteHeader from "@/app/components/site-header";
 import { addFleetCrew, deleteFleetCrew, activatePlannedCrew, deletePlannedCrew, rehireCrew, updateCrewNote, addCustomColumn, removeCustomColumn, moveToPlannedFromHistory, moveColumn, renameColumn, moveCrewRow } from "@/lib/actions/fleet";
 import { getEffectiveColumns } from "@/lib/fleet-columns";
 import { SALARY_DATA, VESSELS } from "@/lib/data/salary";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Vessel Crew — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Vessel Crew \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function VesselCrewPage({
   params,

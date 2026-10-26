@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "GDPR — ShipCrewFinder",
-  description: "How ShipCrewFinder complies with the General Data Protection Regulation (GDPR) and your data rights.",
-  alternates: { canonical: "https://shipcrewfinder.com/gdpr" },
-};
+export const metadata = pageMeta({
+  title: "GDPR & Your Data Rights | ShipCrewFinder",
+  description:
+    "How ShipCrewFinder complies with the EU General Data Protection Regulation, the rights you have over your personal data, and how to request access or deletion.",
+  path: "/gdpr",
+});
 
 const updated = "June 2026";
 

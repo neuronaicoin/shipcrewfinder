@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = {
   title: "Candidate — ShipCrewFinder",
+  // Personal crew data behind company login: never index.
+  robots: { index: false, follow: false },
 };
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";

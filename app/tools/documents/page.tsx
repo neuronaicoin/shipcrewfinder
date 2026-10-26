@@ -7,7 +7,7 @@ type DocType = 'NOR' | 'SOF' | 'LOP' | 'LOI' | 'NAGO' | 'MR' | 'NOT';
 const DOC_TYPES: { key: DocType; name: string; icon: string; desc: string }[] = [
   { key: 'NOR', name: 'Notice of Readiness', icon: '📋', desc: 'Tendered by master to charterer/receiver to commence laytime.' },
   { key: 'SOF', name: 'Statement of Facts', icon: '📊', desc: 'Chronological record of port operations.' },
-  { key: 'LOP', name: 'Letter of Protest', icon: '⚠️', desc: '14 protest scenarios — delay, damage, short delivery, and more.' },
+  { key: 'LOP', name: 'Letter of Protest', icon: '⚠️', desc: '17 protest scenarios — delay, damage, short delivery, and more.' },
   { key: 'LOI', name: 'Letter of Indemnity', icon: '🤝', desc: 'Indemnity for cargo release without B/L, change of destination.' },
   { key: 'NAGO', name: 'Notice of Apparent Good Order', icon: '✅', desc: 'Receiver/agent acknowledgment of cargo condition.' },
   { key: 'MR', name: "Mate's Receipt", icon: '📝', desc: 'Acknowledgment of cargo received on board, before B/L.' },
@@ -282,7 +282,7 @@ export default function DocumentsPage() {
         <Link href="/tools" className="dg-back">← All Tools</Link>
         <div className="dg-title">Documents Generator</div>
         <p className="dg-sub">
-          NOR, SOF, LOI and more — plus 14 Letter of Protest scenarios covering the most common disputes at sea. Fill in details, copy the result. Nothing is saved.
+          NOR, SOF, LOI and more — plus 17 Letter of Protest scenarios covering the most common disputes at sea. Fill in details, copy the result. Nothing is saved.
         </p>
 
         {showUpgrade && (

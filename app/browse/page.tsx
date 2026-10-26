@@ -5,10 +5,12 @@ import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
 import { getSortedLanguages } from "@/lib/constants/languages";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Search for Crew — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Search for Crew \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 type ProfileRow = {
   id: string;

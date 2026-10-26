@@ -4,10 +4,12 @@ import SiteHeader from "@/app/components/site-header";
 import { addDocument, deleteDocument } from "@/lib/actions/documents";
 import SmartUploadBox from "@/app/components/smart-upload-box";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Document Vault — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Document Vault \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const DOC_TYPES = [
   "STCW Certificate",

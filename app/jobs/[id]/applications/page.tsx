@@ -4,10 +4,12 @@ import SiteHeader from "@/app/components/site-header";
 import ApplicationControls from "@/app/components/application-controls";
 import { getSortedCountries } from "@/lib/constants/countries";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Applications — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Applications \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const STATUS_META: Record<string, { label: string; icon: string; cls: string }> = {
   new: { label: "New", icon: "🆕", cls: "st-new" },

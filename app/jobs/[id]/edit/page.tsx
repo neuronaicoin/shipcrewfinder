@@ -4,10 +4,12 @@ import Link from "next/link";
 import { updateJob } from "@/lib/actions/jobs";
 import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Edit Job — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Edit Job \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function EditJobPage({
   params,

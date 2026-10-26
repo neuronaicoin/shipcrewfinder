@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Check Your Email — ShipCrewFinder",
-  description: "Confirm your email to activate your ShipCrewFinder account.",
-};
+export const metadata = pageMeta({
+  title: "Check Your Email \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default function CheckEmailPage() {
   return (

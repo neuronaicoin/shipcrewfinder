@@ -130,7 +130,7 @@ const post: BlogPost = {
     {
       heading: "Build your crew pool where onboarding starts well",
       paragraphs: [
-        "Onboarding is easier when the candidate's documents, ranks and availability are visible from the start. On ShipCrewFinder, companies post jobs, search seafarer profiles by rank, and contact crew directly, with 0% commission and no agency between you and the seafarer. Companies can try the full platform free for the first month.",
+        "Onboarding is easier when the candidate's documents, ranks and availability are visible from the start. On ShipCrewFinder, companies post jobs, search seafarer profiles by rank, and contact crew directly, with 0% commission and no agency between you and the seafarer. Company accounts are free during the founding period.",
         "Create a company account to post your next vacancy, and use the free crew toolkit for document expiry, visa and rest-hour checks as part of your onboarding checklist.",
       ],
       links: [

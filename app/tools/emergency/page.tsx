@@ -14,7 +14,7 @@ const SCENARIOS: Scenario[] = [
       { n: 1, text: 'Raise the alarm immediately — general alarm, inform the bridge, state location and nature of fire.' },
       { n: 2, text: 'Proceed to muster station; fire party dons appropriate PPE and BA sets as required.' },
       { n: 3, text: 'Locate and confirm the fire. Close boundaries — doors, ventilation, fuel supply to the affected space where safe to do so.' },
-      { n: 4, text: 'Match the extinguishing method to the fire class — never use water on an electrical or oil fire.' },
+      { n: 4, text: 'Match the extinguishing method to the fire class — never use a water jet on an electrical fire or a burning oil pool; use foam, CO2 or dry powder (water fog only as your fire plan allows).' },
       { n: 5, text: 'Never fight a fire alone — always work in a buddy system with a clear line of retreat.' },
       { n: 6, text: 'Apply boundary cooling to adjacent structure if the fire is significant, to prevent spread.' },
       { n: 7, text: 'Continuously reassess — if the fire is not controlled, prepare for evacuation of the space and, if necessary, escalate toward abandon ship readiness.' },
@@ -47,7 +47,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'abandon', name: 'Abandon Ship', icon: '🛟',
     steps: [
-      { n: 1, text: 'The abandon ship signal is more than 6 short blasts followed by 1 long blast on the whistle/siren, repeated, plus the general alarm — this is only sounded on the Master\'s order.' },
+      { n: 1, text: 'The general emergency alarm is 7 or more short blasts followed by 1 long blast on the whistle and alarm bells. Muster at your station; abandon ship is ordered only by the Master, by voice or PA.' },
       { n: 2, text: 'Muster at your assigned station per the muster list, wearing lifejackets and immersion suits if provided and time allows.' },
       { n: 3, text: 'The radio officer/bridge team sends a distress signal and ensures the vessel\'s position is broadcast before communications are lost.' },
       { n: 4, text: 'Launch survival craft per your specific muster list assignment — do not deviate from your assigned station and role.' },

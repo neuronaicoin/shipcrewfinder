@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { requestPasswordReset } from "@/lib/actions/password-reset";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = { title: "Forgot Password — ShipCrewFinder" };
+export const metadata = pageMeta({
+  title: "Forgot Password \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function ForgotPasswordPage({
   searchParams,

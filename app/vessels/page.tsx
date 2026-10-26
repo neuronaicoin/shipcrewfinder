@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Vessels — Ships & Verified Crew Records | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Vessels & Verified Crew Records | ShipCrewFinder",
   description:
-    "Browse vessels with verified seafarer service records: bulk carriers, tankers, container ships and more. Real crew data on ShipCrewFinder.",
-};
+    "Browse vessels with verified seafarer service records: bulk carriers, tankers, container ships and more, with the ranks served on board. Free to view.",
+  path: "/vessels",
+});
 
 type VesselIndexRow = {
   vessel_name: string;

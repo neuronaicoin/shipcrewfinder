@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { updatePassword } from "@/lib/actions/password-reset";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = { title: "Set New Password — ShipCrewFinder" };
+export const metadata = pageMeta({
+  title: "Set New Password \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const ERR_MSG: Record<string, string> = {
   short: "Password must be at least 8 characters.",

@@ -2,10 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import SiteHeader from "@/app/components/site-header";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Messages — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Messages \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function MessagesPage({
   searchParams,

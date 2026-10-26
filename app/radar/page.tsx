@@ -4,10 +4,12 @@ import SiteHeader from "@/app/components/site-header";
 import { getSortedCountries } from "@/lib/constants/countries";
 import Link from "next/link";
 import { getPlanAccess } from "@/lib/plan-access";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Rotation Radar — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Rotation Radar \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function RadarPage() {
   const supabase = await createClient();

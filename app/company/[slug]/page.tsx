@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
 type WorkedCompanySummary = {
   company_name: string | null;
@@ -16,12 +17,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const name = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-  return {
-    title: name + " — Crew Experience & Fleet | ShipCrewFinder",
+  const clean = (slug || "").trim().toLowerCase();
+  const name = clean.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return pageMeta({
+    title: name + ": Crew Records & Fleet | ShipCrewFinder",
     description:
       "Maritime employer profile of " + name + ": verified seafarers who served with this company, fleet vessels and crew ranks. ShipCrewFinder crew records.",
-  };
+    path: "/company/" + clean,
+  });
 }
 
 export default async function WorkedCompanyPage({

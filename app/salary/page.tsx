@@ -3,12 +3,14 @@ import { SALARY_DATA, VESSELS, fmtK, LAST_UPDATED, type VesselKey } from "@/lib/
 import { NATIONALITIES } from "@/lib/data/nationalities";
 import SalarySubmitForm from "@/app/components/salary-submit-form";
 import SalaryShare from "@/app/components/salary-share";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Seafarer Salary Index 2026 — Monthly Wages by Rank & Vessel Type | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Seafarer Salary Index 2026 by Rank | ShipCrewFinder",
   description:
-    "What every maritime rank actually earns in 2026. Monthly basic wages for Master, Chief Engineer, officers, engineers and ratings across bulk carriers, tankers, container ships and LNG.",
-};
+    "Monthly basic wages for Master, Chief Engineer, officers, engineers and ratings across bulk carriers, tankers, container ships and LNG carriers in 2026.",
+  path: "/salary",
+});
 
 const anchorSvg = (
   <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0b0e13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

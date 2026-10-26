@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { sendContactMessage } from "@/lib/actions/contact-form";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Contact Us — ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Contact ShipCrewFinder | Support & Partnerships",
   description:
-    "Get in touch with the ShipCrewFinder team. Questions, feedback or partnership ideas — we read every message.",
-  alternates: { canonical: "https://shipcrewfinder.com/contact" },
-};
+    "Contact the ShipCrewFinder team about seafarer accounts, hiring crew, partnerships or feedback. We read every message and reply by email as soon as we can.",
+  path: "/contact",
+});
 
 export default async function ContactPage({
   searchParams,

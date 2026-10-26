@@ -5,10 +5,12 @@ import Link from "next/link";
 import { getPlanAccess } from "@/lib/plan-access";
 import { requestUpgrade } from "@/lib/actions/upgrade-request";
 import { requestToolUpgrade } from "@/lib/actions/upgrade-tool-request";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Upgrade Your Plan — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Upgrade Your Plan \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const TOOL_INFO: Record<string, { name: string; price: string; period: string; desc: string; features: string[] }> = {
   orb: {

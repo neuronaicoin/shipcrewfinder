@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { SALARY_DATA, VESSELS, fmtK, type VesselKey } from "@/lib/data/salary";
+import { pageMeta, withBrand } from "@/lib/seo";
 
 const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -98,16 +99,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const entry = ALL_RANKS.find((r) => r.slug === slug);
   const sal = entry ? findSalary(entry.rank) : null;
   if (!entry || !sal || !VESSEL_KEYS.includes(vessel as VesselKey)) {
-    return { title: "Not found — ShipCrewFinder" };
+    return { title: "Not found — ShipCrewFinder", robots: { index: false, follow: true } };
   }
   const vm = VESSEL_META[vessel as VesselKey];
   const name = prettify(entry.rank);
   const rg = sal.ranges[vessel as VesselKey];
-  return {
-    title: `${name} on ${vm.plural} — Salary $${fmtK(rg.min)}–${fmtK(rg.max)}/mo & Requirements 2026 | ShipCrewFinder`,
+  return pageMeta({
+    title: withBrand(`${name} on ${vm.plural}: Salary & Jobs 2026`),
     description: `${name} jobs on ${vm.plural.toLowerCase()}: 2026 monthly salary $${fmtK(rg.min)}–$${fmtK(rg.max)}, required certificates, and what the work is really like. Direct contracts, 0% commission.`,
-    alternates: { canonical: `https://shipcrewfinder.com/crew/${slug}/${vessel}` },
-  };
+    path: `/crew/${slug}/${vessel}`,
+  });
 }
 
 export default async function RankVesselPage({ params }: { params: Promise<{ slug: string; vessel: string }> }) {

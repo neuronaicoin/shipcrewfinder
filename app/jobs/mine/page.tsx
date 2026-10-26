@@ -7,10 +7,12 @@ import DeleteJobButton from "@/app/components/delete-job-button";
 import { getSortedCountries } from "@/lib/constants/countries";
 import SiteHeader from "@/app/components/site-header";
 import { getPlanAccess } from "@/lib/plan-access";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "My Job Posts — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "My Job Posts \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 const DAY_MS = 24 * 3600 * 1000;
 

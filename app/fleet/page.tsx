@@ -12,10 +12,12 @@ import {
   rehireCrew,
   moveToPlannedFromHistory,
 } from "@/lib/actions/fleet";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "My Fleet — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "My Fleet \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function FleetPage({
   searchParams,

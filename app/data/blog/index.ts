@@ -27,6 +27,11 @@ import engineResourceManagement2026 from "./engine-resource-management-erm-expla
 import flagOfConvenienceExplained2026 from "./flag-of-convenience-explained-seafarer-guide-2026";
 import trainingRecordBookExplained2026 from "./training-record-book-trb-explained-cadet-guide-2026";
 import anchorWatchDutiesExplained2026 from "./anchor-watch-duties-explained-seafarer-guide-2026";
+import seafarerShoreLeaveAnnualLeaveMlc from "./seafarer-shore-leave-annual-leave-rights-mlc-2006";
+import ratingToOfficerStcwGuide from "./rating-to-officer-ab-oiler-to-oow-4th-engineer-stcw-guide";
+import seafarerPayslipExplained from "./seafarer-payslip-explained-basic-wage-overtime-leave-pay-allotment";
+import shipJobPostingGuideCompanies from "./how-to-write-ship-crew-job-posting-attract-qualified-officers";
+import seafarerOnboardingChecklistCompanies from "./seafarer-onboarding-checklist-shipping-companies-offer-to-sign-on";
 // Her yeni yazıyı buraya import et + posts dizisine ekle
 import piInjuryCompensationClaimProcess from "./pi-injury-compensation-claim-process-guide-2026";
 import overstayedContractMlcRights from "./overstayed-contract-mlc-2006-rights-guide-2026";
@@ -282,6 +287,11 @@ export const allPosts: BlogPost[] = [
   flagOfConvenienceExplained2026,
   trainingRecordBookExplained2026,
   anchorWatchDutiesExplained2026,
+  seafarerShoreLeaveAnnualLeaveMlc,
+  ratingToOfficerStcwGuide,
+  seafarerPayslipExplained,
+  shipJobPostingGuideCompanies,
+  seafarerOnboardingChecklistCompanies,
 ];
 // Tarihe göre yeniden eskiye sıralı
 const sortedPosts = [...allPosts].sort(

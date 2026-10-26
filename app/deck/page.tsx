@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import DeckCard, { type DeckPost } from "@/app/components/deck-card";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Crew Board & Company Board — Available Crew & Hiring Companies | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Crew Board & Company Board | ShipCrewFinder",
   description:
-    "Live maritime board: verified seafarers available for duty and shipping companies hiring right now. Updated live, worldwide.",
-};
+    "Live maritime board of verified seafarers available for duty and shipping companies hiring now. Browse by rank and contact each other directly, 0% commission.",
+  path: "/deck",
+});
 
 // Girişsiz ziyaretçi için kişisel veriyi SUNUCUDA sil — tarayıcıya hiç inmesin
 const maskPost = (p: DeckPost): DeckPost => ({

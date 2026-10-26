@@ -6,10 +6,12 @@ import { SHIP_RANKS, YACHT_POSITIONS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
 import SiteHeader from "@/app/components/site-header";
 import { getPlanAccess } from "@/lib/plan-access";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Post a Job — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "Post a Job \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function NewJobPage({
   searchParams,

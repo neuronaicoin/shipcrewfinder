@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "About — ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "About ShipCrewFinder | Maritime Career Platform",
   description:
-    "ShipCrewFinder is a global maritime career platform built by maritime professionals to connect verified seafarers and yacht crew directly with companies.",
-  alternates: { canonical: "https://shipcrewfinder.com/about" },
-};
+    "A global maritime career platform built by maritime professionals to connect verified seafarers and yacht crew directly with shipping companies, 0% commission.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

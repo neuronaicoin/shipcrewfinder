@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import SiteHeader from "@/app/components/site-header";
 import Link from "next/link";
 import { updatePersonalDocuments } from "@/lib/actions/profile";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "My Profile — ShipCrewFinder",
-};
+export const metadata = pageMeta({
+  title: "My Profile \u2014 ShipCrewFinder",
+  noindex: true,
+});
 
 export default async function MyProfilePage({
   searchParams,

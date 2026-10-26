@@ -1,20 +1,14 @@
 import Link from "next/link";
 import { blogIndex } from "@/app/data/blog";
 import SiteHeader from "@/app/components/site-header";
+import { pageMeta, jsonLd, SITE_URL } from "@/lib/seo";
 
-export const metadata = {
-  title: "Maritime Industry Blog — ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Maritime Career Guides & Seafarer Blog | ShipCrewFinder",
   description:
-    "Insights, trends, and guides for seafarers, yacht crew, and maritime companies. Stay ahead with expert analysis from people who've worked at sea.",
-  alternates: { canonical: "https://shipcrewfinder.com/blog" },
-  openGraph: {
-    title: "Maritime Industry Blog — ShipCrewFinder",
-    description:
-      "Insights, trends, and guides for seafarers, yacht crew, and maritime companies.",
-    url: "https://shipcrewfinder.com/blog",
-    type: "website",
-  },
-};
+    "Practical guides for seafarers and crew managers: salaries, STCW certificates, contracts, seafarer rights, crew change hubs and career paths, written from sea.",
+  path: "/blog",
+});
 
 const cardAnchor = (
   <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(251,191,36,.7)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -29,6 +23,37 @@ const cardAnchor = (
 
 export default function BlogIndexPage() {
   const posts = blogIndex;
+
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${SITE_URL}/blog#page`,
+    url: `${SITE_URL}/blog`,
+    name: "Maritime Career Guides & Seafarer Blog",
+    description:
+      "Practical guides for seafarers and crew managers: salaries, STCW certificates, contracts, seafarer rights, crew change hubs and career paths.",
+    inLanguage: "en",
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#organization` },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      ],
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: posts.length,
+      itemListOrder: "https://schema.org/ItemListOrderDescending",
+      itemListElement: posts.map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${SITE_URL}/blog/${p.slug}`,
+        name: p.title,
+      })),
+    },
+  };
 
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -83,6 +108,7 @@ export default function BlogIndexPage() {
   footer a{color:var(--gold);text-decoration:none}
 `}</style>
 
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(collectionSchema) }} />
       <SiteHeader isLoggedIn={false} active="blog" />
 
       <div className="bl-hero">

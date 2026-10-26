@@ -47,7 +47,7 @@ const post: BlogPost = {
       heading: "The Seafarer's Identity Document (SID) and its limits",
       paragraphs: [
         "The Seafarer's Identity Document, established under ILO Convention 185, is intended to function as an internationally recognized identity document for seafarers, facilitating shore leave and transit. In practice, adoption and recognition varies significantly by country — a valid SID from your flag state does not guarantee visa-free entry or transit everywhere, and relying on it alone without checking the specific destination country's actual current requirements is a genuine risk.",
-        "See our related guide on the [seaman's book and discharge book](/blog/seamans-book-discharge-book) for how these documents function alongside your passport and any required visas, since they serve different, complementary purposes rather than substituting for proper visa documentation.",
+        "See our related guide on the [seaman's book and discharge book](/blog/seamans-book-discharge-book-complete-guide-2026) for how these documents function alongside your passport and any required visas, since they serve different, complementary purposes rather than substituting for proper visa documentation.",
       ],
     },
     {

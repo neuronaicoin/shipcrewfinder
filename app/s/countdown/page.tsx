@@ -23,6 +23,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }): 
   return {
     title,
     description,
+    // Share-card landing pages: keep out of the index, let crawlers follow through.
+    robots: { index: false, follow: true },
     openGraph: {
       title,
       description,

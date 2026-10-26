@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Terms of Service — ShipCrewFinder",
-  description: "The terms and conditions for using the ShipCrewFinder platform.",
-  alternates: { canonical: "https://shipcrewfinder.com/terms" },
-};
+export const metadata = pageMeta({
+  title: "Terms of Service | ShipCrewFinder",
+  description:
+    "The terms that govern use of ShipCrewFinder by seafarers and shipping companies: accounts, verification, acceptable use, subscriptions and liability.",
+  path: "/terms",
+});
 
 const updated = "June 2026";
 

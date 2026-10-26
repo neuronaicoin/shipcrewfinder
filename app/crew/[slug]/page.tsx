@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { SHIP_RANKS } from "@/lib/constants/ranks";
 import { getSortedCountries } from "@/lib/constants/countries";
+import { pageMeta, withBrand } from "@/lib/seo";
 
 // ── slug ↔ rank haritası ──
 const slugify = (r: string) => r.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -18,13 +19,13 @@ const ALL_RANKS: { rank: string; slug: string; dept: string }[] = Object.entries
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const entry = ALL_RANKS.find((r) => r.slug === slug);
-  if (!entry) return { title: "Rank not found — ShipCrewFinder" };
+  if (!entry) return { title: "Rank not found — ShipCrewFinder", robots: { index: false, follow: true } };
   const name = prettify(entry.rank);
-  return {
-    title: `${name} Jobs at Sea — Direct Contracts, 0% Commission | ShipCrewFinder`,
-    description: `Open ${name} positions from verified shipping companies worldwide. Apply directly — no agency, no commission. Build a verified ${name} profile and get contacted by employers.`,
-    alternates: { canonical: `https://shipcrewfinder.com/crew/${slug}` },
-  };
+  return pageMeta({
+    title: withBrand(`${name} Jobs at Sea`),
+    description: `Open ${name} jobs from verified shipping companies worldwide. Apply directly with no agency and 0% commission, or build a verified profile employers can find.`,
+    path: `/crew/${slug}`,
+  });
 }
 
 export default async function RankPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -2,10 +2,34 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSortedCountries } from "@/lib/constants/countries";
+import { pageMeta, withBrand } from "@/lib/seo";
 
-export const metadata = {
-  title: "Careers — ShipCrewFinder",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const clean = (slug || "").trim().toLowerCase();
+  let companyName: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("company_details")
+      .select("company_name")
+      .eq("careers_slug", clean)
+      .maybeSingle();
+    companyName = (data?.company_name as string | undefined) || null;
+  } catch {
+    companyName = null;
+  }
+  if (!companyName) return { title: "Careers — ShipCrewFinder", robots: { index: false, follow: true } };
+  return pageMeta({
+    title: withBrand(`${companyName} Careers: Jobs at Sea`),
+    description: `Open seafarer positions at ${companyName}. See current vacancies by rank and apply directly to the company through ShipCrewFinder, with no crewing agency and no fees.`,
+    path: `/careers/${clean}`,
+  });
+}
 
 type CareerJob = {
   id: string;

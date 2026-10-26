@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = {
-  title: "Maritime Companies — Crew Experience Records | ShipCrewFinder",
+export const metadata = pageMeta({
+  title: "Maritime Companies & Crew Records | ShipCrewFinder",
   description:
-    "Browse maritime employers with verified seafarer service records. See which companies crew have served with — real records on ShipCrewFinder.",
-};
+    "Browse shipping companies through verified seafarer service records. See which employers crew have served with, their fleets and ranks on board. Free to view.",
+  path: "/companies",
+});
 
 type CompanyIndexRow = {
   company_name: string;
